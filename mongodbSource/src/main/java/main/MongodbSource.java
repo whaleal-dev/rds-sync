@@ -148,10 +148,10 @@ public class MongodbSource extends Metadata {
                     } catch (InterruptedException e) {
                         Log.error(e.getMessage());
                     }
-                    if(isOver&&taskMetadataQueue.size()==0&&SourceTask.sourceThreadNum.get()==0){
-                        SourceTaskPoolManager.shuntDownNow();
-                        break;
-                    }
+//                    if(isOver&&taskMetadataQueue.size()==0&&SourceTask.sourceThreadNum.get()==0){
+//                        SourceTaskPoolManager.shuntDownNow();
+//                        break;
+//                    }
                 }
             }
         };
