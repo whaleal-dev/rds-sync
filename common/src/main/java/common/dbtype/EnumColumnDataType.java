@@ -10,7 +10,7 @@ public enum EnumColumnDataType {
     /**
      * mongodb类型
      */
-    INTCOLOMN("INTCOLOMN"),
+    INTCOLUMN("INTCOLUMN"),
     LONGCOLUMN("LONGCOLUMN"),
     STRINGCOLUMN("STRINGCOLUMN"),
     DATECOLUMN("DATECOLUMN"),

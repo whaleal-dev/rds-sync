@@ -16,10 +16,12 @@ import lombok.ToString;
 @ToString
 public class TimestampColumn extends AbstractColumn {
     private long data;
+
     public TimestampColumn(String columnName, long object) {
         this.columnName = columnName;
         this.data = object;
     }
+
     @Override
     public Object getData() {
         return this.data;

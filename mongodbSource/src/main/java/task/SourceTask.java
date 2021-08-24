@@ -9,12 +9,13 @@ import common.metadata.SourceTaskMetadata;
 import common.column.AbstractColumn;
 import common.dataclass.BatchDataEntity;
 import common.dataclass.Range;
+import common.taskinterface.SourceInterface;
 import conf.Configuration;
 
-import main.MongodbSource;
+import execute.MongodbSource;
 import dbconnection.mongodb.MongoDbConnection;
 import org.bson.Document;
-import parse.ParseDataToColumn;
+import parse.TransformationMongodbDataToColumn;
 import util.Log;
 
 import java.util.*;
@@ -25,7 +26,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @time: 2021/7/21 2:38 下午
  * @desc: 读取表某区间数据
  */
-public class SourceTask implements Runnable {
+public class SourceTask implements Runnable, SourceInterface {
     /**
      * 任务配置信息
      */
@@ -68,6 +69,7 @@ public class SourceTask implements Runnable {
      *
      * @desc 获取表数据
      */
+    @Override
     public void getDataFromCollection() {
         String[] strings = this.taskMetadata.getDbTableName().split("\\.", 2);
         String dbName = strings[0];
@@ -120,24 +122,27 @@ public class SourceTask implements Runnable {
         }
     }
 
+    @Override
+    public void dataTransformation(Object document) {
 
-    public void dataTransformation(Document document) {
         List<AbstractColumn> abstractColumns = new ArrayList<>();
-        Iterator<Map.Entry<String, Object>> iterator = document.entrySet().iterator();
+        Iterator<Map.Entry<String, Object>> iterator = ((Document) document).entrySet().iterator();
         while (iterator.hasNext()) {
             Map.Entry<String, Object> next = iterator.next();
-            AbstractColumn abstractColumn = ParseDataToColumn.parseValue(next.getKey(), next.getValue());
+            AbstractColumn abstractColumn = TransformationMongodbDataToColumn.parseValue(next.getKey(), next.getValue());
             abstractColumns.add(abstractColumn);
         }
         this.dataList.add(abstractColumns);
     }
 
     static AtomicInteger atomicInteger = new AtomicInteger();
+
     /**
      * putDataToCache 推送数据到缓存区中
      *
      * @desc 推送数据到缓存区中
      */
+    @Override
     public void putDataToCache() {
         BatchDataEntity batchDataEntity = new BatchDataEntity();
         batchDataEntity.setDataList(this.dataList);
@@ -147,7 +152,7 @@ public class SourceTask implements Runnable {
         batchDataEntity.setBatchNo(System.currentTimeMillis());
         // 推送数据到缓存区中
         MemoryCache.putData(batchDataEntity);
-        System.out.println("source:"+atomicInteger.addAndGet(batchDataEntity.getDataList().size()));
+        System.out.println("source:" + atomicInteger.addAndGet(batchDataEntity.getDataList().size()));
         this.dataList = new ArrayList<>();
         this.cache = 0;
     }

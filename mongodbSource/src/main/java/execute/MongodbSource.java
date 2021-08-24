@@ -1,10 +1,9 @@
-package main;
+package execute;
 
-import com.mongodb.MongoNamespace;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoIterable;
-import common.metadata.Metadata;
+import common.metadata.SourceMetadata;
 import common.metadata.SourceTaskMetadata;
 import common.dataclass.Range;
 import thread.SourceTaskPoolManager;
@@ -24,14 +23,11 @@ import java.util.concurrent.TimeUnit;
  * @time: 2021/7/19 3:02 下午
  * @desc: 主类
  */
-public class MongodbSource extends Metadata {
+public class MongodbSource extends SourceMetadata {
 
-    /**
-     * syncModeOfAll
-     *
-     * @desc 全量任务
-     */
-    public static void syncModeOfAll() {
+
+    @Override
+    public void syncModeOfAll() {
         // 启动获取提交Task任务的线程
         submitSourceTask();
         // 遍历执行源数据源抽取
@@ -44,18 +40,8 @@ public class MongodbSource extends Metadata {
     }
 
 
-    public static void main(String[] args) {
-        syncModeOfAll();
-    }
-
-
-    /**
-     * getAllDbCollections 获取数据源中所有的库表名
-     *
-     * @param sourceName 数据源名称
-     * @desc 获取数据源中所有的库表名
-     */
-    public static void getAllDbCollections(String sourceName) {
+    @Override
+    public void getAllDbCollections(String sourceName) {
         MongoClient mongoClient = MongoDbConnection.getMongoClient(sourceName);
         MongoIterable<String> mongoIterableOfDb = mongoClient.listDatabaseNames();
         MongoCursor<String> mongoCursorOfDb = mongoIterableOfDb.iterator();
@@ -82,27 +68,19 @@ public class MongodbSource extends Metadata {
     }
 
 
-    /**
-     * startFromSource 把所有库表的中数据进行分片和创造
-     *
-     * @desc 启动targetTask任务
-     */
-    public static void startFromSource(String sourceName, boolean isParallel) {
+    @Override
+    public void startFromSource(String sourceName, boolean isParallel) {
         Iterator<Map.Entry<String, String>> mapIterator = dbTables.entrySet().iterator();
         while (mapIterator.hasNext()) {
             Map.Entry<String, String> next = mapIterator.next();
-            createSourceEntity(sourceName, new MongoNamespace(next.getValue()));
+            createSourceEntity(sourceName, next.getValue());
         }
     }
 
-    /**
-     * createSourceEntity 获取这个数据源的某表的且分数据
-     *
-     * @desc 获取这个数据源的某表的且分数据
-     */
-    public static void createSourceEntity(String sourceName, MongoNamespace mongoNamespace) {
+    @Override
+    public void createSourceEntity(String sourceName, String dbTableName) {
         Source source = new Source(sourceName);
-        Map<Integer, Range> map = source.getIdTypes(mongoNamespace);
+        Map<Integer, Range> map = source.getIdTypes(dbTableName);
         Iterator<Map.Entry<Integer, Range>> rangeMap = map.entrySet().iterator();
         while (rangeMap.hasNext()) {
             Runnable runnable = new Runnable() {
@@ -111,8 +89,8 @@ public class MongodbSource extends Metadata {
                     Map.Entry<Integer, Range> next = rangeMap.next();
                     Range rangeOfTable = next.getValue();
                     while (rangeOfTable.getMinId() != null) {
-                        Range range = source.splitRange(mongoNamespace, rangeOfTable, next.getKey());
-                        SourceTaskMetadata taskMetadata = new SourceTaskMetadata(range, mongoNamespace.getFullName(), sourceName);
+                        Range range = source.splitRange(dbTableName, rangeOfTable, next.getKey());
+                        SourceTaskMetadata taskMetadata = new SourceTaskMetadata(range, dbTableName, sourceName);
                         Log.info("taskMetadata配置信息:" + taskMetadata.toString());
                         pushTaskMeta(taskMetadata);
                     }
@@ -122,16 +100,8 @@ public class MongodbSource extends Metadata {
         }
     }
 
-    public static void pushTaskMeta(SourceTaskMetadata taskMetadata) {
-        taskMetadataQueue.add(taskMetadata);
-    }
-
-    /**
-     * submitSourceTask 取task到线程池
-     *
-     * @desc 获取这个数据源的某表的且分数据
-     */
-    public static void submitSourceTask() {
+    @Override
+    public  void  submitSourceTask() {
         Runnable runnable = new Runnable() {
             @Override
             public void run() {
@@ -148,15 +118,9 @@ public class MongodbSource extends Metadata {
                     } catch (InterruptedException e) {
                         Log.error(e.getMessage());
                     }
-//                    if(isOver&&taskMetadataQueue.size()==0&&SourceTask.sourceThreadNum.get()==0){
-//                        SourceTaskPoolManager.shuntDownNow();
-//                        break;
-//                    }
                 }
             }
         };
         SysPoolManager.submit(runnable);
     }
-
-
 }
