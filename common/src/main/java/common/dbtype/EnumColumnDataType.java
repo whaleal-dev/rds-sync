@@ -1,4 +1,4 @@
-package parse;
+package common.dbtype;
 
 /**
  * MongoDB数据类型类

@@ -20,6 +20,8 @@ public enum EnumMongoDbDataType {
     CODE("CODE"),
     REGULAR("BSONREGULAREXPRXSSION"),
     OBJECTID("OBJECTID"),
+    STRING("STRING"),
+    BSONTIMESTAMP("BSONTIMESTAMP"),
     DATE("DATE");
 
     private final String upperCase;

@@ -65,7 +65,7 @@ public class TargetTask implements Runnable {
      */
     public void applyData() {
         Log.info("启动target任务:" + this.targetDsName);
-        while (!MongodbTarget.allIsOver) {
+        while (!MongodbTarget.isOver) {
             BatchDataEntity batchDataEntity = MemoryCache.getData();
             try {
                 // 从缓存中获取一批数据

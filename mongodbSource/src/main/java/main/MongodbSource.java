@@ -7,6 +7,7 @@ import com.mongodb.client.MongoIterable;
 import common.metadata.Metadata;
 import common.metadata.SourceTaskMetadata;
 import common.dataclass.Range;
+import common.thread.SourceTaskPoolManager;
 import common.thread.SysPoolManager;
 import conf.Configuration;
 import dbconnection.mongodb.MongoDbConnection;
@@ -142,13 +143,13 @@ public class MongodbSource extends Metadata {
                         SourceTaskMetadata taskMetadata = taskMetadataQueue.poll();
                         if (taskMetadata != null) {
                             System.out.println(taskMetadata.toString());
-                            TaskPoolManager.submit(new SourceTask(taskMetadata));
+                            SourceTaskPoolManager.submit(new SourceTask(taskMetadata));
                         }
                     } catch (InterruptedException e) {
                         Log.error(e.getMessage());
                     }
                     if(isOver&&taskMetadataQueue.size()==0&&SourceTask.sourceThreadNum.get()==0){
-                        TaskPoolManager.shuntDownNow();
+                        SourceTaskPoolManager.shuntDownNow();
                         break;
                     }
                 }

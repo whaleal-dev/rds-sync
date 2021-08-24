@@ -7,10 +7,10 @@ import com.mongodb.client.MongoClient;
 import common.metadata.SourceTaskMetadata;
 import common.TypeNumber;
 import common.dataclass.Range;
+import common.thread.SourceTaskPoolManager;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import dbconnection.mongodb.MongoDbConnection;
-import manger.thread.TaskPoolManager;
 import org.bson.Document;
 import task.SourceTask;
 
@@ -56,7 +56,7 @@ public class Source {
             while (rangeOfTable.getMinId() != null) {
                 Range range = source.splitRange(mongoNamespace, rangeOfTable, next.getKey());
                 SourceTaskMetadata taskMetadata = new SourceTaskMetadata(range, mongoNamespace.getFullName(), "source.data.mongodb.uri");
-                TaskPoolManager.submit(new SourceTask(taskMetadata));
+                SourceTaskPoolManager.submit(new SourceTask(taskMetadata));
             }
         }
 
