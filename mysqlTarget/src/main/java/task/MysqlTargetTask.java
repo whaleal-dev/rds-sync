@@ -24,7 +24,7 @@ import java.util.Map;
  */
 
 @NoArgsConstructor
-public class TargetTask implements Runnable{
+public class MysqlTargetTask implements Runnable{
     /**
      * 目标数据源名称
      */
@@ -35,7 +35,7 @@ public class TargetTask implements Runnable{
     private MongoNamespace mongoNamespace;
     private List<String> writeModels = new ArrayList<String>();
 
-    public TargetTask(String targetDsName) {
+    public MysqlTargetTask(String targetDsName) {
         this.targetDsName = targetDsName;
     }
 
@@ -124,7 +124,7 @@ public class TargetTask implements Runnable{
                         //数据长度不够，修改长度
                         if(length > maxMap.get(columnData.getColumnName())){
                             maxMap.put(columnData.getColumnName(), length);
-                            SqlUtil.data("ALTER TABLE"+tableName+ "ADD" + columnData.getColumnName() +" " + type +"(" + length +")");
+                            SqlUtil.data("ALTER TABLE"+tableName+ "MODIFY" + columnData.getColumnName() +" " + type +"(" + length +")");
                         }
                     }
                 }
