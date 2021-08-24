@@ -41,38 +41,16 @@ public class Source {
     }
 
     /**
-     * 测试使用
-     *
-     * @param args
-     */
-    public static void main(String[] args) {
-        Source source = new Source("source.data.mongodb.uri");
-        MongoNamespace mongoNamespace = new MongoNamespace("ys", "exam_item_check_log");
-        Map<Integer, Range> map = source.getIdTypes(mongoNamespace);
-        Iterator<Map.Entry<Integer, Range>> rangeMap = map.entrySet().iterator();
-        while (rangeMap.hasNext()) {
-            Map.Entry<Integer, Range> next = rangeMap.next();
-            Range rangeOfTable = next.getValue();
-            while (rangeOfTable.getMinId() != null) {
-                Range range = source.splitRange(mongoNamespace, rangeOfTable, next.getKey());
-                SourceTaskMetadata taskMetadata = new SourceTaskMetadata(range, mongoNamespace.getFullName(), "source.data.mongodb.uri");
-                SourceTaskPoolManager.submit(new SourceTask(taskMetadata));
-            }
-        }
-
-    }
-
-    /**
      * getIdTypes 获取某表中的主键类型的最大和最小值
      *
-     * @param mongoNamespace 库表名
+     * @param dbTableName 库表名
      * @return Map
      * @desc 获取某表中的主键类型的最大和最小值
      */
-    public Map getIdTypes(MongoNamespace mongoNamespace) {
+    public Map getIdTypes(String dbTableName) {
         Map<Integer, Range> typeMap = new HashMap<>();
-        String dbName = mongoNamespace.getDatabaseName();
-        String tableName = mongoNamespace.getCollectionName();
+        String dbName = dbTableName.split("\\.")[0];
+        String tableName = dbTableName.split("\\.")[1];
         BasicDBObject basicDBObject = new BasicDBObject();
         Iterator<Map.Entry<String, Integer>> typeIterator = TypeNumber.typeNumberMap.entrySet().iterator();
         while (typeIterator.hasNext()) {
@@ -87,7 +65,7 @@ public class Source {
                     .projection(new BasicDBObject().append("_id", 1)).first();
             // 判断某类型的主键是否有数据
             if (document != null) {
-                Range range = getMaxAndMinIdByNs(mongoNamespace, type);
+                Range range = getMaxAndMinIdByNs(dbTableName, type);
                 typeMap.put(type, range);
             }
         }
@@ -97,14 +75,14 @@ public class Source {
     /**
      * getMaxAndMinIdByNs 获取某类型主键的最大和最小值
      *
-     * @param mongoNamespace 库表名
-     * @param type           数据类型
+     * @param dbTableName 库表名
+     * @param type        数据类型
      * @return Range
      * @desc 获取某类型主键的最大和最小值
      */
-    public Range getMaxAndMinIdByNs(MongoNamespace mongoNamespace, int type) {
-        String dbName = mongoNamespace.getDatabaseName();
-        String tableName = mongoNamespace.getCollectionName();
+    public Range getMaxAndMinIdByNs(String dbTableName, int type) {
+        String dbName = dbTableName.split("\\.")[0];
+        String tableName = dbTableName.split("\\.")[1];
         BasicDBObject condition = new BasicDBObject();
         condition.append("_id", new Document().append("$type", type));
         BasicDBObject sort = new BasicDBObject();
@@ -128,17 +106,17 @@ public class Source {
     /**
      * splitRange 切分数据，每分数据最大长度为50w
      *
-     * @param mongoNamespace 库表名
+     * @param dbTableName 库表名
      * @param rangeOfTable   表范围range
      * @param type           数据类型
      * @return Range  某个区间的range
      * @desc 切分数据，每分数据最大长度为50w
      */
-    public Range splitRange(MongoNamespace mongoNamespace, Range rangeOfTable, int type) {
+    public Range splitRange(String dbTableName, Range rangeOfTable, int type) {
         Range range = new Range();
         range.set_idType(type);
-        String dbName = mongoNamespace.getDatabaseName();
-        String tableName = mongoNamespace.getCollectionName();
+        String dbName = dbTableName.split("\\.")[0];
+        String tableName = dbTableName.split("\\.")[1];
         BasicDBObject condition = new BasicDBObject();
         // 不要紧在where条件中单独添加type的查询
         condition.append("_id", new Document("$gte", rangeOfTable.getMinId()));
@@ -149,12 +127,12 @@ public class Source {
             Object maxIdRTemp = document.get("_id");
             range.setMinId(rangeOfTable.getMinId());
             range.setMaxId(maxIdRTemp);
-            range.setDbTableName(mongoNamespace.getFullName());
+            range.setDbTableName(dbTableName);
             rangeOfTable.setMinId(maxIdRTemp);
         } else {
             range.setMinId(rangeOfTable.getMinId());
             range.setMaxId(rangeOfTable.getMaxId());
-            range.setDbTableName(mongoNamespace.getFullName());
+            range.setDbTableName(dbTableName);
             range.setMax(true);
             //要修改总的rangeOfTable的范围
             rangeOfTable.setMinId(null);

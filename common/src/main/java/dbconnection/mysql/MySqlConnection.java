@@ -1,0 +1,68 @@
+package dbconnection.mysql;
+
+
+import com.mongodb.client.MongoClient;
+import org.apache.commons.dbcp.BasicDataSource;
+import org.springframework.jdbc.core.JdbcTemplate;
+
+import java.sql.SQLException;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
+/**
+ * mysql链接类
+ *
+ * @author lhp
+ * @time 2021-05-31 13:12:12
+ */
+public class MySqlConnection {
+    private static Map<String, JdbcTemplate> jdbcTemplateMysqlMap = new ConcurrentHashMap<>();
+
+    /**
+     * getBasicDataSource 获取mysql的源链接
+     *
+     * @param dsName
+     * @desc 获取mysql的源链接
+     */
+    private static synchronized void getBasicDataSource(String dsName) {
+        if (jdbcTemplateMysqlMap.containsKey(dsName)) {
+            return;
+        }
+        BasicDataSource basicDataSource = new BasicDataSource();
+        basicDataSource.setUrl("jdbc:mysql://192.168.3.19:3306/photon?useUnicode=true&characterEncoding=utf-8");
+        basicDataSource.setUsername("root");
+        basicDataSource.setPassword("123456");
+        JdbcTemplate jdbcTemplate = new JdbcTemplate(basicDataSource);
+        jdbcTemplateMysqlMap.put(dsName, jdbcTemplate);
+    }
+
+    /**
+     * getJdbcTemplate 获取mysql的Jdbc
+     *
+     * @param dsName
+     * @return JdbcTemplate
+     * @desc 获取mysql的Jdbc
+     */
+    public static JdbcTemplate getJdbcTemplate(String dsName) {
+        if (!jdbcTemplateMysqlMap.containsKey(dsName)) {
+            getBasicDataSource(dsName);
+        }
+        return jdbcTemplateMysqlMap.get(dsName);
+    }
+
+    /**
+     * close 关闭jdbc链接
+     *
+     * @param dsName
+     * @desc 关闭jdbc链接
+     */
+    public static void close(String dsName) {
+        if (jdbcTemplateMysqlMap.containsKey(dsName)) {
+            try {
+                jdbcTemplateMysqlMap.get(dsName).getDataSource().getConnection().close();
+            } catch (SQLException exception) {
+                exception.printStackTrace();
+            }
+        }
+    }
+}

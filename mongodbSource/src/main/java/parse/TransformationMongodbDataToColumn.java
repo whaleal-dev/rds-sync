@@ -15,7 +15,10 @@ import java.time.temporal.TemporalAccessor;
 import java.util.Locale;
 
 
-public class ParseDataToColumn {
+/**
+ * @author liheping
+ */
+public class TransformationMongodbDataToColumn {
 
 
     private static final Gson gson = new Gson();
@@ -34,10 +37,7 @@ public class ParseDataToColumn {
         }
         String type = object.getClass().getSimpleName().toUpperCase();
         EnumMongoDbDataType enumMongoDbDataType = EnumMongoDbDataType.valueOf(type);
-        BsonTimestamp bsonTimestamp=new BsonTimestamp();
-
         switch (enumMongoDbDataType) {
-
             case INTEGER:
                 return new IntColumn(columnName, (Integer) object);
             case DOUBLE:
@@ -70,7 +70,5 @@ public class ParseDataToColumn {
             default:
                 return new StringColumn(columnName, object.toString());
         }
-
     }
-
 }

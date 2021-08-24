@@ -12,10 +12,10 @@ import common.dataclass.Range;
 import common.taskinterface.SourceInterface;
 import conf.Configuration;
 
-import main.MongodbSource;
+import execute.MongodbSource;
 import dbconnection.mongodb.MongoDbConnection;
 import org.bson.Document;
-import parse.ParseDataToColumn;
+import parse.TransformationMongodbDataToColumn;
 import util.Log;
 
 import java.util.*;
@@ -129,7 +129,7 @@ public class SourceTask implements Runnable, SourceInterface {
         Iterator<Map.Entry<String, Object>> iterator = ((Document) document).entrySet().iterator();
         while (iterator.hasNext()) {
             Map.Entry<String, Object> next = iterator.next();
-            AbstractColumn abstractColumn = ParseDataToColumn.parseValue(next.getKey(), next.getValue());
+            AbstractColumn abstractColumn = TransformationMongodbDataToColumn.parseValue(next.getKey(), next.getValue());
             abstractColumns.add(abstractColumn);
         }
         this.dataList.add(abstractColumns);
