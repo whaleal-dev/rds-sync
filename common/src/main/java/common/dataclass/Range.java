@@ -2,6 +2,8 @@ package common.dataclass;
 
 import lombok.*;
 
+import java.nio.charset.StandardCharsets;
+
 /**
  * @author: lhp
  * @time: 2021/7/19 5:02 下午
@@ -41,4 +43,9 @@ public class Range {
      * 数据类型
      */
     private int _idType;
+
+    public static void main(String[] args) {
+
+        System.out.println("李和平".getBytes(StandardCharsets.UTF_8).toString());
+    }
 }

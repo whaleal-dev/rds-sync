@@ -3,15 +3,15 @@ package execute;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoIterable;
-import common.metadata.SourceMetadata;
-import common.metadata.SourceTaskMetadata;
+import common.taskbase.metadata.SourceMetadata;
+import common.taskbase.SourceTaskInfo;
 import common.dataclass.Range;
 import thread.SourceTaskPoolManager;
 import thread.SysPoolManager;
 import conf.Configuration;
 import dbconnection.mongodb.MongoDbConnection;
-import source.Source;
-import task.SourceTask;
+import sourcesplit.MongodbSourceSplitRange;
+import task.MongodbSourceTask;
 import util.Log;
 
 import java.util.Iterator;
@@ -25,7 +25,6 @@ import java.util.concurrent.TimeUnit;
  */
 public class MongodbSource extends SourceMetadata {
 
-
     @Override
     public void syncModeOfAll() {
         // 启动获取提交Task任务的线程
@@ -38,7 +37,6 @@ public class MongodbSource extends SourceMetadata {
         startFromSource(sourceName, false);
         isOver = true;
     }
-
 
     @Override
     public void getAllDbCollections(String sourceName) {
@@ -67,7 +65,6 @@ public class MongodbSource extends SourceMetadata {
         Log.info("sourceName:" + sourceName + ",全量同步的表列表:" + dbTables);
     }
 
-
     @Override
     public void startFromSource(String sourceName, boolean isParallel) {
         Iterator<Map.Entry<String, String>> mapIterator = dbTables.entrySet().iterator();
@@ -79,7 +76,7 @@ public class MongodbSource extends SourceMetadata {
 
     @Override
     public void createSourceEntity(String sourceName, String dbTableName) {
-        Source source = new Source(sourceName);
+        MongodbSourceSplitRange source = new MongodbSourceSplitRange(sourceName);
         Map<Integer, Range> map = source.getIdTypes(dbTableName);
         Iterator<Map.Entry<Integer, Range>> rangeMap = map.entrySet().iterator();
         while (rangeMap.hasNext()) {
@@ -90,7 +87,7 @@ public class MongodbSource extends SourceMetadata {
                     Range rangeOfTable = next.getValue();
                     while (rangeOfTable.getMinId() != null) {
                         Range range = source.splitRange(dbTableName, rangeOfTable, next.getKey());
-                        SourceTaskMetadata taskMetadata = new SourceTaskMetadata(range, dbTableName, sourceName);
+                        SourceTaskInfo taskMetadata = new SourceTaskInfo(range, dbTableName, sourceName);
                         Log.info("taskMetadata配置信息:" + taskMetadata.toString());
                         pushTaskMeta(taskMetadata);
                     }
@@ -110,10 +107,9 @@ public class MongodbSource extends SourceMetadata {
                         if (taskMetadataQueue.size() == 0) {
                             TimeUnit.SECONDS.sleep(2);
                         }
-                        SourceTaskMetadata taskMetadata = taskMetadataQueue.poll();
+                        SourceTaskInfo taskMetadata = taskMetadataQueue.poll();
                         if (taskMetadata != null) {
-                            System.out.println(taskMetadata.toString());
-                            SourceTaskPoolManager.submit(new SourceTask(taskMetadata));
+                            SourceTaskPoolManager.submit(new MongodbSourceTask(taskMetadata));
                         }
                     } catch (InterruptedException e) {
                         Log.error(e.getMessage());

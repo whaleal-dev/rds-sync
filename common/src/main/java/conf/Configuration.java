@@ -154,4 +154,8 @@ public class Configuration {
          */
         incrementParseThreadNum = Integer.parseInt(Property.getPropertiesByKey("increment.parse.thread_num"));
     }
+
+    public static void main(String[] args) {
+        System.out.println("ys.test22".matches(dbTableWhite));
+    }
 }

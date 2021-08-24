@@ -14,23 +14,27 @@ import java.time.format.DateTimeFormatter;
  * @author liheping
  */
 public class ParseColumnDataToMongodbData {
-    private static DateTimeFormatter timestampSimpleDateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.n");
+    private static DateTimeFormatter timestampSimpleDateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
     public static Object parseColumnData(AbstractColumn columnData) {
         String type = columnData.getClass().getSimpleName().toUpperCase();
         EnumColumnDataType enumColumnDataType = EnumColumnDataType.valueOf(type);
         switch (enumColumnDataType) {
-            case DATECOLUMN:
+            case DATETIMECOLUMN:
                 return LocalDateTime.parse(columnData.getData().toString(), timestampSimpleDateFormat);
             case TIMESTAMPCOLUMN:
                 return new BsonTimestamp(Long.parseLong(columnData.getData().toString()));
             case JSONCOLUMN:
                 return Document.parse(columnData.getData().toString());
+            case ARRAYCOLUMN:
             case INTCOLUMN:
             case STRINGCOLUMN:
             case LONGCOLUMN:
             case DOUBLECOLUMN:
             case FLOATCOLUMN:
             case OBJECTIDCOLUMN:
+            case BOOLCOLUMN:
+            case DATECOLUMN:
             default:
                 return columnData.getData();
         }

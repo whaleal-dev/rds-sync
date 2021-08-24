@@ -1,10 +1,9 @@
-package common.metadata;
+package common.taskbase.metadata;
 
-import com.mongodb.MongoNamespace;
+import common.taskbase.SourceTaskInfo;
 import conf.Configuration;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -24,7 +23,7 @@ public abstract class SourceMetadata {
      */
     protected static final String targetName = Configuration.targetName;
     /**
-     * 目标数据源名称
+     * 目标数据源线程数
      */
     protected static final int targetNum = Configuration.targetThreadNum;
     /**
@@ -38,13 +37,15 @@ public abstract class SourceMetadata {
     /**
      * TaskMetadata队列
      */
-    protected static Queue<SourceTaskMetadata> taskMetadataQueue = new ConcurrentLinkedQueue<>();
+    protected static Queue<SourceTaskInfo> taskMetadataQueue = new ConcurrentLinkedQueue<>();
+
     /**
      * syncModeOfAll
      *
      * @desc 全量任务
      */
     public abstract void syncModeOfAll();
+
     /**
      * getAllDbCollections 获取数据源中所有的库表名
      *
@@ -52,26 +53,33 @@ public abstract class SourceMetadata {
      * @desc 获取数据源中所有的库表名
      */
     public abstract void getAllDbCollections(String sourceName);
+
     /**
      * startFromSource 把所有库表的中数据进行分片和创造
      *
+     * @param sourceName 数据源名称
+     * @param isParallel 是否并行
      * @desc 启动targetTask任务
      */
     public abstract void startFromSource(String sourceName, boolean isParallel);
 
-    public static void pushTaskMeta(SourceTaskMetadata taskMetadata) {
+    public static void pushTaskMeta(SourceTaskInfo taskMetadata) {
         taskMetadataQueue.add(taskMetadata);
     }
+
     /**
      * createSourceEntity 获取这个数据源的某表的且分数据
      *
+     * @param sourceName  数据源名称
+     * @param dbTableName 库表名
      * @desc 获取这个数据源的某表的且分数据
      */
     public abstract void createSourceEntity(String sourceName, String dbTableName);
+
     /**
      * submitSourceTask 取task到线程池
      *
      * @desc 获取这个数据源的某表的且分数据
      */
-    public abstract void  submitSourceTask();
+    public abstract void submitSourceTask();
 }

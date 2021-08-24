@@ -5,11 +5,11 @@ import cache.MemoryCache;
 import com.mongodb.BasicDBObject;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCursor;
-import common.metadata.SourceTaskMetadata;
+import common.taskbase.SourceTaskInfo;
 import common.column.AbstractColumn;
 import common.dataclass.BatchDataEntity;
 import common.dataclass.Range;
-import common.taskinterface.SourceInterface;
+import common.taskbase.SourceTaskInterface;
 import conf.Configuration;
 
 import execute.MongodbSource;
@@ -26,11 +26,11 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @time: 2021/7/21 2:38 下午
  * @desc: 读取表某区间数据
  */
-public class SourceTask implements Runnable, SourceInterface {
+public class MongodbSourceTask implements Runnable, SourceTaskInterface {
     /**
      * 任务配置信息
      */
-    private SourceTaskMetadata taskMetadata;
+    private SourceTaskInfo taskMetadata;
     /**
      * mongoClient
      */
@@ -50,14 +50,13 @@ public class SourceTask implements Runnable, SourceInterface {
 
     public static AtomicInteger sourceThreadNum = new AtomicInteger(0);
 
-    public SourceTask(SourceTaskMetadata taskMetadata) {
+    public MongodbSourceTask(SourceTaskInfo taskMetadata) {
         this.taskMetadata = taskMetadata;
         this.mongoClient = MongoDbConnection.getMongoClient(this.taskMetadata.getSourceDsName());
     }
 
     @Override
     public void run() {
-
         Log.info("启动source任务:" + this.taskMetadata.toString());
         // 读取数据
         getDataFromCollection();
@@ -108,7 +107,7 @@ public class SourceTask implements Runnable, SourceInterface {
             rangeTem.setMaxId(maxId);
             rangeTem.setMax(range.isMax());
             // 出现意外时，再次启动该任务实例
-            SourceTaskMetadata taskMetadata = new SourceTaskMetadata(rangeTem, this.taskMetadata.getDbTableName(), this.taskMetadata.getSourceDsName());
+            SourceTaskInfo taskMetadata = new SourceTaskInfo(rangeTem, this.taskMetadata.getDbTableName(), this.taskMetadata.getSourceDsName());
             MongodbSource.pushTaskMeta(taskMetadata);
         } finally {
             // 设置range的结束时间。设置range的开始结束时间，后期会使用到该参数
@@ -124,7 +123,6 @@ public class SourceTask implements Runnable, SourceInterface {
 
     @Override
     public void dataTransformation(Object document) {
-
         List<AbstractColumn> abstractColumns = new ArrayList<>();
         Iterator<Map.Entry<String, Object>> iterator = ((Document) document).entrySet().iterator();
         while (iterator.hasNext()) {

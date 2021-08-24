@@ -1,4 +1,4 @@
-package common.metadata;
+package common.taskbase;
 
 import common.dataclass.Range;
 import lombok.*;
@@ -13,7 +13,7 @@ import lombok.*;
 @AllArgsConstructor
 @ToString
 @NoArgsConstructor
-public class SourceTaskMetadata {
+public class SourceTaskInfo {
     /**
      * range
      */
@@ -31,7 +31,7 @@ public class SourceTaskMetadata {
      */
     private String targetDsName;
 
-    public SourceTaskMetadata(Range range, String dbTableName, String sourceDsName) {
+    public SourceTaskInfo(Range range, String dbTableName, String sourceDsName) {
         this.range = range;
         this.dbTableName = dbTableName;
         this.sourceDsName = sourceDsName;

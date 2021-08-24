@@ -16,5 +16,11 @@ import lombok.ToString;
 public abstract class AbstractColumn {
     protected String columnName;
 
+    /**
+     * getData
+     *
+     * @return
+     * @desc 获取数句
+     */
     public abstract Object getData();
 }
