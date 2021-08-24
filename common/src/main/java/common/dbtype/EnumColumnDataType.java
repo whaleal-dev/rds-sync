@@ -18,6 +18,7 @@ public enum EnumColumnDataType {
     FLOATCOLUMN("FLOATCOLUMN"),
     JSONCOLUMN("JSONCOLUMN"),
     TIMESTAMPCOLUMN("TIMESTAMPCOLUMN"),
+    OBJECTIDCOLUMN("OBJECTIDCOLUMN"),
     BOOLCOLUMN("BOOLCOLUMN");
     private final String upperCase;
 

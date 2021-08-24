@@ -1,16 +1,18 @@
-package common.thread;
+package thread;
+
+import conf.Configuration;
 
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @Author liheping
  * @create 2021/7/7 11:21 上午
- * @desc sys的线程池
  */
-public class SysPoolManager {
+public class TargetTaskPoolManager {
     /**
      * 核心线程数
      */
@@ -23,19 +25,19 @@ public class SysPoolManager {
      * 阻塞的线程数
      */
     private static final int blockSize = 100;
-
+    /**
+     * 活跃的get线程数
+     */
+    private static AtomicInteger activeThreadNumOfTarget = new AtomicInteger(0);
     /**
      * 线程池
      */
     private static ExecutorService executorService;
 
     static {
-        /**
-         * sys最少4个线程
-         */
-        corePoolSize = 4;
-        maximumPoolSize = 5;
-        executorService = new ThreadPoolExecutor(corePoolSize, maximumPoolSize + 1, 0L, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(blockSize), new ThreadPoolExecutor.CallerRunsPolicy());
+        corePoolSize = Configuration.targetThreadNum;
+        maximumPoolSize = Configuration.targetThreadNum;
+        executorService = new ThreadPoolExecutor(corePoolSize, maximumPoolSize, 0L, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(blockSize), new ThreadPoolExecutor.CallerRunsPolicy());
     }
 
     /**
@@ -53,6 +55,23 @@ public class SysPoolManager {
         }
         return "启动成功";
     }
+
+    /**
+     * getActiveTargetThreadNum target线程数
+     *
+     * @param num
+     * @desc 提交任务
+     */
+    public static synchronized int getActiveTargetThreadNum(int num) {
+        if (num > 0) {
+            return activeThreadNumOfTarget.incrementAndGet();
+        } else if (num < 0) {
+            return activeThreadNumOfTarget.decrementAndGet();
+        } else {
+            return activeThreadNumOfTarget.get();
+        }
+    }
+
 
     public static void shuntDownNow() {
         executorService.shutdownNow();

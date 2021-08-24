@@ -3,6 +3,7 @@ package main;
 import common.metadata.Metadata;
 
 import task.TargetTask;
+import thread.TargetTaskPoolManager;
 
 
 /**
@@ -13,17 +14,11 @@ import task.TargetTask;
 public class MongodbTarget extends Metadata {
 
 
-
-    public static void main(String[] args) {
-
+    public static void startToTarget() {
+        for (int i = 0; i < targetNum; i++) {
+            TargetTaskPoolManager.submit(new TargetTask(targetName));
+        }
     }
-
-//    public static void startToTarget() {
-//        for (int i = 0; i < targetNum; i++) {
-//            TaskPoolManager.submit(new TargetTask(targetName));
-//        }
-//    }
-
 
 
 }

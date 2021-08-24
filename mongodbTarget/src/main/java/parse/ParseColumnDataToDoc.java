@@ -25,6 +25,7 @@ public class ParseColumnDataToDoc {
             case LONGCOLUMN:
             case DOUBLECOLUMN:
             case FLOATCOLUMN:
+            case OBJECTIDCOLUMN:
                 return columnData.getData();
             case DATECOLUMN:
                 return LocalDateTime.parse(columnData.getData().toString(), timestampSimpleDateFormat);

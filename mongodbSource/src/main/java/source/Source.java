@@ -7,7 +7,7 @@ import com.mongodb.client.MongoClient;
 import common.metadata.SourceTaskMetadata;
 import common.TypeNumber;
 import common.dataclass.Range;
-import common.thread.SourceTaskPoolManager;
+import thread.SourceTaskPoolManager;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import dbconnection.mongodb.MongoDbConnection;

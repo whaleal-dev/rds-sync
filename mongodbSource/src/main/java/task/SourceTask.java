@@ -132,7 +132,7 @@ public class SourceTask implements Runnable {
         this.dataList.add(abstractColumns);
     }
 
-
+    static AtomicInteger atomicInteger = new AtomicInteger();
     /**
      * putDataToCache 推送数据到缓存区中
      *
@@ -147,6 +147,7 @@ public class SourceTask implements Runnable {
         batchDataEntity.setBatchNo(System.currentTimeMillis());
         // 推送数据到缓存区中
         MemoryCache.putData(batchDataEntity);
+        System.out.println("source:"+atomicInteger.addAndGet(batchDataEntity.getDataList().size()));
         this.dataList = new ArrayList<>();
         this.cache = 0;
     }

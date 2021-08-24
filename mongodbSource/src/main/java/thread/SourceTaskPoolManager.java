@@ -1,8 +1,7 @@
-package common.thread;
+package thread;
 
 import conf.Configuration;
 
-import java.util.Map;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 

@@ -1,4 +1,5 @@
-import common.thread.SourceTaskPoolManager;
+import main.MongodbTarget;
+import thread.TargetTaskPoolManager;
 import conf.Configuration;
 import main.MongodbSource;
 
@@ -11,10 +12,7 @@ import task.TargetTask;
  */
 public class TestMain {
     public static void main(String[] args) {
-        for (int i = 0; i < Configuration.targetThreadNum; i++) {
-            SourceTaskPoolManager.submit(new TargetTask(Configuration.targetName));
-        }
-        MongodbSource source=new MongodbSource();
+        MongodbTarget.startToTarget();
         MongodbSource.syncModeOfAll();
     }
 }

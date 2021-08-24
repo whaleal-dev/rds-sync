@@ -8,6 +8,7 @@ import org.bson.BsonRegularExpression;
 import org.bson.BsonTimestamp;
 import org.bson.types.Code;
 import org.bson.types.Decimal128;
+import org.bson.types.ObjectId;
 
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAccessor;
@@ -36,6 +37,7 @@ public class ParseDataToColumn {
         BsonTimestamp bsonTimestamp=new BsonTimestamp();
 
         switch (enumMongoDbDataType) {
+
             case INTEGER:
                 return new IntColumn(columnName, (Integer) object);
             case DOUBLE:
@@ -63,6 +65,7 @@ public class ParseDataToColumn {
             case DOCUMENT:
                 return new JsonColumn(columnName, gson.toJson(object));
             case OBJECTID:
+                return new ObjectIdColumn(columnName, (ObjectId) object);
             case STRING:
             default:
                 return new StringColumn(columnName, object.toString());

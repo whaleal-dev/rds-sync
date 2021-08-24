@@ -99,6 +99,7 @@ public class MemoryCache {
                 //设置空跑次数为 (cacheNum * 5) - cacheNum
                 IdlingTimes = (int)(cacheNum * 1.8);
                 waitTimes.increment();
+
             }
         }
         return returnValue;
