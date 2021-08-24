@@ -13,7 +13,8 @@
         <module>mongodbSource</module>
         <module>mongodbTarget</module>
         <module>execute</module>
-        <module>mysqlTargetByLhp</module>
+        <module>mysqlTarget</module>
+        <module>mysqlSource</module>
     </modules>
 
     <properties>

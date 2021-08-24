@@ -16,7 +16,7 @@ public class DbcpUtil {
     static{
         try{
             //注意这里需要使用绝对路径
-            FileInputStream is = new FileInputStream("src/main/resources/dbcp.properties");
+            FileInputStream is = new FileInputStream("mysqlTarget/src/main/resources/dbcp.properties");
             properties.load(is);
         }catch(IOException e){
             e.printStackTrace();
