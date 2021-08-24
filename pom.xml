@@ -13,6 +13,7 @@
         <module>mongodbSource</module>
         <module>mongodbTarget</module>
         <module>execute</module>
+        <module>mysqlTarget</module>
     </modules>
 
     <properties>
