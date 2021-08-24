@@ -27,7 +27,7 @@ public class Property {
         // 读取src下的配置文件
         setFileName("src/main/resources/mongodbT.properties");
         // 读取./下的配置文件
-        setFileName("/Users/liheping/Desktop/photonT/common/src/main/resources/mongodbT.properties");
+        setFileName("common/src/main/resources/mongodbT.properties");
     }
 
     public static void setFileName(String fileNameTemp) {

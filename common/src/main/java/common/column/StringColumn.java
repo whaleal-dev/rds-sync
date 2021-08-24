@@ -16,10 +16,12 @@ import lombok.ToString;
 @ToString
 public class StringColumn extends AbstractColumn {
     private String data;
+
     public StringColumn(String columnName, String object) {
-        this.columnName=columnName;
-        this.data=object;
+        this.columnName = columnName;
+        this.data = object;
     }
+
     @Override
     public String getData() {
         return this.data;
