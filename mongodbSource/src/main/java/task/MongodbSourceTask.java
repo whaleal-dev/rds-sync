@@ -27,6 +27,10 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @desc: 读取表某区间数据
  */
 public class MongodbSourceTask implements Runnable, SourceTaskInterface {
+
+    private MemoryCache memoryCache;
+
+    private String procName;
     /**
      * 任务配置信息
      */
@@ -42,7 +46,7 @@ public class MongodbSourceTask implements Runnable, SourceTaskInterface {
     /**
      * 每个批次数据的大小
      */
-    public static final int dataBatchSize = Configuration.dataBatchSize;
+    public int dataBatchSize = 128;
     /**
      * 缓存数据集合
      */
@@ -50,7 +54,10 @@ public class MongodbSourceTask implements Runnable, SourceTaskInterface {
 
     public static AtomicInteger sourceThreadNum = new AtomicInteger(0);
 
-    public MongodbSourceTask(SourceTaskInfo taskMetadata) {
+    public MongodbSourceTask(SourceTaskInfo taskMetadata, String procName, MemoryCache memoryCache, int dataBatchSize) {
+        this.procName = procName;
+        this.memoryCache = memoryCache;
+        this.dataBatchSize = dataBatchSize;
         this.taskMetadata = taskMetadata;
         this.mongoClient = MongoDbConnection.getMongoClient(this.taskMetadata.getSourceDsName());
     }
@@ -108,7 +115,7 @@ public class MongodbSourceTask implements Runnable, SourceTaskInterface {
             rangeTem.setMax(range.isMax());
             // 出现意外时，再次启动该任务实例
             SourceTaskInfo taskMetadata = new SourceTaskInfo(rangeTem, this.taskMetadata.getDbTableName(), this.taskMetadata.getSourceDsName());
-            MongodbSource.pushTaskMeta(taskMetadata);
+            MongodbSource.pushTaskMeta(procName, taskMetadata);
         } finally {
             // 设置range的结束时间。设置range的开始结束时间，后期会使用到该参数
             range.setEndTime(System.currentTimeMillis());
@@ -149,8 +156,8 @@ public class MongodbSourceTask implements Runnable, SourceTaskInterface {
         batchDataEntity.setSourceDsName(this.taskMetadata.getSourceDsName());
         batchDataEntity.setBatchNo(System.currentTimeMillis());
         // 推送数据到缓存区中
-        MemoryCache.putData(batchDataEntity);
-        //System.out.println("source:" + atomicInteger.addAndGet(batchDataEntity.getDataList().size()));
+        memoryCache.putData(batchDataEntity);
+        System.out.println("sourceNum:" + atomicInteger.addAndGet(batchDataEntity.getDataList().size()));
         this.dataList = new ArrayList<>();
         this.cache = 0;
     }

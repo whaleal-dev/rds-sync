@@ -6,7 +6,7 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 /**
- * @description:
+ * @description:日期时间字段类 年月日时分秒
  * @author: lhp
  * @time: 2021/8/23 9:53 上午
  */
@@ -16,10 +16,12 @@ import lombok.ToString;
 @ToString
 public class DateTimeColumn extends AbstractColumn {
     private String data;
+
     public DateTimeColumn(String columnName, String object) {
-        this.columnName=columnName;
-        this.data=object;
+        this.columnName = columnName;
+        this.data = object;
     }
+
     @Override
     public String getData() {
         return this.data;

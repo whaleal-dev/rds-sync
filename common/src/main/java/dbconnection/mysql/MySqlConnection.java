@@ -44,6 +44,29 @@ public class MySqlConnection {
     }
 
     /**
+     * getJdbcTemplate 获取mysql的connection
+     *
+     * @param dsName
+     * @return JdbcTemplate
+     * @desc 获取mysql的Jdbc
+     */
+    public static Connection getConnection(String dsName) {
+        if (!jdbcTemplateMysqlMap.containsKey(dsName)) {
+            getBasicDataSource(dsName);
+        }
+        synchronized (MySqlConnection.class) {
+            if (!connectionMysqlMap.containsKey(dsName)) {
+                try {
+                    connectionMysqlMap.put(dsName, jdbcTemplateMysqlMap.get(dsName).getDataSource().getConnection());
+                } catch (SQLException exception) {
+                    exception.printStackTrace();
+                }
+            }
+        }
+        return connectionMysqlMap.get(dsName);
+    }
+
+    /**
      * getJdbcTemplate 获取mysql的Jdbc
      *
      * @param dsName

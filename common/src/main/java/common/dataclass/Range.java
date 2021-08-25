@@ -1,8 +1,7 @@
 package common.dataclass;
 
-import lombok.*;
 
-import java.nio.charset.StandardCharsets;
+import lombok.*;
 
 /**
  * @author: lhp
@@ -43,9 +42,8 @@ public class Range {
      * 数据类型
      */
     private int _idType;
-
-    public static void main(String[] args) {
-
-        System.out.println("李和平".getBytes(StandardCharsets.UTF_8).toString());
-    }
+    /**
+     * 查询语句
+     */
+    private String query;
 }

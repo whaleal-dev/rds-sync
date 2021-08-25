@@ -2,6 +2,8 @@ package cache;
 
 import common.dataclass.BatchDataEntity;
 import conf.Configuration;
+import lombok.NoArgsConstructor;
+
 import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
@@ -16,15 +18,24 @@ import java.util.concurrent.atomic.LongAdder;
  * @time: 2021/7/20 9:53 上午
  * @desc: 数据缓存类
  */
+@NoArgsConstructor
 public class MemoryCache {
+    /**
+     * 任务名称
+     */
+    private String taskName;
+    /**
+     * 程序名称
+     */
+    private String procName;
     /**
      * 缓存区个数
      */
-    private static final int cacheNum = Configuration.cacheNum;
+    private int cacheNum = 20;
     /**
      * 每个缓存区缓存批次数量
      */
-    public static final int cacheSize = Configuration.cacheSize;
+    public int cacheSize = 20;
     /**
      * 缓存队列
      */
@@ -32,32 +43,35 @@ public class MemoryCache {
     /**
      * 缓存类数组
      */
-    private static MemoryCache[] cacheList = new MemoryCache[cacheNum];
+    private MemoryCache[] cacheList;
     /**
      * 某缓存区是否被使用
      */
-    private static AtomicBoolean[] isUseState = new AtomicBoolean[cacheNum];
+    private AtomicBoolean[] isUseState;
     /**
      * 空跑次数
      */
-    public static LongAdder waitTimes = new LongAdder();
-
-    static {
-        init();
-    }
+    public LongAdder waitTimes = new LongAdder();
 
     /**
      * init
      *
      * @desc 初始化缓存区类
      */
-    public static void init() {
-        for (int i = 0; i < cacheNum; i++) {
-            cacheList[i] = new MemoryCache();
+    public MemoryCache(String taskName, String procName, int cacheNum, int cacheSize, boolean isFirst) {
+        this.procName = procName;
+        this.taskName = taskName;
+        this.cacheSize = cacheSize;
+        this.cacheNum = cacheNum;
+        this.cacheList = new MemoryCache[cacheNum];
+        this.isUseState = new AtomicBoolean[cacheNum];
+        for (int i = 0; (i < cacheNum) && isFirst; i++) {
+            cacheList[i] = new MemoryCache(taskName, procName, cacheNum, cacheSize, false);
             isUseState[i] = new AtomicBoolean();
             isUseState[i].set(false);
         }
     }
+
 
     /**
      * getData
@@ -65,7 +79,7 @@ public class MemoryCache {
      * @return BatchDataEntity
      * @desc 塞入数据
      */
-    public static BatchDataEntity getData() {
+    public BatchDataEntity getData() {
         // 返回的数据
         BatchDataEntity returnValue = null;
         // 没有获取对缓存区的次数。即空跑次数
@@ -91,13 +105,13 @@ public class MemoryCache {
             // 若没有获取对缓存区的次数大于cacheNum * 5，则进行睡眠1s
             else if (IdlingTimes++ > cacheNum * 2) {
                 try {
-                //    judgePutGetBalance();
+                    //    judgePutGetBalance();
                     TimeUnit.SECONDS.sleep(1);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
                 //设置空跑次数为 (cacheNum * 5) - cacheNum
-                IdlingTimes = (int)(cacheNum * 1.8);
+                IdlingTimes = (int) (cacheNum * 1.8);
                 waitTimes.increment();
             }
         }
@@ -110,7 +124,7 @@ public class MemoryCache {
      * @param data
      * @desc 塞入数据
      */
-    public static void putData(BatchDataEntity data) {
+    public void putData(BatchDataEntity data) {
         // 没有获取对缓存区的次数。即空跑次数
         int IdlingTimes = 0;
         // 是否继续尝试获取数据
@@ -139,7 +153,7 @@ public class MemoryCache {
                     e.printStackTrace();
                 }
                 //设置空跑次数为 (cacheNum * 5) - cacheNum
-                IdlingTimes = (int)(cacheNum * 1.8);
+                IdlingTimes = (int) (cacheNum * 1.8);
                 waitTimes.increment();
             }
         }

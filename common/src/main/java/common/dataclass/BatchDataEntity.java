@@ -12,8 +12,7 @@ import java.util.List;
  * @time 2021-05-31 13:12:12
  * @desc 批量数据实体类
  */
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
@@ -40,6 +39,14 @@ public class BatchDataEntity implements Serializable {
      * 数据目的地
      */
     private String targetDsName;
+    /**
+     * 任务名称
+     */
+    private String taskName;
+    /**
+     * 程序名称
+     */
+    private String procName;
     /**
      * 数据集合
      */

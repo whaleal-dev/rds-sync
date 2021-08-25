@@ -1,6 +1,8 @@
 package common.taskbase;
 
+import cache.MemoryCache;
 import common.dataclass.BatchDataEntity;
+import conf.Configuration;
 
 /**
  * @description:
@@ -15,7 +17,25 @@ public abstract class AbstractTargetTask implements Runnable {
     /**
      * dbTableName
      */
-    protected String dbTableName;
+    protected String dbTableName="";
+    /**
+     * 任务名称
+     */
+    protected String taskName;
+    /**
+     * 程序名称
+     */
+    protected String proName;
+
+    protected MemoryCache memoryCache;
+
+    public AbstractTargetTask(Configuration configuration, MemoryCache memoryCache) {
+        this.targetDsName = configuration.getTargetName();
+        this.taskName = configuration.getTaskName();
+        this.proName = configuration.getProName();
+        this.memoryCache = memoryCache;
+    }
+
 
     /**
      * applyData 应用数据

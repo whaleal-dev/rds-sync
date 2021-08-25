@@ -6,7 +6,7 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 /**
- * @description:
+ * @description:int字段类
  * @author: lhp
  * @time: 2021/8/23 9:53 上午
  */
@@ -16,10 +16,12 @@ import lombok.ToString;
 @ToString
 public class IntColumn extends AbstractColumn {
     private int data;
+
     public IntColumn(String columnName, Integer object) {
-        this.columnName=columnName;
-        this.data=object;
+        this.columnName = columnName;
+        this.data = object;
     }
+
     @Override
     public Object getData() {
         return this.data;

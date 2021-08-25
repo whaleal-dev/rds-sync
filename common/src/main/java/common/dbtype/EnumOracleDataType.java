@@ -9,7 +9,7 @@ package common.dbtype;
 public enum EnumOracleDataType {
 
     /**
-     * mongodb类型
+     * oracle类型
      */
     CHAR("CHAR"),
     VARCHAR2("VARCHAR2"),

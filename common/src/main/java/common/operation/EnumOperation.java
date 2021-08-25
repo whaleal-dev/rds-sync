@@ -55,7 +55,7 @@ public enum EnumOperation {
      */
     DROPDATABASE("DROPDATABASE");
 
-    private final String upperCase;
+    private String upperCase;
 
     EnumOperation(String upperCase) {
         this.upperCase = upperCase;
