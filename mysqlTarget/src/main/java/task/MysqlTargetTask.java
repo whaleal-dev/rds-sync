@@ -74,7 +74,9 @@ public class MysqlTargetTask implements Runnable{
         String tableName = mongoNamespace.getCollectionName();
         List<List<AbstractColumn>> dataList = batchDataEntity.getDataList();
         for (List<AbstractColumn> columnList : dataList) {
+            //列名和类型Map
             Map<String,String> hashMap = new HashMap<>();
+            //字段长度Map
             Map<String, Integer> maxMap = new HashMap<>();
             //字段
             StringBuffer column = new StringBuffer();
@@ -90,16 +92,20 @@ public class MysqlTargetTask implements Runnable{
                     //存在，查询表中的结构
                     List<Map<String,Object>> array = new ArrayList<Map<String,Object>>();
                     //查询表中的字段和类型
-                    String sql = "select column_name,data_type from information_schema.COLUMNS where table_name = '"+tableName+"' and table_schema = '"+dbName+"'";
+                    String sql = "select column_name,data_type,CHARACTER_MAXIMUM_LENGTH,NUMERIC_SCALE from information_schema.COLUMNS where table_name = '"+tableName+"' and table_schema = '"+dbName+"'";
                     array = SqlUtil.selectData(sql);
                     for (int i = 0;i < array.size();i++) {
                         if(!hashMap.containsKey(array.get(i).get("column_name"))){
                             hashMap.put(array.get(i).get("column_name").toString(),array.get(i).get("data_type").toString());
                         }
+                        if(!maxMap.containsKey(array.get(i).get("column_name"))){
+                            hashMap.put(array.get(i).get("column_name").toString(),array.get(i).get("CHARACTER_MAXIMUM_LENGTH").toString());
+                        }
                     }
                 } else {
                     //不存在，创建表
                     hashMap.put(columnData.getColumnName(),columnData.getData().toString());
+                    SqlUtil.data("CREATE DATABASE IF NOT EXISTS " + dbName);
                     SqlUtil.data("CREATE Table"+tableName+"("+ columnData.getColumnName() +" " + type + "(" + length + "))");
                 }
                 //HashMap中没有这个属性就加入
@@ -108,8 +114,10 @@ public class MysqlTargetTask implements Runnable{
                     String sql;
                     if (type.equals("String")||type.equals("Boolean")||columnData.getData() instanceof Map||columnData.getData() instanceof Array ){
                         sql = "ALTER TABLE"+tableName+ "ADD" + columnData.getColumnName() +" "+ "varchar("+ length +")";
-                    } else if(type.equals("Double")||type.equals("Long")||type.equals("Float")){
-                        sql = "ALTER TABLE"+tableName+ "ADD" + columnData.getColumnName() +" " + type + "(" + length + ",2)";
+                    } else if(type.equals("Double")||type.equals("Long")||type.equals("Float")||type.equals("Decimal")){
+                        //字符串分割，获取精度
+                        String arr[] = columnData.getColumnName().split(".");
+                        sql = "ALTER TABLE"+tableName+ "ADD" + columnData.getColumnName() +" " + type + "(" + length + "," + arr[1].length()+")";
                     } else if(columnData.getData() instanceof Date ){
                         sql = "ALTER TABLE"+tableName+ "ADD" + columnData.getColumnName() +" "+type;
                     } else {
@@ -117,14 +125,20 @@ public class MysqlTargetTask implements Runnable{
                     }
                     //表中加入这个字段
                     SqlUtil.data(sql);
-                    //Map中没有这个属性就加入
+                    //maxMap中没有这个属性就加入
                     if (!maxMap.containsKey(columnData.getColumnName())){
                         maxMap.put(columnData.getColumnName(), length);
                     } else {
                         //数据长度不够，修改长度
                         if(length > maxMap.get(columnData.getColumnName())){
-                            maxMap.put(columnData.getColumnName(), length);
-                            SqlUtil.data("ALTER TABLE"+tableName+ "MODIFY" + columnData.getColumnName() +" " + type +"(" + length +")");
+                            int ckLen = length;
+                            //加锁，防止数据长度被多个线程修改
+                            synchronized (this){
+                                if (ckLen == length){
+                                    SqlUtil.data("ALTER TABLE"+tableName+ "MODIFY" + columnData.getColumnName() +" " + type +"(" + length +")");
+                                    maxMap.put(columnData.getColumnName(), length);
+                                }
+                            }
                         }
                     }
                 }

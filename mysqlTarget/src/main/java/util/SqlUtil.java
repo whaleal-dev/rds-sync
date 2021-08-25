@@ -91,6 +91,12 @@ public class SqlUtil {
                 Map map = new HashMap();
                 map.put("column_name",rs.getString("column_name"));
                 map.put("data_type",rs.getString("data_type"));
+                //字符长度
+                map.put("CHARACTER_MAXIMUM_LENGTH",rs.getString("CHARACTER_MAXIMUM_LENGTH"));
+                //小数位
+                map.put("NUMERIC_SCALE",rs.getString("NUMERIC_SCALE"));
+
+
                 data1.add(map);
             }
             return data1;
