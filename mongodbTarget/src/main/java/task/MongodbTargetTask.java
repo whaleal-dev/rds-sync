@@ -56,7 +56,7 @@ public class MongodbTargetTask extends AbstractTargetTask {
                 if (batchDataEntity != null) {
                     // 当前任务拉取的mongoNamespace
                     this.dbTableName = batchDataEntity.getDbTableName();
-                    System.out.println("target:" + atomicInteger.addAndGet(batchDataEntity.getDataList().size()));
+                  //  System.out.println("target:" + atomicInteger.addAndGet(batchDataEntity.getDataList().size()));
                     // 判断操作行为。如果为INSERTMANY类型，直接应用数据。
                     parseColumnDataToDocument(batchDataEntity);
                     bulkExecute(dbTableName, -1);
