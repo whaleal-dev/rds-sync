@@ -21,8 +21,12 @@ public class TargetTaskPoolManager extends ThreadPoolManager {
     public static TargetTaskPoolManager getTargetTaskPoolManager(String procName) {
         return targetThreadPoolManager.get(procName);
     }
+
     public static void addTargetTaskPoolManager(String procName, TargetTaskPoolManager targetTaskPoolManager) {
-        targetThreadPoolManager.put(procName, targetTaskPoolManager);
+        if (!targetThreadPoolManager.containsKey(procName)) {
+            targetThreadPoolManager.put(procName, targetTaskPoolManager);
+        }
+
     }
 
     /**

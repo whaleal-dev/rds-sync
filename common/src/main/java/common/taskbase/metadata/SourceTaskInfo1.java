@@ -42,7 +42,7 @@ public class SourceTaskInfo1 {
     /**
      * 源数据表名
      */
-    private String soureTable;
+    private String sourceTable;
     /**
      * 目标数据url
      */

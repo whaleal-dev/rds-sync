@@ -29,9 +29,11 @@ public class MongoDbConnection {
         if (mongoClientMap.containsKey(dsName)) {
             return;
         }
-        System.out.println(dsName);
+        System.out.println("数据源启动:"+dsName);
         MongoClient mongoClient = MongoClients.create(dsName);
         mongoClientMap.put(dsName, mongoClient);
+
+        System.out.println(dsName + "数据源启动成功");
     }
 
 
@@ -62,8 +64,7 @@ public class MongoDbConnection {
     }
 
     public static void main(String[] args) {
-        Document document = new Document();
-        System.out.println(document.get("_id").toString());
+       getMongoClient("mongodb://admin:123456@192.168.3.172:6001/admin?authSource=admin");
     }
 
 }
