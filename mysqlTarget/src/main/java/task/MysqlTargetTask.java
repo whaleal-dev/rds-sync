@@ -5,6 +5,8 @@ import com.mongodb.MongoNamespace;
 import com.mongodb.client.MongoClient;
 import common.column.AbstractColumn;
 import common.dataclass.BatchDataEntity;
+import common.taskbase.AbstractTargetTask;
+import conf.Configuration;
 import dbconnection.mongodb.MongoDbConnection;
 import lombok.NoArgsConstructor;
 import util.Log;
@@ -23,8 +25,10 @@ import java.util.Map;
  * @desc: 写入数据
  */
 
-@NoArgsConstructor
-public class MysqlTargetTask implements Runnable{
+
+public class MysqlTargetTask  extends AbstractTargetTask {
+
+
     /**
      * 目标数据源名称
      */
@@ -35,8 +39,11 @@ public class MysqlTargetTask implements Runnable{
     private MongoNamespace mongoNamespace;
     private List<String> writeModels = new ArrayList<String>();
 
-    public MysqlTargetTask(String targetDsName) {
-        this.targetDsName = targetDsName;
+
+    public MysqlTargetTask(Configuration configuration, MemoryCache memoryCache) {
+        super(configuration, memoryCache);
+        System.out.println(memoryCache.toString());
+
     }
 
     @Override
@@ -47,7 +54,7 @@ public class MysqlTargetTask implements Runnable{
     public void applyData() {
         Log.info("启动target任务:" + this.targetDsName);
         while (true) {
-            BatchDataEntity batchDataEntity = MemoryCache.getData();
+            BatchDataEntity batchDataEntity = memoryCache.getData();
             try {
                 // 从缓存中获取一批数据
                 if (batchDataEntity != null) {
@@ -83,11 +90,14 @@ public class MysqlTargetTask implements Runnable{
             //属性值
             StringBuffer value = new StringBuffer();
             for (AbstractColumn columnData : columnList) {
-
+                //数据类型
                 String type = columnData.getData().getClass().getSimpleName();
+                //数据长度
                 int length = columnData.getData().toString().length();
                 //查询数据库中是否存在这个表
-                int num = SqlUtil.isData("select count(*)  from information_schema.TABLES t where t.TABLE_SCHEMA ='"+dbName+"' and t.TABLE_NAME ='"+tableName+"'");
+                int num = SqlUtil.isData("select count(*)  from information_schema.TABLES t where t.TABLE_SCHEMA ='"+ dbName +"' and t.TABLE_NAME ='" + tableName + "'");
+                System.out.println("select count(*)  from information_schema.TABLES t where t.TABLE_SCHEMA ='"+dbName+"' and t.TABLE_NAME ='"+tableName+"'");
+             System.out.println("num"+num);
                 if(num == 1){
                     //存在，查询表中的结构
                     List<Map<String,Object>> array = new ArrayList<Map<String,Object>>();
@@ -103,25 +113,36 @@ public class MysqlTargetTask implements Runnable{
                         }
                     }
                 } else {
-                    //不存在，创建表
+                    //不存在，创建表和数据库
                     SqlUtil.data("CREATE DATABASE IF NOT EXISTS " + dbName);
-                    SqlUtil.data("CREATE Table"+tableName+"("+ columnData.getColumnName() +" " + type + "(" + length + "))");
+                    if (type.equals("String")) {
+                        SqlUtil.data("USE " + dbName + "; CREATE Table " + tableName + "(" + columnData.getColumnName() + " varchar(" + length + "))");
+                        System.out.println("CREATE Table " + tableName + "(" + columnData.getColumnName() +" varchar(" + length + "))");
+                    } else if(type.equals("ObjectId")) {
+                        SqlUtil.data("USE " + dbName + ";CREATE Table " + tableName + "(" + columnData.getColumnName() + " integer(" + length + "))");
+                        System.out.println("CREATE Table " + tableName + "(" + columnData.getColumnName() + " integer(" + length + "))");
+                    } else {
+                        SqlUtil.data("USE "+ dbName + "; CREATE Table "+tableName+"("+ columnData.getColumnName() +" " + type + "(" + length + "))");
+                        System.out.println("CREATE Table "+tableName+"("+ columnData.getColumnName() +" " + type + "(" + length + "))");
+                    }
                     hashMap.put(columnData.getColumnName(),columnData.getData().toString());
                 }
                 //HashMap中没有这个属性就加入
                 if (!hashMap.containsKey(columnData.getColumnName())){
                     hashMap.put(columnData.getColumnName(),columnData.getData().toString());
                     String sql;
-                    if (type.equals("String")||type.equals("Boolean")||columnData.getData() instanceof Map||columnData.getData() instanceof Array ){
-                        sql = "ALTER TABLE"+tableName+ "ADD" + columnData.getColumnName() +" "+ "varchar("+ length +")";
-                    } else if(type.equals("Double")||type.equals("Long")||type.equals("Float")||type.equals("Decimal")){
+                    if (type.equals("Boolean")||columnData.getData() instanceof Map||columnData.getData() instanceof Array ){
+                        sql = "ALTER TABLE "+tableName+ " ADD " + columnData.getColumnName() +" "+ "varchar("+ length +")";
+                    } else if(type.equals("Double")||type.equals("Long")||type.equals("Float")||type.equals("Decimal")) {
                         //字符串分割，获取精度
                         String arr[] = columnData.getColumnName().split(".");
-                        sql = "ALTER TABLE"+tableName+ "ADD" + columnData.getColumnName() +" " + type + "(" + length + "," + arr[1].length()+")";
+                        sql = "ALTER TABLE " + tableName + " ADD " + columnData.getColumnName() + " " + type + "(" + length + "," + arr[1].length() + ")";
+                    } else if (type.equals("ObjectId")||type.equals("Integer")){
+                        sql = "ALTER TABLE " + tableName + " ADD " + columnData.getColumnName() + " integer(" + length + ")";
                     } else if(columnData.getData() instanceof Date ){
-                        sql = "ALTER TABLE"+tableName+ "ADD" + columnData.getColumnName() +" "+type;
+                        sql = "ALTER TABLE "+tableName+ " ADD " + columnData.getColumnName() +" "+type;
                     } else {
-                        sql = "ALTER TABLE"+tableName+ "ADD" + columnData.getColumnName() +" " + type +"(" + length + ")";
+                        sql = "ALTER TABLE "+tableName+ " ADD " + columnData.getColumnName() +" " + type +"(" + length + ")";
                     }
                     //表中加入这个字段
                     SqlUtil.data(sql);
@@ -134,7 +155,7 @@ public class MysqlTargetTask implements Runnable{
                             //加锁，防止数据长度被多个线程修改
                             synchronized (this){
                                 if (length > maxMap.get(columnData.getColumnName())){
-                                    SqlUtil.data("ALTER TABLE"+tableName+ "MODIFY" + columnData.getColumnName() +" " + type +"(" + length +")");
+                                    SqlUtil.data("ALTER TABLE "+tableName+ " MODIFY " + columnData.getColumnName() +" " + type +"(" + length +")");
                                     maxMap.put(columnData.getColumnName(), length);
                                 }
                             }
@@ -155,6 +176,11 @@ public class MysqlTargetTask implements Runnable{
 
     }
 
+    @Override
+    public void bulkExecute(String dbTable, long batchNo) {
+
+    }
+
 
     /**
      * bulkExecute 写数据
@@ -163,17 +189,24 @@ public class MysqlTargetTask implements Runnable{
      * @desc 写数据
      */
     public void bulkExecute(List<String> writeModels) {
-        try {
+
             if (writeModels.size() == 0) {
                 return;
             }
             String tableName = mongoNamespace.getCollectionName();
             for (int i = 0;i < writeModels.size();i++) {
-                String sql = "insert into"+ tableName + writeModels.get(i);
+
+                String sql ="";
+                try {
+                    sql= "insert into "+ tableName + writeModels.get(i);
                 SqlUtil.data(sql);
+                System.out.println(sql);
+                } catch (Exception e) {
+                    System.out.println(sql);
+                    Log.error(e.getMessage());
+                }
             }
-        } catch (Exception e) {
-            Log.error(e.getMessage());
-        }
+
+
     }
 }
