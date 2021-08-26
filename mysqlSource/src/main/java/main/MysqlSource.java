@@ -75,10 +75,10 @@ public class MysqlSource extends SourceMetadata1 {
                     SourceTaskInfo1 taskMetadata = SourceTaskInfo1.builder().rangeSql(splitConf.getString(Key.QUERY_SQL))
                             .sourceUrl(splitConf.getString(Key.JDBC_URL)).databaseType(splitConf.getString(Key.DATABASE_TYPE))
                             .sourceUsername(splitConf.getString(Key.USERNAME)).sourcePassword(splitConf.getString(Key.PASSWORD))
-                            .sourceDatabase(splitConf.getString(Key.DATABASE)).soureTable(splitConf.getString(Key.TABLE))
+                            .sourceDatabase(splitConf.getString(Key.DATABASE)).sourceTable(splitConf.getString(Key.TABLE))
                             .targetUrl(splitConf.getString("target.jdbcUrl")).targetUsername(splitConf.getString("target.username", null))
-                            .targetPassword(splitConf.getString("target.password", null)).targetDatabase(splitConf.getString("target.collection"))
-                            .targetCollection(splitConf.getString("target.collection")).dataBatchSize(splitConf.getInt("dataBatchSize"))
+                            .targetPassword(splitConf.getString("target.password", null)).targetDatabase(splitConf.getString(Key.DATABASE))
+                            .targetCollection(StringUtils.strip(splitConf.getString("target.collection"), "[]").replaceAll("\"", "")).dataBatchSize(splitConf.getInt("dataBatchSize"))
                             .build();
                     Log.info("taskMetadata配置信息:" + taskMetadata.toString());
                     pushTaskMeta(proName, taskMetadata);

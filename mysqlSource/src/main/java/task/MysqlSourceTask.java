@@ -119,7 +119,7 @@ public class MysqlSourceTask implements Runnable, SourceTaskInterface {
         //源数据集合
         batchDataEntity.setDataList(this.dataList);
         //源数据表名
-        batchDataEntity.setDbTableName(this.taskMetadata.getSoureTable());
+        batchDataEntity.setDbTableName(this.taskMetadata.getSourceTable());
         //操作行为
         batchDataEntity.setOperation("INSERTMANY");
         //源数据库名
