@@ -1,7 +1,11 @@
 package execute;
 
+import cache.MemoryCache;
 import common.taskbase.metadata.SourceMetadata;
 
+import conf.Configuration;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 import task.MysqlTargetTask;
 import thread.TargetTaskPoolManager;
 
@@ -11,14 +15,18 @@ import thread.TargetTaskPoolManager;
  * @time: 2021/7/19 3:02 下午
  * @desc: 主类
  */
-public class MysqlTargetLhp extends SourceMetadata {
+@AllArgsConstructor
+@NoArgsConstructor
+public class MysqlTargetLhp  {
 
+    private Configuration configuration;
+    private MemoryCache memoryCache;
+    private String procName;
 
-    public static void startToTarget2() {
-        for (int i = 0; i < targetNum; i++) {
-            TargetTaskPoolManager.submit(new MysqlTargetTask(targetName));
+    public void startToTarget() {
+        for (int i = 0; i < configuration.getTargetThreadNum(); i++) {
+            TargetTaskPoolManager.submit(procName, new MysqlTargetTask(configuration, memoryCache));
         }
+
     }
-
-
 }

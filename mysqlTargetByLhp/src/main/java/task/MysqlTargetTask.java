@@ -5,8 +5,11 @@ import common.column.AbstractColumn;
 import common.columnclass.ColumnType;
 import common.dataclass.BatchDataEntity;
 import common.dbtype.DbTypeFlag;
+import common.taskbase.AbstractTargetTask;
 import conf.Configuration;
+import dbconnection.mongodb.MongoDbConnection;
 import dbconnection.mysql.MySqlConnection;
+import lombok.NoArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
 import parse.ParseColumnDataToMysql;
 import parse.ParseTypeFromColumn;
@@ -27,15 +30,10 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @desc: 写入数据
  */
 
-public class MysqlTargetTask implements Runnable {
-
+public class MysqlTargetTask extends AbstractTargetTask {
 
     private static Map<String, ColumnType> columnTypeMap = new ConcurrentHashMap<>();
     private static volatile Set<String> dbTableSet = new CopyOnWriteArraySet<>();
-    /**
-     * 目标数据源名称
-     */
-    private String targetDsName;
 
     /**
      * jdbcTemplate
@@ -48,10 +46,9 @@ public class MysqlTargetTask implements Runnable {
 
     private List<String> writeModels = new ArrayList<>();
 
-    public MysqlTargetTask(String targetDsName) {
-        this.targetDsName = targetDsName;
-        this.jdbcTemplate = MySqlConnection.getJdbcTemplate(targetDsName);
-        createConnection();
+    public MysqlTargetTask(Configuration configuration, MemoryCache memoryCache) {
+        super(configuration, memoryCache);
+        this.connection = MySqlConnection.getConnection(this.targetDsName);
     }
 
     @Override
@@ -66,16 +63,17 @@ public class MysqlTargetTask implements Runnable {
      *
      * @desc 应用数据
      */
+    @Override
     public void applyData() {
         Log.info("启动targetMysql任务:" + this.targetDsName);
         while (true) {
-            BatchDataEntity batchDataEntity = MemoryCache.getData();
+            BatchDataEntity batchDataEntity = memoryCache.getData();
             try {
                 // 从缓存中获取一批数据
                 if (batchDataEntity != null) {
                     // 当前任务拉取的mongoNamespace
                     if (!dbTableSet.contains(batchDataEntity.getDbTableName().toUpperCase())) {
-                        createTableByCommonDataEntity(batchDataEntity.getDbTableName(), batchDataEntity.getDataList().get(0));
+                        createTableByCommonDataEntity(batchDataEntity.getDbTableName(), batchDataEntity.getDataList().get(0), targetDsName);
                     }
                     System.out.println("targetMysql:" + atomicInteger.addAndGet(batchDataEntity.getDataList().size()));
                     // 判断操作行为。如果为INSERTMANY类型，直接应用数据。
@@ -90,6 +88,7 @@ public class MysqlTargetTask implements Runnable {
         }
     }
 
+    @Override
     public void parseColumnDataToDocument(BatchDataEntity batchDataEntity) {
 
         List<List<AbstractColumn>> dataList = batchDataEntity.getDataList();
@@ -109,6 +108,11 @@ public class MysqlTargetTask implements Runnable {
             insertSql = insertSql + columns + values;
             writeModels.add(insertSql);
         }
+    }
+
+    @Override
+    public void bulkExecute(String dbTable, long batchNo) {
+
     }
 
     /**
@@ -167,12 +171,12 @@ public class MysqlTargetTask implements Runnable {
      * @param dbTable
      * @desc 获取表结构
      */
-    public static synchronized int getTableInfoByTableName(String dbTable) {
+    public static synchronized int getTableInfoByTableName(String dbTable, String targetDsName) {
         String[] array = dbTable.split("\\.", 2);
         String dbName = array[0];
         String tableName = array[1];
         String sql = "select *  from information_schema.COLUMNS t where t.TABLE_SCHEMA ='" + dbName + "' and t.TABLE_NAME  ='" + tableName + "' ";
-        List<Map<String, Object>> mysqlColumnMap = MySqlConnection.getJdbcTemplate(Configuration.targetName).queryForList(sql);
+        List<Map<String, Object>> mysqlColumnMap = MySqlConnection.getJdbcTemplate(targetDsName).queryForList(sql);
         if (mysqlColumnMap.size() == 0 || dbTableSet.contains(dbTable.toUpperCase())) {
             return 0;
         }
@@ -201,7 +205,7 @@ public class MysqlTargetTask implements Runnable {
     }
 
 
-    public synchronized static void createTableByCommonDataEntity(String dbTable, List<AbstractColumn> columnDataList) {
+    public synchronized static void createTableByCommonDataEntity(String dbTable, List<AbstractColumn> columnDataList, String targetDsName) {
         if (dbTableSet.contains(dbTable.toUpperCase())) {
             return;
         }
@@ -210,12 +214,12 @@ public class MysqlTargetTask implements Runnable {
         String tableName = array[1];
         String sql = "select count(*)  from information_schema.TABLES t where t.TABLE_SCHEMA ='" + dbName + "' and t.TABLE_NAME  ='" + tableName + "' ";
         // 查询源数据源中是否已有该表
-        int count = MySqlConnection.getJdbcTemplate(Configuration.targetName).queryForObject(sql, Integer.class);
+        int count = MySqlConnection.getJdbcTemplate(targetDsName).queryForObject(sql, Integer.class);
         if (count == 1) {
-            getTableInfoByTableName(dbTable);
+            getTableInfoByTableName(dbTable, targetDsName);
             return;
         }
-        MySqlConnection.getJdbcTemplate(Configuration.targetName).execute("CREATE DATABASE IF NOT EXISTS " + dbName);
+        MySqlConnection.getJdbcTemplate(targetDsName).execute("CREATE DATABASE IF NOT EXISTS " + dbName);
         StringBuilder createSql = new StringBuilder("create table if not exists " + dbName + "." + tableName + " ( ");
         for (AbstractColumn columnValue : columnDataList) {
             if (columnValue.getData() != null) {
@@ -226,8 +230,8 @@ public class MysqlTargetTask implements Runnable {
         }
         createSql.deleteCharAt(createSql.length() - 1);
         createSql.append(" ) ");
-        MySqlConnection.getJdbcTemplate(Configuration.targetName).execute(createSql.toString());
-        getTableInfoByTableName(dbTable);
+        MySqlConnection.getJdbcTemplate(targetDsName).execute(createSql.toString());
+        getTableInfoByTableName(dbTable, targetDsName);
         Log.info("dbTableName:" + dbTable + ",createSql: " + createSql);
     }
 
