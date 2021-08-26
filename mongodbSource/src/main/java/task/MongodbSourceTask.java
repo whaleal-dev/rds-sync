@@ -151,7 +151,8 @@ public class MongodbSourceTask implements Runnable, SourceTaskInterface {
     public void putDataToCache() {
         BatchDataEntity batchDataEntity = new BatchDataEntity();
         batchDataEntity.setDataList(this.dataList);
-        batchDataEntity.setDbTableName(this.taskMetadata.getDbTableName());
+        ;
+        batchDataEntity.setDbTableName(this.taskMetadata.getDbTableName().split("\\.")[0]+"bak."+this.taskMetadata.getDbTableName().split("\\.")[1]);
         batchDataEntity.setOperation("INSERTMANY");
         batchDataEntity.setSourceDsName(this.taskMetadata.getSourceDsName());
         batchDataEntity.setBatchNo(System.currentTimeMillis());

@@ -16,6 +16,7 @@ public class SourceTaskPoolManager extends ThreadPoolManager {
 
     public SourceTaskPoolManager(String procName, int corePoolSize, int maximumPoolSize) {
         super(procName, corePoolSize, maximumPoolSize);
+
     }
 
     public static SourceTaskPoolManager getSourceTaskPoolManager(String procName) {
@@ -23,7 +24,9 @@ public class SourceTaskPoolManager extends ThreadPoolManager {
     }
 
     public static void addSourceTaskPoolManager(String procName, SourceTaskPoolManager sourceTaskPoolManager) {
-        sourceThreadPoolManager.put(procName, sourceTaskPoolManager);
+        if (!sourceThreadPoolManager.containsKey(procName)) {
+            sourceThreadPoolManager.put(procName, sourceTaskPoolManager);
+        }
     }
 
     /**

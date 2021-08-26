@@ -8,6 +8,7 @@ import lombok.*;
  * @author: jy
  * @Date: 2021/08/25
  */
+@Builder
 @Getter
 @Setter
 @AllArgsConstructor
@@ -23,6 +24,10 @@ public class SourceTaskInfo1 {
      */
     private String sourceUrl;
     /**
+     * 源数据url
+     */
+    private String databaseType;
+    /**
      * 源数据用户名
      */
     private String sourceUsername;
@@ -37,7 +42,7 @@ public class SourceTaskInfo1 {
     /**
      * 源数据表名
      */
-    private String soureTable;
+    private String sourceTable;
     /**
      * 目标数据url
      */

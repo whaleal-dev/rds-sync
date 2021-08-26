@@ -29,6 +29,7 @@ import java.util.concurrent.TimeUnit;
  */
 @NoArgsConstructor
 public class MongodbSource extends SourceMetadata {
+    MongoClient mongoClient = null;
 
     public MongodbSource(Configuration configuration, MemoryCache memoryCache) {
         this.sourceName = configuration.getSourceName();
@@ -37,6 +38,7 @@ public class MongodbSource extends SourceMetadata {
         this.dbTableWhite = configuration.getDbTableWhite();
         this.memoryCache = memoryCache;
         procSourceTask.put(proName, taskMetadataQueue);
+        mongoClient = MongoDbConnection.getMongoClient(sourceName);
     }
 
     @Override
@@ -48,12 +50,11 @@ public class MongodbSource extends SourceMetadata {
         getAllDbCollections(sourceName);
         // 开始遍历抽取该数据源的所有库表
         startFromSource(sourceName, false);
-        isOver = true;
+        isGetAllDbTable = true;
     }
 
     @Override
     public void getAllDbCollections(String sourceName) {
-        MongoClient mongoClient = MongoDbConnection.getMongoClient(sourceName);
         MongoIterable<String> mongoIterableOfDb = mongoClient.listDatabaseNames();
         MongoCursor<String> mongoCursorOfDb = mongoIterableOfDb.iterator();
         // 遍历库列表
@@ -127,6 +128,9 @@ public class MongodbSource extends SourceMetadata {
                         }
                     } catch (InterruptedException e) {
                         Log.error(e.getMessage());
+                    }
+                    if (isGetAllDbTable) {
+
                     }
                 }
             }

@@ -12,16 +12,19 @@ import java.util.Map;
 public class SqlUtil<T> {
 
     //获取连接池
-    private static Connection conn;
+    private Connection conn;
 
-    private static Statement st = getSt();
-
+    public SqlUtil (Connection conn){
+        this.conn = conn;
+    }
+    public SqlUtil (){
+    }
     /**
      * 创建Statement实例
      *
      * @return
      */
-    private static Statement getSt() {
+    private  Statement getSt() {
         try {
             return conn.createStatement();
         } catch (SQLException throwables) {
@@ -40,22 +43,14 @@ public class SqlUtil<T> {
 
         try {
             //获取数据库结果集的数据表
-            ResultSet rs = st.executeQuery(sql);
+            ResultSet rs = this.getSt().executeQuery(sql);
             System.out.println("rs = " + rs);
             List<Document> datas = new ArrayList<>();
-//            List<Map<String, T>> datas = new ArrayList<>();
-
             while (rs.next()){
                 Document doc = new Document(getADocument(rs, cla));
-
                 datas.add(doc);
             }
             return datas;
-//            while (rs.next()){
-//                datas.add(getAMap(rs,cla));
-//            }
-//            return datas;
-
         } catch (SQLException throwables) {
             throwables.printStackTrace();
         }
