@@ -3,6 +3,7 @@ package task;
 import cache.MemoryCache;
 import common.column.AbstractColumn;
 import common.dataclass.BatchDataEntity;
+import common.dataclass.DataEntity;
 import common.taskbase.SourceTaskInterface;
 import common.taskbase.metadata.SourceTaskInfo1;
 import org.bson.Document;
@@ -57,8 +58,7 @@ public class MysqlSourceTask implements Runnable, SourceTaskInterface {
 
     public MysqlSourceTask(SourceTaskInfo1 taskMetadata) {
         this.taskMetadata = taskMetadata;
-        this.connection = DBUtil.getConnection(DATABASE_TYPE, this.taskMetadata.getSourceUrl(),
-                this.taskMetadata.getSourceUsername(), this.taskMetadata.getSourcePassword());
+        this.connection = DBUtil.getConnection(taskMetadata);
     }
 
     @Override
@@ -72,9 +72,10 @@ public class MysqlSourceTask implements Runnable, SourceTaskInterface {
     @Override
     public void getDataFromCollection(){
         String sql = this.taskMetadata.getRangeSql();
-        //TODO
-        SqlUtil<Object> sqlUtil = new SqlUtil<>();
-        List<Document> list = sqlUtil.getAllMap(sql, Object.class);
+        Connection conn = DBUtil.getConnection(this.taskMetadata);
+        SqlUtil<DataEntity> sqlUtil = new SqlUtil<>(conn);
+        List<Document> list = sqlUtil.getAllMap(sql, DataEntity.class);
+//        System.out.println("List<Document> =    " + list.toString());
         for (Document document : list) {
             dataTransformation(document);
         }

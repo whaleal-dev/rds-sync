@@ -12,7 +12,6 @@ import task.MysqlSourceTask;
 import thread.SourceTaskPoolManager;
 import thread.SysPoolManager;
 import util.DBUtil;
-import util.DataBaseType;
 import util.Log;
 import util.ReaderSplitUtil;
 
@@ -65,9 +64,8 @@ public class MysqlSource extends SourceMetadata1 {
 
     @Override
     public void createSourceEntity(Configuration conf, String dbTableName) {
-
+        //根据总配置进行切分配置
         List<Configuration> list = ReaderSplitUtil.doSplit(conf, conf.getInt("adviceNumber", 2));
-
         for (Configuration splitConf : list) {
             Runnable runnable = new Runnable() {
                 @Override
