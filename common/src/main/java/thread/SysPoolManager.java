@@ -23,7 +23,7 @@ public class SysPoolManager extends ThreadPoolManager {
         if (!sysThreadPoolManager.containsKey(procName)) {
             sysThreadPoolManager.put(procName, sysPoolManager);
         }
-        sysThreadPoolManager.put(procName, sysPoolManager);
+
     }
 
     /**

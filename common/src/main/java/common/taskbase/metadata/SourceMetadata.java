@@ -38,9 +38,9 @@ public abstract class SourceMetadata {
      */
     protected String dbTableWhite;
     /**
-     * 全量数据是否完成
+     * 获取全部的表是否完成
      */
-    protected volatile boolean isOver = false;
+    protected volatile boolean isGetAllDbTable = false;
     /**
      * 库表和对应的MongoNamespace
      */

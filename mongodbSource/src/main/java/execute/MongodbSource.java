@@ -50,7 +50,7 @@ public class MongodbSource extends SourceMetadata {
         getAllDbCollections(sourceName);
         // 开始遍历抽取该数据源的所有库表
         startFromSource(sourceName, false);
-        isOver = true;
+        isGetAllDbTable = true;
     }
 
     @Override
@@ -128,6 +128,9 @@ public class MongodbSource extends SourceMetadata {
                         }
                     } catch (InterruptedException e) {
                         Log.error(e.getMessage());
+                    }
+                    if (isGetAllDbTable) {
+
                     }
                 }
             }

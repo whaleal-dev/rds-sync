@@ -26,7 +26,7 @@ public class TargetTaskPoolManager extends ThreadPoolManager {
         if (!targetThreadPoolManager.containsKey(procName)) {
             targetThreadPoolManager.put(procName, targetTaskPoolManager);
         }
-        targetThreadPoolManager.put(procName, targetTaskPoolManager);
+
     }
 
     /**
