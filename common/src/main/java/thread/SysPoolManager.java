@@ -20,6 +20,9 @@ public class SysPoolManager extends ThreadPoolManager {
         return sysThreadPoolManager.get(procName);
     }
     public static void addSysTaskPoolManager(String procName, SysPoolManager sysPoolManager) {
+        if (!sysThreadPoolManager.containsKey(procName)) {
+            sysThreadPoolManager.put(procName, sysPoolManager);
+        }
         sysThreadPoolManager.put(procName, sysPoolManager);
     }
 
