@@ -8,6 +8,7 @@ import lombok.*;
  * @author: jy
  * @Date: 2021/08/25
  */
+@Builder
 @Getter
 @Setter
 @AllArgsConstructor
@@ -22,6 +23,10 @@ public class SourceTaskInfo1 {
      * 源数据url
      */
     private String sourceUrl;
+    /**
+     * 源数据url
+     */
+    private String databaseType;
     /**
      * 源数据用户名
      */

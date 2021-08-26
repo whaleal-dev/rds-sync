@@ -2,7 +2,9 @@ package util;
 
 import com.alibaba.druid.sql.parser.SQLParserUtils;
 import com.alibaba.druid.sql.parser.SQLStatementParser;
+import com.alibaba.fastjson.JSONObject;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import common.taskbase.metadata.SourceTaskInfo1;
 import conf.Configuration;
 import constant.Constant;
 import constant.Key;
@@ -300,6 +302,30 @@ public final class DBUtil {
     public static Connection getConnection(final DataBaseType dataBaseType,
                                            final String jdbcUrl, final String username, final String password) {
 
+        return getConnection(dataBaseType, jdbcUrl, username, password, String.valueOf(Constant.SOCKET_TIMEOUT_INSECOND * 1000));
+    }
+
+    public static Connection getConnection(final Configuration configuration) {
+        DataBaseType dataBaseType = null;
+        List<JSONObject> connConfList = configuration.getList("connection", JSONObject.class);
+        String jdbcUrl = connConfList.get(0).getString(Key.JDBC_URL);
+        String username = configuration.getString(Key.USERNAME);
+        String password = configuration.getString(Key.PASSWORD);
+        if(StringUtils.equals(configuration.getString(Key.DATABASE_TYPE), "mysql")){
+            dataBaseType = DataBaseType.MySql;
+        }
+        return getConnection(dataBaseType, jdbcUrl, username, password, String.valueOf(Constant.SOCKET_TIMEOUT_INSECOND * 1000));
+    }
+
+
+    public static Connection getConnection(final SourceTaskInfo1 taskMetadata) {
+        DataBaseType dataBaseType = null;
+        String jdbcUrl = taskMetadata.getSourceUrl();
+        String username = taskMetadata.getSourceUsername();
+        String password = taskMetadata.getSourcePassword();
+        if(StringUtils.equals(taskMetadata.getDatabaseType(), "mysql")){
+            dataBaseType = DataBaseType.MySql;
+        }
         return getConnection(dataBaseType, jdbcUrl, username, password, String.valueOf(Constant.SOCKET_TIMEOUT_INSECOND * 1000));
     }
 

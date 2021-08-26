@@ -4,6 +4,8 @@ package constant;
  * 编码，时区等配置，暂未定.
  */
 public final class Key {
+    public final static String DATABASE_TYPE = "databasetype";
+
     public final static String JDBC_URL = "jdbcUrl";
 
     public final static String USERNAME = "username";
@@ -55,4 +57,8 @@ public final class Key {
     public final static String REUSE_CONN = "reuseConn";
 
     public final static String PARTITION_NAME = "partitionName";
+
+    public final static String CONNECTION = "connection";
+
+    public final static String DATABASE = "database";
 }

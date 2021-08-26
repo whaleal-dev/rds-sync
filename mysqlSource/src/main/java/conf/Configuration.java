@@ -1,6 +1,7 @@
 package conf;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.serializer.SerializerFeature;
 import exception.CommonErrorCode;
 import exception.PhotonTException;
@@ -433,6 +434,7 @@ public class Configuration {
         return result;
     }
 
+
     /**
      * 根据用户提供的json path，寻址List对象，如果对象不存在，返回默认List
      */
@@ -445,6 +447,7 @@ public class Configuration {
         }
         return (List<Object>) object;
     }
+
 
     /**
      * 根据用户提供的json path，寻址List对象，如果对象不存在，返回默认List
