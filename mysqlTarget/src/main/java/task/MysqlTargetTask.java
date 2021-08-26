@@ -104,9 +104,9 @@ public class MysqlTargetTask implements Runnable{
                     }
                 } else {
                     //不存在，创建表
-                    hashMap.put(columnData.getColumnName(),columnData.getData().toString());
                     SqlUtil.data("CREATE DATABASE IF NOT EXISTS " + dbName);
                     SqlUtil.data("CREATE Table"+tableName+"("+ columnData.getColumnName() +" " + type + "(" + length + "))");
+                    hashMap.put(columnData.getColumnName(),columnData.getData().toString());
                 }
                 //HashMap中没有这个属性就加入
                 if (!hashMap.containsKey(columnData.getColumnName())){
@@ -131,10 +131,9 @@ public class MysqlTargetTask implements Runnable{
                     } else {
                         //数据长度不够，修改长度
                         if(length > maxMap.get(columnData.getColumnName())){
-                            int ckLen = length;
                             //加锁，防止数据长度被多个线程修改
                             synchronized (this){
-                                if (ckLen == length){
+                                if (length > maxMap.get(columnData.getColumnName())){
                                     SqlUtil.data("ALTER TABLE"+tableName+ "MODIFY" + columnData.getColumnName() +" " + type +"(" + length +")");
                                     maxMap.put(columnData.getColumnName(), length);
                                 }
@@ -173,7 +172,6 @@ public class MysqlTargetTask implements Runnable{
                 String sql = "insert into"+ tableName + writeModels.get(i);
                 SqlUtil.data(sql);
             }
-
         } catch (Exception e) {
             Log.error(e.getMessage());
         }
