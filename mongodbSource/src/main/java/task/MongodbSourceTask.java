@@ -5,11 +5,11 @@ import cache.MemoryCache;
 import com.mongodb.BasicDBObject;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCursor;
-import common.metadata.SourceTaskMetadata;
+import common.taskbase.SourceTaskInfo;
 import common.column.AbstractColumn;
 import common.dataclass.BatchDataEntity;
 import common.dataclass.Range;
-import common.taskinterface.SourceInterface;
+import common.taskbase.SourceTaskInterface;
 import conf.Configuration;
 
 import execute.MongodbSource;
@@ -26,11 +26,15 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @time: 2021/7/21 2:38 下午
  * @desc: 读取表某区间数据
  */
-public class SourceTask implements Runnable, SourceInterface {
+public class MongodbSourceTask implements Runnable, SourceTaskInterface {
+
+    private MemoryCache memoryCache;
+
+    private String procName;
     /**
      * 任务配置信息
      */
-    private SourceTaskMetadata taskMetadata;
+    private SourceTaskInfo taskMetadata;
     /**
      * mongoClient
      */
@@ -42,7 +46,7 @@ public class SourceTask implements Runnable, SourceInterface {
     /**
      * 每个批次数据的大小
      */
-    public static final int dataBatchSize = Configuration.dataBatchSize;
+    public int dataBatchSize = 128;
     /**
      * 缓存数据集合
      */
@@ -50,14 +54,16 @@ public class SourceTask implements Runnable, SourceInterface {
 
     public static AtomicInteger sourceThreadNum = new AtomicInteger(0);
 
-    public SourceTask(SourceTaskMetadata taskMetadata) {
+    public MongodbSourceTask(SourceTaskInfo taskMetadata, String procName, MemoryCache memoryCache, int dataBatchSize) {
+        this.procName = procName;
+        this.memoryCache = memoryCache;
+        this.dataBatchSize = dataBatchSize;
         this.taskMetadata = taskMetadata;
         this.mongoClient = MongoDbConnection.getMongoClient(this.taskMetadata.getSourceDsName());
     }
 
     @Override
     public void run() {
-
         Log.info("启动source任务:" + this.taskMetadata.toString());
         // 读取数据
         getDataFromCollection();
@@ -108,8 +114,8 @@ public class SourceTask implements Runnable, SourceInterface {
             rangeTem.setMaxId(maxId);
             rangeTem.setMax(range.isMax());
             // 出现意外时，再次启动该任务实例
-            SourceTaskMetadata taskMetadata = new SourceTaskMetadata(rangeTem, this.taskMetadata.getDbTableName(), this.taskMetadata.getSourceDsName());
-            MongodbSource.pushTaskMeta(taskMetadata);
+            SourceTaskInfo taskMetadata = new SourceTaskInfo(rangeTem, this.taskMetadata.getDbTableName(), this.taskMetadata.getSourceDsName());
+            MongodbSource.pushTaskMeta(procName, taskMetadata);
         } finally {
             // 设置range的结束时间。设置range的开始结束时间，后期会使用到该参数
             range.setEndTime(System.currentTimeMillis());
@@ -124,7 +130,6 @@ public class SourceTask implements Runnable, SourceInterface {
 
     @Override
     public void dataTransformation(Object document) {
-
         List<AbstractColumn> abstractColumns = new ArrayList<>();
         Iterator<Map.Entry<String, Object>> iterator = ((Document) document).entrySet().iterator();
         while (iterator.hasNext()) {
@@ -151,8 +156,8 @@ public class SourceTask implements Runnable, SourceInterface {
         batchDataEntity.setSourceDsName(this.taskMetadata.getSourceDsName());
         batchDataEntity.setBatchNo(System.currentTimeMillis());
         // 推送数据到缓存区中
-        MemoryCache.putData(batchDataEntity);
-        System.out.println("source:" + atomicInteger.addAndGet(batchDataEntity.getDataList().size()));
+        memoryCache.putData(batchDataEntity);
+        System.out.println("sourceNum:" + atomicInteger.addAndGet(batchDataEntity.getDataList().size()));
         this.dataList = new ArrayList<>();
         this.cache = 0;
     }

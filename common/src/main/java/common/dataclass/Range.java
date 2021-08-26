@@ -1,5 +1,6 @@
 package common.dataclass;
 
+
 import lombok.*;
 
 /**
@@ -41,4 +42,8 @@ public class Range {
      * 数据类型
      */
     private int _idType;
+    /**
+     * 查询语句
+     */
+    private String query;
 }

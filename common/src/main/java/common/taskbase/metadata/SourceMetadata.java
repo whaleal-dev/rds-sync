@@ -1,10 +1,10 @@
-package common.metadata;
+package common.taskbase.metadata;
 
-import com.mongodb.MongoNamespace;
+import cache.MemoryCache;
+import common.taskbase.SourceTaskInfo;
 import conf.Configuration;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -16,35 +16,47 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  */
 public abstract class SourceMetadata {
     /**
-     * 全量数据是否完成
+     * 配置文件类
      */
-    public static volatile boolean isOver = false;
+    protected Configuration configuration;
+
+    protected MemoryCache memoryCache;
     /**
-     * 目标数据源名称
+     * 源端数据源名称
      */
-    protected static final String targetName = Configuration.targetName;
+    protected String sourceName;
     /**
-     * 目标数据源名称
+     * 任务名称
      */
-    protected static final int targetNum = Configuration.targetThreadNum;
+    protected String taskName;
     /**
-     * 库表和对应的MongoNamespace
+     * 程序名称
      */
-    protected static Map<String, String> dbTables = new HashMap<>();
+    protected String proName;
     /**
      * 表名过滤的策略
      */
-    protected static final String dbTableWhite = Configuration.dbTableWhite;
+    protected String dbTableWhite;
+    /**
+     * 全量数据是否完成
+     */
+    protected volatile boolean isOver = false;
+    /**
+     * 库表和对应的MongoNamespace
+     */
+    protected Map<String, String> dbTables = new HashMap<>();
     /**
      * TaskMetadata队列
      */
-    protected static Queue<SourceTaskMetadata> taskMetadataQueue = new ConcurrentLinkedQueue<>();
+    protected Queue<SourceTaskInfo> taskMetadataQueue = new ConcurrentLinkedQueue<>();
+
     /**
-     * syncModeOfAll
+     * createTask
      *
      * @desc 全量任务
      */
-    public abstract void syncModeOfAll();
+    public abstract void createTask();
+
     /**
      * getAllDbCollections 获取数据源中所有的库表名
      *
@@ -52,26 +64,29 @@ public abstract class SourceMetadata {
      * @desc 获取数据源中所有的库表名
      */
     public abstract void getAllDbCollections(String sourceName);
+
     /**
      * startFromSource 把所有库表的中数据进行分片和创造
      *
+     * @param sourceName 数据源名称
+     * @param isParallel 是否并行
      * @desc 启动targetTask任务
      */
     public abstract void startFromSource(String sourceName, boolean isParallel);
 
-    public static void pushTaskMeta(SourceTaskMetadata taskMetadata) {
-        taskMetadataQueue.add(taskMetadata);
-    }
     /**
      * createSourceEntity 获取这个数据源的某表的且分数据
      *
+     * @param sourceName  数据源名称
+     * @param dbTableName 库表名
      * @desc 获取这个数据源的某表的且分数据
      */
     public abstract void createSourceEntity(String sourceName, String dbTableName);
+
     /**
      * submitSourceTask 取task到线程池
      *
      * @desc 获取这个数据源的某表的且分数据
      */
-    public abstract void  submitSourceTask();
+    public abstract void submitSourceTask();
 }

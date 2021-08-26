@@ -1,15 +1,16 @@
-package common;
+package common.dbtype;
 
 import java.util.HashMap;
 import java.util.Map;
 
 /**
- * @desc: 每个数据类型对象的int
+ * @desc: 每个mongodb数据类型对象的int
  * @author: lhp
  * @time: 2021/7/22 10:33 上午
  */
-public class TypeNumber {
+public class MongoDbTypeNumber {
     public static final Map<String, Integer> typeNumberMap = new HashMap<>();
+
     static {
         typeNumberMap.put("double", 1);
         typeNumberMap.put("string", 2);

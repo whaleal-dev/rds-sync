@@ -8,12 +8,14 @@ package common.dbtype;
  */
 public enum EnumColumnDataType {
     /**
-     * mongodb类型
+     * 字段类类型
      */
     INTCOLUMN("INTCOLUMN"),
     LONGCOLUMN("LONGCOLUMN"),
     STRINGCOLUMN("STRINGCOLUMN"),
     DATECOLUMN("DATECOLUMN"),
+    DATETIMECOLUMN("DATETIMECOLUMN"),
+    ARRAYCOLUMN("ARRAYCOLUMN"),
     DOUBLECOLUMN("DOUBLECOLUMN"),
     FLOATCOLUMN("FLOATCOLUMN"),
     JSONCOLUMN("JSONCOLUMN"),

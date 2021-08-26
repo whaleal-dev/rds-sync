@@ -3,7 +3,7 @@ package common.column;
 import org.bson.types.ObjectId;
 
 /**
- * @description:
+ * @description:  objectId字段类
  * @author: lhp
  * @time: 2021/8/24 11:05 上午
  */

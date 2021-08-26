@@ -5,6 +5,7 @@ import com.mongodb.client.MongoClient;
 import org.apache.commons.dbcp.BasicDataSource;
 import org.springframework.jdbc.core.JdbcTemplate;
 
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -17,6 +18,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class MySqlConnection {
     private static Map<String, JdbcTemplate> jdbcTemplateMysqlMap = new ConcurrentHashMap<>();
+    private static Map<String, Connection> connectionMysqlMap = new ConcurrentHashMap<>();
 
     /**
      * getBasicDataSource 获取mysql的源链接
@@ -34,6 +36,34 @@ public class MySqlConnection {
         basicDataSource.setPassword("123456");
         JdbcTemplate jdbcTemplate = new JdbcTemplate(basicDataSource);
         jdbcTemplateMysqlMap.put(dsName, jdbcTemplate);
+        try {
+            connectionMysqlMap.put(dsName, basicDataSource.getConnection());
+        } catch (SQLException exception) {
+            exception.printStackTrace();
+        }
+    }
+
+    /**
+     * getJdbcTemplate 获取mysql的connection
+     *
+     * @param dsName
+     * @return JdbcTemplate
+     * @desc 获取mysql的Jdbc
+     */
+    public static Connection getConnection(String dsName) {
+        if (!jdbcTemplateMysqlMap.containsKey(dsName)) {
+            getBasicDataSource(dsName);
+        }
+        synchronized (MySqlConnection.class) {
+            if (!connectionMysqlMap.containsKey(dsName)) {
+                try {
+                    connectionMysqlMap.put(dsName, jdbcTemplateMysqlMap.get(dsName).getDataSource().getConnection());
+                } catch (SQLException exception) {
+                    exception.printStackTrace();
+                }
+            }
+        }
+        return connectionMysqlMap.get(dsName);
     }
 
     /**
@@ -49,6 +79,7 @@ public class MySqlConnection {
         }
         return jdbcTemplateMysqlMap.get(dsName);
     }
+
 
     /**
      * close 关闭jdbc链接

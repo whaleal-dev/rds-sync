@@ -1,18 +1,12 @@
-package source;
+package sourcesplit;
 
 
 import com.mongodb.BasicDBObject;
-import com.mongodb.MongoNamespace;
 import com.mongodb.client.MongoClient;
-import common.metadata.SourceTaskMetadata;
-import common.TypeNumber;
 import common.dataclass.Range;
-import thread.SourceTaskPoolManager;
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
+import common.dbtype.MongoDbTypeNumber;
 import dbconnection.mongodb.MongoDbConnection;
 import org.bson.Document;
-import task.SourceTask;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -23,9 +17,7 @@ import java.util.Map;
  * @time: 2021/7/16 3:04 下午
  * @desc:
  */
-@NoArgsConstructor
-@AllArgsConstructor
-public class Source {
+public class MongodbSourceSplitRange {
     /**
      * mongoClient
      */
@@ -35,7 +27,7 @@ public class Source {
      */
     private String sourceDsName;
 
-    public Source(String sourceDsName) {
+    public MongodbSourceSplitRange(String sourceDsName) {
         this.sourceDsName = sourceDsName;
         this.mongoClient = MongoDbConnection.getMongoClient(sourceDsName);
     }
@@ -52,7 +44,7 @@ public class Source {
         String dbName = dbTableName.split("\\.")[0];
         String tableName = dbTableName.split("\\.")[1];
         BasicDBObject basicDBObject = new BasicDBObject();
-        Iterator<Map.Entry<String, Integer>> typeIterator = TypeNumber.typeNumberMap.entrySet().iterator();
+        Iterator<Map.Entry<String, Integer>> typeIterator = MongoDbTypeNumber.typeNumberMap.entrySet().iterator();
         while (typeIterator.hasNext()) {
             Map.Entry<String, Integer> next = typeIterator.next();
             int type = next.getValue();

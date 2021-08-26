@@ -1,9 +1,8 @@
 package common.dbtype;
 
 /**
-
-
-/**
+ * /**
+ *
  * @author : liheping
  * @create at:  2021/7/12  2:29 下午
  * @description: mysql

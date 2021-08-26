@@ -12,6 +12,8 @@ import org.bson.types.ObjectId;
 
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAccessor;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 
 
@@ -19,7 +21,6 @@ import java.util.Locale;
  * @author liheping
  */
 public class TransformationMongodbDataToColumn {
-
 
     private static final Gson gson = new Gson();
     /**
@@ -33,7 +34,7 @@ public class TransformationMongodbDataToColumn {
 
     public static AbstractColumn parseValue(String columnName, Object object) {
         if (object == null) {
-            return null;
+            return new StringColumn(columnName, "null");
         }
         String type = object.getClass().getSimpleName().toUpperCase();
         EnumMongoDbDataType enumMongoDbDataType = EnumMongoDbDataType.valueOf(type);
@@ -49,7 +50,7 @@ public class TransformationMongodbDataToColumn {
             case DATE:
                 TemporalAccessor temporalAccessor = formatterOfUs.parse(object.toString());
                 String formatterDate = formatterOfZh.format(temporalAccessor);
-                return new DateColumn(columnName, formatterDate);
+                return new DateTimeColumn(columnName, formatterDate);
             case REGULAR:
                 BsonRegularExpression bsonRegularExpression = (BsonRegularExpression) object;
                 String options = bsonRegularExpression.getOptions();
@@ -62,6 +63,7 @@ public class TransformationMongodbDataToColumn {
             case BOOLEAN:
                 return new BoolColumn(columnName, ((Boolean) object).booleanValue());
             case ARRAYLIST:
+                return new ArrayColumn(columnName, (List<Object>) object);
             case DOCUMENT:
                 return new JsonColumn(columnName, gson.toJson(object));
             case OBJECTID:

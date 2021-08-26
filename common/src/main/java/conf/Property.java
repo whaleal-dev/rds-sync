@@ -25,7 +25,8 @@ public class Property {
 
     static {
         // 读取src下的配置文件
-        setFileName("src/main/resources/mongodbT.properties");
+        setFileName("../mongodbT.properties");
+        setFileName("mongodbT.properties");
         // 读取./下的配置文件
         setFileName("common/src/main/resources/mongodbT.properties");
     }
@@ -65,7 +66,4 @@ public class Property {
         return value.trim();
     }
 
-    public static void main(String[] args) {
-        System.out.println(propertiesMap);
-    }
 }
