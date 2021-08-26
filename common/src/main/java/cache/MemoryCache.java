@@ -79,7 +79,7 @@ public class MemoryCache {
      * @return BatchDataEntity
      * @desc 塞入数据
      */
-    public static BatchDataEntity getData() {
+    public  BatchDataEntity getData() {
         // 返回的数据
         BatchDataEntity returnValue = null;
         // 没有获取对缓存区的次数。即空跑次数
