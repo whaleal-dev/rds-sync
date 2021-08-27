@@ -3,21 +3,13 @@ package task;
 import cache.MemoryCache;
 import common.column.AbstractColumn;
 import common.dataclass.BatchDataEntity;
-import common.dataclass.DataEntity;
 import common.taskbase.SourceTaskInterface;
 import common.taskbase.metadata.SourceTaskInfo1;
-import org.bson.Document;
-import parse.TransformationMongodbDataToColumn;
-import util.DBUtil;
-import util.DataBaseType;
-import util.Log;
-import util.SqlUtil;
+import util.*;
 
 import java.sql.Connection;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static util.DataBaseType.MySql;
@@ -73,12 +65,11 @@ public class MysqlSourceTask implements Runnable, SourceTaskInterface {
     public void getDataFromCollection(){
         String sql = this.taskMetadata.getRangeSql();
         Connection conn = DBUtil.getConnection(this.taskMetadata);
-        SqlUtil<DataEntity> sqlUtil = new SqlUtil<>(conn);
-        List<Document> list = sqlUtil.getAllMap(sql, DataEntity.class);
-//        System.out.println("List<Document> =    " + list.toString());
-        for (Document document : list) {
-            dataTransformation(document);
-        }
+        //读取表中的数据
+        DataUtil dataUtil = new DataUtil(conn);
+        //得到 datalist
+        this.dataList = dataUtil.getMysqlDatalist(sql);
+        System.out.println("dataList    =    "  + this.dataList);
         if (cache++ > dataBatchSize) {
             putDataToCache();
         }
@@ -90,22 +81,22 @@ public class MysqlSourceTask implements Runnable, SourceTaskInterface {
         Log.info("source任务查询完毕:" + this.taskMetadata.toString());
     }
 
-    /**
-     * putDataToCache 推送数据到缓存区中
-     *
-     * @desc 推送数据到缓存区中
-     */
-    @Override
-    public void dataTransformation(Object document) {
-        List<AbstractColumn> abstractColumns = new ArrayList<>();
-        Iterator<Map.Entry<String, Object>> iterator = ((Document) document).entrySet().iterator();
-        while (iterator.hasNext()) {
-            Map.Entry<String, Object> next = iterator.next();
-            AbstractColumn abstractColumn = TransformationMongodbDataToColumn.parseValue(next.getKey(), next.getValue());
-            abstractColumns.add(abstractColumn);
-        }
-        this.dataList.add(abstractColumns);
-    }
+//    /**
+//     * putDataToCache 推送数据到缓存区中
+//     *
+//     * @desc 推送数据到缓存区中
+//     */
+//    @Override
+//    public void dataTransformation(Object document) {
+//        List<AbstractColumn> abstractColumns = new ArrayList<>();
+//        Iterator<Map.Entry<String, Object>> iterator = ((Document) document).entrySet().iterator();
+//        while (iterator.hasNext()) {
+//            Map.Entry<String, Object> next = iterator.next();
+//            AbstractColumn abstractColumn = TransformationMongodbDataToColumn.parseValue(next.getKey(), next.getValue());
+//            abstractColumns.add(abstractColumn);
+//        }
+//        this.dataList.add(abstractColumns);
+//    }
 
     static AtomicInteger atomicInteger = new AtomicInteger();
 

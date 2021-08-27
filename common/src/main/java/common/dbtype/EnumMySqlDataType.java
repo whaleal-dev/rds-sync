@@ -8,6 +8,14 @@ package common.dbtype;
  */
 public enum EnumMySqlDataType {
     /**
+     * Long
+     */
+    LONG("LONG"),
+    /**
+     * String
+     */
+    STRING("STRING"),
+    /**
      * TINYINT 短int
      */
     TINYINT("TINYINT"),

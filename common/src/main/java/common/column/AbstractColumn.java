@@ -1,6 +1,5 @@
 package common.column;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
@@ -23,4 +22,5 @@ public abstract class AbstractColumn {
      * @desc 获取数句
      */
     public abstract Object getData();
+
 }

@@ -15,6 +15,7 @@
         <module>execute</module>
         <module>mysqlTarget</module>
         <module>mysqlSource</module>
+        <module>mysqlTargetByLhp</module>
     </modules>
 
     <properties>
