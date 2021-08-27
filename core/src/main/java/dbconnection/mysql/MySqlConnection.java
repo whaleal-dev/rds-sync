@@ -140,7 +140,7 @@ public class MySqlConnection {
         if (jdbcTemplateMysqlMap.containsKey(dsName)) {
             try {
                 connectionMysqlMap.get(dsName).close();
-                // jdbcTemplateMysqlMap.get(dsName).getDataSource().getConnection().close();
+                // jdbcTemplateMysqlMap.get(dsName).DataSourceUtil().getConnection().close();
                 System.out.println(dsName + "数据源关闭");
             } catch (SQLException exception) {
                 Log.error(exception.getMessage());
