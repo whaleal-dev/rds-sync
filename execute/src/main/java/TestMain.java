@@ -1,11 +1,17 @@
 import cache.MemoryCache;
+import common.photonV.entity.Datasource;
 import conf.Configuration;
+import dbconnection.mongodb.MongoDbConnection;
+import dbconnection.mysql.MySqlConnection;
 import execute.MongodbSource;
 import execute.MongodbTarget;
 import execute.MysqlTargetLhp;
+import task.MongodbTargetTask;
 import thread.SourceTaskPoolManager;
 import thread.SysPoolManager;
 import thread.TargetTaskPoolManager;
+
+import java.util.Map;
 
 /**
  * @description:
@@ -14,23 +20,26 @@ import thread.TargetTaskPoolManager;
  */
 public class TestMain {
     public static void main(String[] args) {
-        testMongoDbToMysql();
+        Map<String, Object> map = MySqlConnection.getJdbcTemplate("1").queryForMap("select * from photon.program where proc_name='proc1'  ");
+        System.out.println(map);
+        testMongoDbToMongoDb();
+        MySqlConnection.close("1");
     }
 
-    //
-    public static void testMongoDbToMongoDb() {
-
+    public static Configuration getConfiguration(String procName) {
         Configuration configuration = new Configuration();
+        Map<String, Object> map = MySqlConnection.getJdbcTemplate(procName).queryForMap("select * from photon.program where proc_name='" + procName + "' ");
+        System.out.println(map);
         configuration.setTargetName("1");
-        configuration.setProName("1");
-        configuration.setSourceName("mongodb://admin:123456@192.168.3.172:6001/admin?authSource=admin");
-        configuration.setTargetName("mongodb://root:123456@192.168.3.100:6004/admin?authSource=admin");
+        configuration.setProName(map.get("proc_name").toString());
+        configuration.setSourceName(map.get("source_ds_name").toString());
+        configuration.setTargetName(map.get("target_ds_name").toString());
         configuration.setSyncMode("all");
         configuration.setDbTableWhite("photon.+");
         configuration.setFilterDdl(false);
         configuration.setCollectionExistDrop(true);
         configuration.setCreateIndex(true);
-        configuration.setTargetThreadNum(5);
+        configuration.setTargetThreadNum(1);
         configuration.setSourceThreadNum(2);
         configuration.setCacheNum(20);
         configuration.setCacheSize(20);
@@ -38,66 +47,94 @@ public class TestMain {
         configuration.setSyncParallel(false);
         configuration.setStartIncrementTime((int) (System.currentTimeMillis() / 1000));
         configuration.setIncrementParseThreadNum(5);
-        MemoryCache memoryCache = new MemoryCache("1", "1", 20, 20, true);
+
+        return configuration;
+    }
+
+    public static Datasource getDataSource(String procName, String dsName) {
+        Map<String, Object> map = MySqlConnection.getJdbcTemplate(procName).queryForMap("select * from photon.datasource where name='" + dsName + "' ");
+        Datasource dataSource = new Datasource();
+        dataSource.setId(map.get("id").toString());
+        dataSource.setName(map.get("name").toString());
+        dataSource.setType(map.get("type").toString());
+        dataSource.setDsDatabase(map.get("ds_database").toString());
+        dataSource.setUsername(map.get("username").toString());
+        dataSource.setPassword(map.get("password").toString());
+        dataSource.setId(map.get("ip").toString());
+        dataSource.setUrl(map.get("url").toString());
+        dataSource.setPort((String) map.get("port"));
+        return dataSource;
+    }
+
+    public static void testMongoDbToMongoDb() {
+        Configuration configuration = getConfiguration("proc1");
+
+        MongoDbConnection.getMongoClient(configuration.getSourceName(), getDataSource(configuration.getProName(), configuration.getSourceName()));
+
+        MongoDbConnection.getMongoClient(configuration.getTargetName(), getDataSource(configuration.getProName(), configuration.getTargetName()));
+
+        MemoryCache memoryCache = new MemoryCache(configuration.getTaskName(),
+                configuration.getProName(), configuration.getCacheNum(), configuration.getCacheSize(), true);
+
+
         configuration.setMemoryCache(memoryCache);
 
-        SourceTaskPoolManager sourceTaskPoolManager = new SourceTaskPoolManager("1", 2, 2);
-        SourceTaskPoolManager.addSourceTaskPoolManager("1", sourceTaskPoolManager);
+        SourceTaskPoolManager sourceTaskPoolManager = new SourceTaskPoolManager(configuration.getProName(), configuration.getSourceThreadNum(), configuration.getSourceThreadNum());
+        SourceTaskPoolManager.addSourceTaskPoolManager(configuration.getProName(), sourceTaskPoolManager);
 
-        SysPoolManager sysPoolManager = new SysPoolManager("1", 2, 3);
-        SysPoolManager.addSysTaskPoolManager("1", sysPoolManager);
+        SysPoolManager sysPoolManager = new SysPoolManager(configuration.getProName(), 2, 3);
+        SysPoolManager.addSysTaskPoolManager(configuration.getProName(), sysPoolManager);
 
-        TargetTaskPoolManager targetTaskPoolManager = new TargetTaskPoolManager("1", 5, 5);
-        TargetTaskPoolManager.addTargetTaskPoolManager("1", targetTaskPoolManager);
+        TargetTaskPoolManager targetTaskPoolManager = new
+                TargetTaskPoolManager(configuration.getProName(),1,
+                1);
+        TargetTaskPoolManager.addTargetTaskPoolManager(configuration.getProName(), targetTaskPoolManager);
 
-
-        MongodbSource mongodbSource = new MongodbSource(configuration,memoryCache);
-        mongodbSource.createTask();
-
-
-        MongodbTarget mongodbTarget = new MongodbTarget(configuration, memoryCache, "1");
+        MongodbTarget mongodbTarget = new MongodbTarget(configuration, memoryCache, configuration.getProName());
         mongodbTarget.startToTarget();
 
-    }
-    public static void testMongoDbToMysql() {
-
-        Configuration configuration = new Configuration();
-        configuration.setTargetName("1");
-        configuration.setProName("1");
-        configuration.setSourceName("mongodb://admin:123456@192.168.3.172:6001/admin?authSource=admin");
-        configuration.setTargetName("jdbc:mysql://192.168.3.19:3306/photon?useUnicode=true&characterEncoding=utf-8");
-        configuration.setSyncMode("all");
-        configuration.setDbTableWhite("photon.+");
-        configuration.setFilterDdl(false);
-        configuration.setCollectionExistDrop(true);
-        configuration.setCreateIndex(true);
-        configuration.setTargetThreadNum(5);
-        configuration.setSourceThreadNum(2);
-        configuration.setCacheNum(20);
-        configuration.setCacheSize(20);
-        configuration.setDataBatchSize(128);
-        configuration.setSyncParallel(false);
-        configuration.setStartIncrementTime((int) (System.currentTimeMillis() / 1000));
-        configuration.setIncrementParseThreadNum(5);
-        MemoryCache memoryCache = new MemoryCache("1", "1", 20, 20, true);
-        configuration.setMemoryCache(memoryCache);
-
-        SourceTaskPoolManager sourceTaskPoolManager = new SourceTaskPoolManager("1", 2, 2);
-        SourceTaskPoolManager.addSourceTaskPoolManager("1", sourceTaskPoolManager);
-
-        SysPoolManager sysPoolManager = new SysPoolManager("1", 2, 3);
-        SysPoolManager.addSysTaskPoolManager("1", sysPoolManager);
-
-        TargetTaskPoolManager targetTaskPoolManager = new TargetTaskPoolManager("1", 5, 5);
-        TargetTaskPoolManager.addTargetTaskPoolManager("1", targetTaskPoolManager);
-
-
-        MongodbSource mongodbSource = new MongodbSource(configuration,memoryCache);
+        MongodbSource mongodbSource = new MongodbSource(configuration, memoryCache);
         mongodbSource.createTask();
+        while (true) {
+            try {
+                Thread.sleep(10000);
+                int sourceThread = SourceTaskPoolManager.setSourceActiveThreadNum(configuration.getProName(), 0);
+                boolean getAllDbTable = mongodbSource.isGetAllDbTable();
+                int sourceTaskQueueSize = mongodbSource.getTaskMetadataQueueSize();
+                int setSysActiveThreadNum = SysPoolManager.setSysActiveThreadNum(configuration.getProName(), 0);
+                int targetActiveThreadNum = TargetTaskPoolManager.setTargetActiveThreadNum(configuration.getProName(), 0);
+                int allDataCacheNum = memoryCache.getAllDataCacheNum();
+                System.out.println(setSysActiveThreadNum);
+                System.out.println("sum:" + (sourceThread + sourceTaskQueueSize + sourceTaskQueueSize + allDataCacheNum + setSysActiveThreadNum));
+                System.out.println("sourceThread:" + sourceThread);
+                System.out.println("sourceTaskQueueSize:" + sourceTaskQueueSize);
+                System.out.println("setSysActiveThreadNum:" + setSysActiveThreadNum);
+                System.out.println("targetActiveThreadNum:" + targetActiveThreadNum);
+                System.out.println("allDataCacheNum:" + allDataCacheNum);
+                System.out.println("getAllDbTable:" + getAllDbTable);
+                if ((sourceThread + sourceTaskQueueSize + sourceTaskQueueSize + allDataCacheNum + setSysActiveThreadNum + targetActiveThreadNum) == 0 && getAllDbTable) {
+                    Thread.sleep(10000);
+                    try {
+                        SourceTaskPoolManager.shuntDownNow(configuration.getProName());
+                        TargetTaskPoolManager.shuntDownNow(configuration.getProName());
+                        SysPoolManager.shuntDownNow(configuration.getProName());
+                    } catch (Exception e) {
+                        System.out.println(e.getMessage());
+                    }
+                    MongoDbConnection.close(configuration.getTargetName());
+                    MongoDbConnection.close(configuration.getSourceName());
+                    MySqlConnection.close("1");
+                    System.out.println("procName:" + configuration.getProName() + "关闭成功");
 
+                    break;
+                } else if ((sourceThread + sourceTaskQueueSize + sourceTaskQueueSize + allDataCacheNum + setSysActiveThreadNum) == 0 && getAllDbTable) {
+                    MongodbTargetTask.setIsStopFlagOfTarget(configuration.getProName());
+                }
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
 
-        MysqlTargetLhp mysqlTargetLhp = new MysqlTargetLhp(configuration, memoryCache, "1");
-        mysqlTargetLhp.startToTarget();
-
+        }
     }
+
 }
