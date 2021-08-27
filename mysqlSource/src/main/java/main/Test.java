@@ -4,6 +4,9 @@ import com.alibaba.fastjson.JSONObject;
 import common.column.AbstractColumn;
 import common.taskbase.metadata.SourceTaskInfo1;
 import conf.Configuration;
+import conf.DBUtil;
+import conf.DataUtil;
+import conf.ReaderSplitUtil;
 import constant.Key;
 import org.apache.commons.lang3.StringUtils;
 import org.bson.Document;
@@ -25,7 +28,7 @@ public class Test {
 
 
     public static void main(String[] args) throws SQLException {
-        File file = new File("/Users/jiangyun/Documents/3.json");
+        File file = new File("/Users/cs/Documents/3.json");
         Configuration configuration = Configuration.from(file);
         System.out.println("=========================================================================================");
         System.out.println("=========================        =======读取到配置如下==========  =   ======================");

@@ -34,7 +34,7 @@ public class Configuration {
     /**
      * 目标数据源名称
      */
-    private String targetName;
+    protected String targetName;
     /**
      * 同步模式
      */

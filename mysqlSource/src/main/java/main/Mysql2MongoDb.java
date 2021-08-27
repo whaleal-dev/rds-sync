@@ -1,9 +1,8 @@
 package main;
 
 import conf.Configuration;
+import conf.ReaderSplitUtil;
 import constant.Key;
-import util.DataBaseType;
-import util.ReaderSplitUtil;
 
 import java.io.File;
 import java.util.List;
@@ -17,7 +16,7 @@ import java.util.List;
 public class Mysql2MongoDb {
     public static void main(String[] args) {
         //配置文件
-        File file = new File("/Users/jiangyun/Documents/3.json");
+        File file = new File("/Users/cs/Documents/3.json");
         Configuration con = Configuration.from(file);
         System.out.println("con = " + con);
 //        String a = DataBaseType.parseIpFromJdbcUrl("jdbc:mysql://192.168.3.106:3306/community?characterEncoding=utf-8&useSSL=false");
