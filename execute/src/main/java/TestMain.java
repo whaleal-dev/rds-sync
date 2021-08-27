@@ -2,6 +2,8 @@ import cache.MemoryCache;
 import common.photonV.entity.Datasource;
 import conf.Configuration;
 
+import configuration.ConfigurationUtil;
+import datasource.DataSourceUtil;
 import dbconnection.mongodb.MongoDbConnection;
 import dbconnection.mysql.MySqlConnection;
 import execute.MongodbSource;
@@ -27,52 +29,13 @@ public class TestMain {
         MySqlConnection.close("1");
     }
 
-    public static Configuration getConfiguration(String procName) {
-        Configuration configuration = new Configuration();
-        Map<String, Object> map = MySqlConnection.getJdbcTemplate(procName).queryForMap("select * from photon.program where proc_name='" + procName + "' ");
-        System.out.println(map);
-        configuration.setTargetName("1");
-        configuration.setProName(map.get("proc_name").toString());
-        configuration.setSourceName(map.get("source_ds_name").toString());
-        configuration.setTargetName(map.get("target_ds_name").toString());
-        configuration.setSyncMode("all");
-        configuration.setDbTableWhite("photon.+");
-        configuration.setFilterDdl(false);
-        configuration.setCollectionExistDrop(true);
-        configuration.setCreateIndex(true);
-        configuration.setTargetThreadNum(1);
-        configuration.setSourceThreadNum(2);
-        configuration.setCacheNum(20);
-        configuration.setCacheSize(20);
-        configuration.setDataBatchSize(128);
-        configuration.setSyncParallel(false);
-        configuration.setStartIncrementTime((int) (System.currentTimeMillis() / 1000));
-        configuration.setIncrementParseThreadNum(5);
-
-        return configuration;
-    }
-
-    public static Datasource getDataSource(String procName, String dsName) {
-        Map<String, Object> map = MySqlConnection.getJdbcTemplate(procName).queryForMap("select * from photon.datasource where name='" + dsName + "' ");
-        Datasource dataSource = new Datasource();
-        dataSource.setId(map.get("id").toString());
-        dataSource.setName(map.get("name").toString());
-        dataSource.setType(map.get("type").toString());
-        dataSource.setDsDatabase(map.get("ds_database").toString());
-        dataSource.setUsername(map.get("username").toString());
-        dataSource.setPassword(map.get("password").toString());
-        dataSource.setId(map.get("ip").toString());
-        dataSource.setUrl(map.get("url").toString());
-        dataSource.setPort((String) map.get("port"));
-        return dataSource;
-    }
 
     public static void testMongoDbToMongoDb() {
-        Configuration configuration = getConfiguration("proc1");
+        Configuration configuration = ConfigurationUtil.getConfiguration("proc1");
 
-        MongoDbConnection.getMongoClient(configuration.getSourceName(), getDataSource(configuration.getProName(), configuration.getSourceName()));
+        MongoDbConnection.getMongoClient(configuration.getSourceName(), DataSourceUtil.getDataSourceByDsName(configuration.getProName(), configuration.getSourceName()));
 
-        MongoDbConnection.getMongoClient(configuration.getTargetName(), getDataSource(configuration.getProName(), configuration.getTargetName()));
+        MongoDbConnection.getMongoClient(configuration.getTargetName(), DataSourceUtil.getDataSourceByDsName(configuration.getProName(), configuration.getTargetName()));
 
         MemoryCache memoryCache = new MemoryCache(configuration.getTaskName(),
                 configuration.getProName(), configuration.getCacheNum(), configuration.getCacheSize(), true);
@@ -87,7 +50,7 @@ public class TestMain {
         SysPoolManager.addSysTaskPoolManager(configuration.getProName(), sysPoolManager);
 
         TargetTaskPoolManager targetTaskPoolManager = new
-                TargetTaskPoolManager(configuration.getProName(),1,
+                TargetTaskPoolManager(configuration.getProName(), 1,
                 1);
         TargetTaskPoolManager.addTargetTaskPoolManager(configuration.getProName(), targetTaskPoolManager);
 
