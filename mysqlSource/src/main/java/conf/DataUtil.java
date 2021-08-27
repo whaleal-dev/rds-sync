@@ -1,4 +1,4 @@
-package util;
+package conf;
 
 import com.google.common.base.CaseFormat;
 import common.column.AbstractColumn;
