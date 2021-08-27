@@ -1,6 +1,9 @@
 package constant.utils;
 
 public final class Constant {
+
+    public static final String MYSQL_DRIVER_CLASS = "com.mysql.jdbc.Driver";
+
     public static final String PK_TYPE = "pkType";
 
     public static final Object PK_TYPE_STRING = "pkTypeString";

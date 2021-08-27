@@ -5,14 +5,14 @@ import common.column.AbstractColumn;
 import common.dataclass.BatchDataEntity;
 import common.taskbase.SourceTaskInterface;
 import common.taskbase.metadata.SourceTaskInfo1;
+import conf.DBUtil;
+import conf.DataUtil;
 import util.*;
 
 import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
-
-import static util.DataBaseType.MySql;
 
 /**
  * @author: jy
@@ -26,8 +26,6 @@ public class MysqlSourceTask implements Runnable, SourceTaskInterface {
      * 任务配置信息
      */
     private SourceTaskInfo1 taskMetadata;
-
-    public static DataBaseType DATABASE_TYPE = MySql;
 
     private Connection connection;
 

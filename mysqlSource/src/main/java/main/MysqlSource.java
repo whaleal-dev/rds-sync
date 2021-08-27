@@ -6,15 +6,14 @@ import com.alibaba.fastjson.JSONObject;
 import common.taskbase.metadata.SourceMetadata1;
 import common.taskbase.metadata.SourceTaskInfo1;
 import conf.Configuration;
+import conf.DBUtil;
+import conf.ReaderSplitUtil;
 import constant.Key;
 import org.apache.commons.lang3.StringUtils;
 import task.MysqlSourceTask;
 import thread.SourceTaskPoolManager;
 import thread.SysPoolManager;
-import util.DBUtil;
 import util.Log;
-import util.ReaderSplitUtil;
-
 import java.io.File;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
