@@ -80,12 +80,13 @@ public class MongoDbConnection {
     public static void close(String dsName) {
         if (mongoClientMap.containsKey(dsName)) {
             mongoClientMap.get(dsName).close();
+            mongoClientMap.remove(dsName);
         }
     }
 
     public static void main(String[] args) {
         //getMongoClient("mongodb://admin:123456@192.168.3.172:6001/admin?authSource=admin");
-        Map<String, Object> map = MySqlConnection.getJdbcTemplate("1").queryForMap("select * from photon.program where name='mongodb1' ");
+        Map<String, Object> map = MySqlConnection.getJdbcTemplate("1").queryForMap("select * from photon.datasource where name='mongodb1' ");
 
         Datasource datasource = new Datasource();
         datasource.setId(map.get("id").toString());
@@ -102,7 +103,7 @@ public class MongoDbConnection {
 
         datasource.setPort((String) map.get("port"));
 
-
+        datasource.setDsOption(map.get("ds_option").toString());
         getMongoClient("1",datasource);
     }
 

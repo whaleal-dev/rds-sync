@@ -79,7 +79,7 @@ public class MemoryCache {
      * @return BatchDataEntity
      * @desc 塞入数据
      */
-    public  BatchDataEntity getData() {
+    public BatchDataEntity getData() {
         // 返回的数据
         BatchDataEntity returnValue = null;
         // 没有获取对缓存区的次数。即空跑次数
@@ -101,6 +101,11 @@ public class MemoryCache {
                 }
                 // 释放'锁'
                 isUseState[partition].set(false);
+                IdlingTimes++;
+                if (IdlingTimes++ > cacheNum * 2) {
+                    isWhile = false;
+                    break;
+                }
             }
             // 若没有获取对缓存区的次数大于cacheNum * 5，则进行睡眠1s
             else if (IdlingTimes++ > cacheNum * 2) {
@@ -110,9 +115,12 @@ public class MemoryCache {
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
+
                 //设置空跑次数为 (cacheNum * 5) - cacheNum
                 IdlingTimes = (int) (cacheNum * 1.8);
                 waitTimes.increment();
+                isWhile = false;
+                break;
             }
         }
         return returnValue;
@@ -157,5 +165,13 @@ public class MemoryCache {
                 waitTimes.increment();
             }
         }
+    }
+
+    public int getAllDataCacheNum() {
+        int sum = 0;
+        for (int i = 0; i < cacheNum; i++) {
+            sum += cacheList[i].batchDataEntityQueue.size();
+        }
+        return sum;
     }
 }

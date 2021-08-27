@@ -25,10 +25,6 @@ public class ThreadPoolManager {
      */
     protected int blockSize = 100;
     /**
-     * 活跃的source线程数
-     */
-    protected AtomicInteger activeThreadNum = new AtomicInteger(0);
-    /**
      * 线程池
      */
     protected ExecutorService executorService;
@@ -37,6 +33,6 @@ public class ThreadPoolManager {
         this.procName = procName;
         this.corePoolSize = corePoolSize;
         this.maximumPoolSize = maximumPoolSize;
-        executorService = new ThreadPoolExecutor(corePoolSize, maximumPoolSize, 0L, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(blockSize), new ThreadPoolExecutor.CallerRunsPolicy());
+        executorService = new ThreadPoolExecutor(corePoolSize, maximumPoolSize, 0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>(blockSize), new ThreadPoolExecutor.CallerRunsPolicy());
     }
 }

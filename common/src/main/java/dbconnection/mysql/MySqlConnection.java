@@ -5,6 +5,7 @@ import com.mongodb.client.MongoClient;
 import common.photonV.entity.Datasource;
 import org.apache.commons.dbcp.BasicDataSource;
 import org.springframework.jdbc.core.JdbcTemplate;
+import util.Log;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -138,9 +139,15 @@ public class MySqlConnection {
     public static void close(String dsName) {
         if (jdbcTemplateMysqlMap.containsKey(dsName)) {
             try {
-                jdbcTemplateMysqlMap.get(dsName).getDataSource().getConnection().close();
+                connectionMysqlMap.get(dsName).close();
+                // jdbcTemplateMysqlMap.get(dsName).getDataSource().getConnection().close();
+                System.out.println(dsName + "数据源关闭");
             } catch (SQLException exception) {
+                Log.error(exception.getMessage());
                 exception.printStackTrace();
+            } finally {
+                connectionMysqlMap.remove(dsName);
+                jdbcTemplateMysqlMap.remove(dsName);
             }
         }
     }
@@ -165,6 +172,6 @@ public class MySqlConnection {
         datasource.setPort((String) map.get("port"));
 
 
-        getJdbcTemplate("1",datasource);
+        getJdbcTemplate("1", datasource);
     }
 }

@@ -16,6 +16,7 @@ import execute.MongodbSource;
 import dbconnection.mongodb.MongoDbConnection;
 import org.bson.Document;
 import parse.TransformationMongodbDataToColumn;
+import thread.SourceTaskPoolManager;
 import util.Log;
 
 import java.util.*;
@@ -52,7 +53,6 @@ public class MongodbSourceTask implements Runnable, SourceTaskInterface {
      */
     private List<List<AbstractColumn>> dataList = new ArrayList<>();
 
-    public static AtomicInteger sourceThreadNum = new AtomicInteger(0);
 
     public MongodbSourceTask(SourceTaskInfo taskMetadata, String procName, MemoryCache memoryCache, int dataBatchSize) {
         this.procName = procName;
@@ -62,12 +62,14 @@ public class MongodbSourceTask implements Runnable, SourceTaskInterface {
         this.mongoClient = MongoDbConnection.getMongoClient(this.taskMetadata.getSourceDsName());
     }
 
+
     @Override
     public void run() {
+
         Log.info("启动source任务:" + this.taskMetadata.toString());
         // 读取数据
         getDataFromCollection();
-        sourceThreadNum.addAndGet(-1);
+        SourceTaskPoolManager.setSourceActiveThreadNum(procName, -1);
     }
 
     /**
@@ -151,14 +153,13 @@ public class MongodbSourceTask implements Runnable, SourceTaskInterface {
     public void putDataToCache() {
         BatchDataEntity batchDataEntity = new BatchDataEntity();
         batchDataEntity.setDataList(this.dataList);
-        ;
-        batchDataEntity.setDbTableName(this.taskMetadata.getDbTableName().split("\\.")[0]+"bak."+this.taskMetadata.getDbTableName().split("\\.")[1]);
+        batchDataEntity.setDbTableName(this.taskMetadata.getDbTableName().split("\\.")[0] + "bak." + this.taskMetadata.getDbTableName().split("\\.")[1]);
         batchDataEntity.setOperation("INSERTMANY");
         batchDataEntity.setSourceDsName(this.taskMetadata.getSourceDsName());
         batchDataEntity.setBatchNo(System.currentTimeMillis());
         // 推送数据到缓存区中
         memoryCache.putData(batchDataEntity);
-        System.out.println("sourceNum:" + atomicInteger.addAndGet(batchDataEntity.getDataList().size()));
+       // System.out.println("sourceNum:" + atomicInteger.addAndGet(batchDataEntity.getDataList().size()));
         this.dataList = new ArrayList<>();
         this.cache = 0;
     }

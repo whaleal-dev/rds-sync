@@ -43,14 +43,16 @@ public class MongodbSource extends SourceMetadata {
 
     @Override
     public void createTask() {
-        // 启动获取提交Task任务的线程
-        submitSourceTask();
+
         // 遍历执行源数据源抽取
         // 获取数据源的全部库表
         getAllDbCollections(sourceName);
+        // 启动获取提交Task任务的线程
+        submitSourceTask();
         // 开始遍历抽取该数据源的所有库表
         startFromSource(sourceName, false);
-        isGetAllDbTable = true;
+
+
     }
 
     @Override
@@ -85,7 +87,9 @@ public class MongodbSource extends SourceMetadata {
         while (mapIterator.hasNext()) {
             Map.Entry<String, String> next = mapIterator.next();
             createSourceEntity(sourceName, next.getValue());
+            dbTables.remove(next.getKey());
         }
+        isGetAllDbTable = true;
     }
 
     @Override
@@ -93,10 +97,12 @@ public class MongodbSource extends SourceMetadata {
         MongodbSourceSplitRange source = new MongodbSourceSplitRange(sourceName);
         Map<Integer, Range> map = source.getIdTypes(dbTableName);
         Iterator<Map.Entry<Integer, Range>> rangeMap = map.entrySet().iterator();
-        while (rangeMap.hasNext()) {
-            Runnable runnable = new Runnable() {
-                @Override
-                public void run() {
+        Runnable runnable = new Runnable() {
+            @Override
+            public void run() {
+                while (rangeMap.hasNext()) {
+                    SysPoolManager.setSysActiveThreadNum(proName, 1);
+                    System.out.println("getSysThreadNum1:" + SysPoolManager.setSysActiveThreadNum(proName, 0));
                     Map.Entry<Integer, Range> next = rangeMap.next();
                     Range rangeOfTable = next.getValue();
                     while (rangeOfTable.getMinId() != null) {
@@ -105,11 +111,12 @@ public class MongodbSource extends SourceMetadata {
                         // Log.info("taskMetadata配置信息:" + taskMetadata.toString());
                         pushTaskMeta(proName, taskMetadata);
                     }
+                    SysPoolManager.setSysActiveThreadNum(proName, -1);
+                    System.out.println("getSysThreadNum2:" + SysPoolManager.setSysActiveThreadNum(proName, 0));
                 }
-            };
-
-            SysPoolManager.submit(proName, runnable);
-        }
+            }
+        };
+        SysPoolManager.submit(proName, runnable);
     }
 
     @Override
@@ -119,19 +126,22 @@ public class MongodbSource extends SourceMetadata {
             public void run() {
                 while (true) {
                     try {
-                        if (taskMetadataQueue.size() == 0) {
-                            TimeUnit.SECONDS.sleep(2);
-                        }
                         SourceTaskInfo taskMetadata = taskMetadataQueue.poll();
                         if (taskMetadata != null) {
+                            SourceTaskPoolManager.setSourceActiveThreadNum(proName, 1);
                             SourceTaskPoolManager.submit(proName, new MongodbSourceTask(taskMetadata, proName, memoryCache, 128));
+                        } else {
+                            if (taskMetadataQueue.size() == 0 && isGetAllDbTable && dbTables.size() == 0 && SysPoolManager.setSysActiveThreadNum(proName, 0) == 0) {
+                                break;
+                            }
+                            TimeUnit.SECONDS.sleep(2);
                         }
+
                     } catch (InterruptedException e) {
                         Log.error(e.getMessage());
+                        break;
                     }
-                    if (isGetAllDbTable) {
 
-                    }
                 }
             }
         };

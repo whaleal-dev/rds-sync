@@ -13,9 +13,26 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class TargetTaskPoolManager extends ThreadPoolManager {
 
     private static Map<String, TargetTaskPoolManager> targetThreadPoolManager = new ConcurrentHashMap<>();
+    private static Map<String, AtomicInteger> targetActiveThreadNum = new ConcurrentHashMap<>();
 
     public TargetTaskPoolManager(String procName, int corePoolSize, int maximumPoolSize) {
         super(procName, corePoolSize, maximumPoolSize);
+    }
+
+    public static int setTargetActiveThreadNum(String procName, int num) {
+        if (!targetActiveThreadNum.containsKey(procName)) {
+            synchronized (TargetTaskPoolManager.class) {
+                if (!targetActiveThreadNum.containsKey(procName)) {
+                    targetActiveThreadNum.put(procName, new AtomicInteger(0));
+                }
+            }
+        }
+        if (num > 0) {
+            targetActiveThreadNum.get(procName).incrementAndGet();
+        } else if (num < 0) {
+            targetActiveThreadNum.get(procName).decrementAndGet();
+        }
+        return targetActiveThreadNum.get(procName).get();
     }
 
     public static TargetTaskPoolManager getTargetTaskPoolManager(String procName) {
@@ -43,7 +60,10 @@ public class TargetTaskPoolManager extends ThreadPoolManager {
             return "启动失败:" + e.getMessage();
         }
         return "启动成功";
+    }
 
+    public static void shuntDownNow(String procName) {
+        targetThreadPoolManager.get(procName).executorService.shutdown();
     }
 }
 

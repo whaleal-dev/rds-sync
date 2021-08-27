@@ -14,9 +14,26 @@ public class SourceTaskPoolManager extends ThreadPoolManager {
 
     private static Map<String, SourceTaskPoolManager> sourceThreadPoolManager = new ConcurrentHashMap<>();
 
+    private static Map<String, AtomicInteger> sourceActiveThreadNum = new ConcurrentHashMap<>();
+
+    public static int setSourceActiveThreadNum(String procName, int num) {
+        if (!sourceActiveThreadNum.containsKey(procName)) {
+            synchronized (SourceTaskPoolManager.class) {
+                if (!sourceActiveThreadNum.containsKey(procName)) {
+                    sourceActiveThreadNum.put(procName, new AtomicInteger(0));
+                }
+            }
+        }
+        if (num > 0) {
+            sourceActiveThreadNum.get(procName).incrementAndGet();
+        } else if (num < 0) {
+            sourceActiveThreadNum.get(procName).decrementAndGet();
+        }
+        return sourceActiveThreadNum.get(procName).get();
+    }
+
     public SourceTaskPoolManager(String procName, int corePoolSize, int maximumPoolSize) {
         super(procName, corePoolSize, maximumPoolSize);
-
     }
 
     public static SourceTaskPoolManager getSourceTaskPoolManager(String procName) {
@@ -43,5 +60,9 @@ public class SourceTaskPoolManager extends ThreadPoolManager {
             return "启动失败:" + e.getMessage();
         }
         return "启动成功";
+    }
+
+    public static void shuntDownNow(String procName) {
+        sourceThreadPoolManager.get(procName).executorService.shutdownNow();
     }
 }

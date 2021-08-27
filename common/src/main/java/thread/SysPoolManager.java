@@ -2,6 +2,7 @@ package thread;
 
 import java.util.Map;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @Author liheping
@@ -19,11 +20,29 @@ public class SysPoolManager extends ThreadPoolManager {
     public static SysPoolManager getSysTaskPoolManager(String procName) {
         return sysThreadPoolManager.get(procName);
     }
+
+    private static Map<String, AtomicInteger> sysActiveThreadNum = new ConcurrentHashMap<>();
+
+    public static int setSysActiveThreadNum(String procName, int num) {
+        if (!sysActiveThreadNum.containsKey(procName)) {
+            synchronized (SysPoolManager.class) {
+                if (!sysActiveThreadNum.containsKey(procName)) {
+                    sysActiveThreadNum.put(procName, new AtomicInteger(0));
+                }
+            }
+        }
+        if (num > 0) {
+            sysActiveThreadNum.get(procName).incrementAndGet();
+        } else if (num < 0) {
+            sysActiveThreadNum.get(procName).decrementAndGet();
+        }
+        return sysActiveThreadNum.get(procName).get();
+    }
+
     public static void addSysTaskPoolManager(String procName, SysPoolManager sysPoolManager) {
         if (!sysThreadPoolManager.containsKey(procName)) {
             sysThreadPoolManager.put(procName, sysPoolManager);
         }
-
     }
 
     /**
@@ -41,6 +60,10 @@ public class SysPoolManager extends ThreadPoolManager {
         }
         return "启动成功";
 
+    }
+
+    public static void shuntDownNow(String procName) {
+        sysThreadPoolManager.get(procName).executorService.shutdownNow();
     }
 }
 

@@ -11,12 +11,17 @@ import common.taskbase.AbstractTargetTask;
 import conf.Configuration;
 import lombok.NoArgsConstructor;
 import dbconnection.mongodb.MongoDbConnection;
+
 import org.bson.Document;
 import parse.ParseColumnDataToMongodbData;
+import thread.TargetTaskPoolManager;
 import util.Log;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 
@@ -35,10 +40,22 @@ public class MongodbTargetTask extends AbstractTargetTask {
 
 
     private List<WriteModel<Document>> writeModels = new ArrayList<>();
+    private volatile static Map<String, AtomicBoolean> isStop = new ConcurrentHashMap<>();
 
     public MongodbTargetTask(Configuration configuration, MemoryCache memoryCache) {
         super(configuration, memoryCache);
         this.mongoClient = MongoDbConnection.getMongoClient(this.targetDsName);
+        if (!isStop.containsKey(proName)) {
+            synchronized (MongodbTargetTask.class) {
+                if (!isStop.containsKey(proName)) {
+                    isStop.put(proName, new AtomicBoolean());
+                }
+            }
+        }
+    }
+
+    public static void setIsStopFlagOfTarget(String procName) {
+        isStop.get(procName).set(true);
     }
 
     @Override
@@ -46,14 +63,20 @@ public class MongodbTargetTask extends AbstractTargetTask {
         applyData();
     }
 
-    static AtomicInteger atomicInteger = new AtomicInteger();
 
     @Override
     public void applyData() {
         Log.info("启动target任务:" + this.targetDsName);
         while (true) {
-            BatchDataEntity batchDataEntity = memoryCache.getData();
             try {
+                if (isStop.get(proName).get()) {
+                    System.out.println("targetTask-1");
+
+                    TargetTaskPoolManager.setTargetActiveThreadNum(proName, -1);
+                    System.out.println("setTargetActiveThreadNum" + TargetTaskPoolManager.setTargetActiveThreadNum(proName, 0));
+                    break;
+                }
+                BatchDataEntity batchDataEntity = memoryCache.getData();
                 // 从缓存中获取一批数据
                 if (batchDataEntity != null) {
                     // 当前任务拉取的mongoNamespace
@@ -62,10 +85,12 @@ public class MongodbTargetTask extends AbstractTargetTask {
                     // 判断操作行为。如果为INSERTMANY类型，直接应用数据。
                     parseColumnDataToDocument(batchDataEntity);
                     bulkExecute(dbTableName, -1);
+                } else {
+                    System.out.println("我是空数据");
                 }
             } catch (Exception e) {
                 e.printStackTrace();
-                Log.error(e.getMessage());
+               System.out.println(e.getMessage());
             }
         }
     }
@@ -94,7 +119,7 @@ public class MongodbTargetTask extends AbstractTargetTask {
             this.mongoClient.getDatabase(dbName).
                     getCollection(tableName).bulkWrite(writeModels, new BulkWriteOptions().ordered(false));
         } catch (Exception e) {
-            Log.error(e.getMessage());
+         //   Log.error(e.getMessage());
         } finally {
             writeModels = new ArrayList<>();
         }

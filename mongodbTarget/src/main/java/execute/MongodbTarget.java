@@ -20,6 +20,8 @@ public class MongodbTarget {
 
     public void startToTarget() {
         for (int i = 0; i < configuration.getTargetThreadNum(); i++) {
+            TargetTaskPoolManager.setTargetActiveThreadNum(procName, 1);
+            System.out.println("setTargetActiveThreadNum" + TargetTaskPoolManager.setTargetActiveThreadNum(procName, 0));
             TargetTaskPoolManager.submit(procName, new MongodbTargetTask(configuration, memoryCache));
         }
 

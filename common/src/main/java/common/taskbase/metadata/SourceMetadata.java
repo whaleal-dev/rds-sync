@@ -7,6 +7,7 @@ import conf.Configuration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Queue;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
@@ -41,10 +42,23 @@ public abstract class SourceMetadata {
      * 获取全部的表是否完成
      */
     protected volatile boolean isGetAllDbTable = false;
+
+    public boolean isGetAllDbTable() {
+        return isGetAllDbTable;
+    }
+
+    public int getTaskMetadataQueueSize() {
+        return taskMetadataQueue.size();
+    }
+
+    public void setTaskMetadataQueue(Queue<SourceTaskInfo> taskMetadataQueue) {
+        this.taskMetadataQueue = taskMetadataQueue;
+    }
+
     /**
      * 库表和对应的MongoNamespace
      */
-    protected Map<String, String> dbTables = new HashMap<>();
+    protected Map<String, String> dbTables = new ConcurrentHashMap<>();
     /**
      * TaskMetadata队列
      */
