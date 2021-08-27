@@ -10,10 +10,11 @@ import org.apache.commons.lang3.CharUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import spi.ErrorCode;
-import util.StrUtil;
 
 import java.io.*;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Configuration 提供多级JSON配置信息无损存储 <br>
@@ -62,7 +63,8 @@ public class Configuration {
             new HashSet<String>();
 
     private Object root = null;
-
+    private static final Pattern VARIABLE_PATTERN = Pattern
+            .compile("(\\$)\\{?(\\w+)\\}?");
     /**
      * 初始化空白的Configuration
      */
@@ -74,7 +76,7 @@ public class Configuration {
      * 从JSON字符串加载Configuration
      */
     public static Configuration from(String json) {
-        json = StrUtil.replaceVariable(json);
+        json = replaceVariable(json);
         checkJSON(json);
 
         try {
@@ -1079,6 +1081,27 @@ public class Configuration {
 
     public Set<String> getSecretKeyPathSet() {
         return secretKeyPathSet;
+    }
+
+    public static String replaceVariable(final String param) {
+        Map<String, String> mapping = new HashMap<String, String>();
+
+        Matcher matcher = VARIABLE_PATTERN.matcher(param);
+        while (matcher.find()) {
+            String variable = matcher.group(2);
+            String value = System.getProperty(variable);
+            if (StringUtils.isBlank(value)) {
+                value = matcher.group();
+            }
+            mapping.put(matcher.group(), value);
+        }
+
+        String retString = param;
+        for (final String key : mapping.keySet()) {
+            retString = retString.replace(key, mapping.get(key));
+        }
+
+        return retString;
     }
 }
 
