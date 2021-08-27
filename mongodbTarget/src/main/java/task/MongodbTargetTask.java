@@ -70,10 +70,9 @@ public class MongodbTargetTask extends AbstractTargetTask {
         while (true) {
             try {
                 if (isStop.get(proName).get()) {
-                    System.out.println("targetTask-1");
-
+                    // System.out.println("targetTask-1");
                     TargetTaskPoolManager.setTargetActiveThreadNum(proName, -1);
-                    System.out.println("setTargetActiveThreadNum" + TargetTaskPoolManager.setTargetActiveThreadNum(proName, 0));
+                    //  System.out.println("setTargetActiveThreadNum" + TargetTaskPoolManager.setTargetActiveThreadNum(proName, 0));
                     break;
                 }
                 BatchDataEntity batchDataEntity = memoryCache.getData();
@@ -86,11 +85,11 @@ public class MongodbTargetTask extends AbstractTargetTask {
                     parseColumnDataToDocument(batchDataEntity);
                     bulkExecute(dbTableName, -1);
                 } else {
-                    System.out.println("我是空数据");
+                    // System.out.println("我是空数据");
                 }
             } catch (Exception e) {
                 e.printStackTrace();
-               System.out.println(e.getMessage());
+                Log.error(e.getMessage());
             }
         }
     }
@@ -119,7 +118,7 @@ public class MongodbTargetTask extends AbstractTargetTask {
             this.mongoClient.getDatabase(dbName).
                     getCollection(tableName).bulkWrite(writeModels, new BulkWriteOptions().ordered(false));
         } catch (Exception e) {
-         //   Log.error(e.getMessage());
+              Log.error(e.getMessage());
         } finally {
             writeModels = new ArrayList<>();
         }
