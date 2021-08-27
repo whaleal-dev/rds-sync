@@ -13,14 +13,11 @@
         <module>mongodbSource</module>
         <module>mongodbTarget</module>
         <module>execute</module>
-        <module>mysqlTarget</module>
-        <module>mysqlSource</module>
         <module>mysqlTargetByLhp</module>
+        <module>core</module>
     </modules>
-
     <properties>
         <maven.compiler.source>8</maven.compiler.source>
         <maven.compiler.target>8</maven.compiler.target>
     </properties>
-
 </project>

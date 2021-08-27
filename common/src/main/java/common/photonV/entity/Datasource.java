@@ -1,6 +1,6 @@
 package common.photonV.entity;
 
-import dbconnection.mysql.MySqlConnection;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

@@ -7,7 +7,7 @@ import common.dataclass.BatchDataEntity;
 import common.dbtype.DbTypeFlag;
 import common.taskbase.AbstractTargetTask;
 import conf.Configuration;
-import dbconnection.mongodb.MongoDbConnection;
+
 import dbconnection.mysql.MySqlConnection;
 import lombok.NoArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
