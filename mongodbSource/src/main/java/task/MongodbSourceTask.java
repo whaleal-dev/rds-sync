@@ -130,7 +130,6 @@ public class MongodbSourceTask implements Runnable, SourceTaskInterface {
         }
     }
 
-    @Override
     public void dataTransformation(Object document) {
         List<AbstractColumn> abstractColumns = new ArrayList<>();
         Iterator<Map.Entry<String, Object>> iterator = ((Document) document).entrySet().iterator();

@@ -15,7 +15,5 @@ public interface SourceTaskInterface {
      */
     void getDataFromCollection();
 
-    void dataTransformation(Object object);
-
     void putDataToCache();
 }

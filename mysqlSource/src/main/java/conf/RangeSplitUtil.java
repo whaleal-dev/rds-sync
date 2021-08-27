@@ -1,4 +1,4 @@
-package util;
+package conf;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
@@ -6,9 +6,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import java.math.BigInteger;
 import java.util.*;
 
-/**
- * 提供通用的根据数字范围、字符串范围等进行切分的通用功能.
- */
 public final class RangeSplitUtil {
 
     public static String[] doAsciiStringSplit(String left, String right, int expectSliceNumber) {
@@ -29,7 +26,6 @@ public final class RangeSplitUtil {
 
         return result;
     }
-
 
     public static long[] doLongSplit(long left, long right, int expectSliceNumber) {
         BigInteger[] result = doBigIntegerSplit(BigInteger.valueOf(left),
