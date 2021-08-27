@@ -122,7 +122,7 @@ public class MysqlSource extends SourceMetadata1 {
                         }
                         SourceTaskInfo1 taskMetadata = taskMetadataQueue1.poll();
                         if (taskMetadata != null) {
-                            SourceTaskPoolManager.submit(proName, new MysqlSourceTask(taskMetadata));
+                            SourceTaskPoolManager.submit(proName, new MysqlSourceTask(taskMetadata, proName, memoryCache, 128));
                         }
                     } catch (InterruptedException e) {
                         Log.error(e.getMessage());

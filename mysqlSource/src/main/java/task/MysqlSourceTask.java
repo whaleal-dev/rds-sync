@@ -39,7 +39,7 @@ public class MysqlSourceTask implements Runnable, SourceTaskInterface {
     /**
      * 每个批次数据的大小
      */
-    public final int dataBatchSize = this.taskMetadata.getDataBatchSize();
+    public int dataBatchSize = 128;
 
     /**
      * 缓存数据集合
@@ -48,9 +48,11 @@ public class MysqlSourceTask implements Runnable, SourceTaskInterface {
 
     public static AtomicInteger sourceThreadNum = new AtomicInteger(0);
 
-    public MysqlSourceTask(SourceTaskInfo1 taskMetadata) {
+    public MysqlSourceTask(SourceTaskInfo1 taskMetadata, String procName, MemoryCache memoryCache, int dataBatchSize) {
         this.taskMetadata = taskMetadata;
         this.connection = DBUtil.getConnection(taskMetadata);
+        this.memoryCache = memoryCache;
+        this.dataBatchSize = dataBatchSize;
     }
 
     @Override
@@ -120,7 +122,7 @@ public class MysqlSourceTask implements Runnable, SourceTaskInterface {
         batchDataEntity.setBatchNo(System.currentTimeMillis());
         // 推送数据到缓存区中
         memoryCache.putData(batchDataEntity);
-        //System.out.println("source:" + atomicInteger.addAndGet(batchDataEntity.getDataList().size()));
+        System.out.println("source:" + atomicInteger.addAndGet(batchDataEntity.getDataList().size()));
         this.dataList = new ArrayList<>();
         this.cache = 0;
     }
