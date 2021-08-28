@@ -54,8 +54,8 @@ public class MongodbTargetTask extends AbstractTargetTask {
         }
     }
 
-    public static void setIsStopFlagOfTarget(String procName) {
-        isStop.get(procName).set(true);
+    public static void setIsStopFlagOfTarget(String procName,boolean value) {
+        isStop.get(procName).set(value);
     }
 
     @Override

@@ -37,7 +37,7 @@ public class TransformationMongodbDataToColumn {
 
     public static AbstractColumn parseValue(String columnName, Object object) {
         if (object == null) {
-            return new StringColumn(columnName, "null");
+            return new NullColumn(columnName, null);
         }
         String type = object.getClass().getSimpleName().toUpperCase();
         EnumMongoDbDataType enumMongoDbDataType = EnumMongoDbDataType.valueOf(type);
@@ -51,12 +51,7 @@ public class TransformationMongodbDataToColumn {
             case DECIMAL128:
                 return new DoubleColumn(columnName, ((Decimal128) object).doubleValue());
             case DATE:
-                System.out.println("3：   " + object.toString());
-                TemporalAccessor temporalAccessor = formatterOfUs.parse(object.toString());
-                System.out.println("2：   " + temporalAccessor.toString());
-                String formatterDate = formatterOfZh.format(temporalAccessor);
-                System.out.println("1：   " + formatterDate);
-                return new DateTimeColumn(columnName, (((Date)object).getTime()));
+                return new DateTimeColumn(columnName, (((Date) object).getTime()));
             case REGULAR:
                 BsonRegularExpression bsonRegularExpression = (BsonRegularExpression) object;
                 String options = bsonRegularExpression.getOptions();
@@ -66,6 +61,8 @@ public class TransformationMongodbDataToColumn {
             case CODE:
                 Code code = (Code) object;
                 return new StringColumn(columnName, code.getCode());
+            case BSONTIMESTAMP:
+                return new TimestampColumn(columnName, ((BsonTimestamp) object).getValue());
             case BOOLEAN:
                 return new BoolColumn(columnName, ((Boolean) object).booleanValue());
             case ARRAYLIST:
@@ -83,17 +80,8 @@ public class TransformationMongodbDataToColumn {
     }
 
     public static void main(String[] args) {
-        BasicDBObject basicDBObject = new BasicDBObject();
-        basicDBObject.append("_id", new ObjectId("60efd2a0c5a4e52f3f978d3d"));
-        MongoClient mongoClient = MongoDbConnection.getMongoClient("mongodb://admin:123456@192.168.3.172:6001/admin?authSource=admin");
-        Document first = mongoClient.getDatabase("photon").getCollection("apply").find(basicDBObject).first();
-        System.out.println(first.get("time"));
-        TemporalAccessor temporalAccessor = formatterOfUs.parse(first.get("time").toString());
-        System.out.println("2：   " + temporalAccessor.toString());
-        String formatterDate = formatterOfZh.format(temporalAccessor);
-        System.out.println(formatterDate);
-       // System.out.println(first.get("time",BsonDateTime.class));
-        //System.out.println(first.get("time").getClass().getSimpleName());
-        System.out.println(first.getDate("time").getTime());
+
+        BsonTimestamp bsonTimestamp = new BsonTimestamp(System.currentTimeMillis() / 1000);
+        System.out.println();
     }
 }

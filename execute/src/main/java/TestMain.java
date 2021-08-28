@@ -13,6 +13,7 @@ import task.MongodbTargetTask;
 import thread.SourceTaskPoolManager;
 import thread.SysPoolManager;
 import thread.TargetTaskPoolManager;
+import util.Log;
 
 import java.util.Map;
 
@@ -31,6 +32,7 @@ public class TestMain {
 
 
     public static void testMongoDbToMongoDb() {
+
         Configuration configuration = ConfigurationUtil.getConfiguration("proc1");
 
         MongoDbConnection.getMongoClient(configuration.getSourceDsName(), DataSourceUtil.getDataSourceByDsName(configuration.getProName(), configuration.getSourceDsName()));
@@ -68,31 +70,43 @@ public class TestMain {
                 int setSysActiveThreadNum = SysPoolManager.setSysActiveThreadNum(configuration.getProName(), 0);
                 int targetActiveThreadNum = TargetTaskPoolManager.setTargetActiveThreadNum(configuration.getProName(), 0);
                 int allDataCacheNum = memoryCache.getAllDataCacheNum();
-                System.out.println(setSysActiveThreadNum);
-                System.out.println("sum:" + (sourceThread + sourceTaskQueueSize + sourceTaskQueueSize + allDataCacheNum + setSysActiveThreadNum));
-                System.out.println("sourceThread:" + sourceThread);
-                System.out.println("sourceTaskQueueSize:" + sourceTaskQueueSize);
-                System.out.println("setSysActiveThreadNum:" + setSysActiveThreadNum);
-                System.out.println("targetActiveThreadNum:" + targetActiveThreadNum);
-                System.out.println("allDataCacheNum:" + allDataCacheNum);
-                System.out.println("getAllDbTable:" + getAllDbTable);
+                Log.info(setSysActiveThreadNum + "");
+                Log.info("sum:" + (sourceThread + sourceTaskQueueSize + sourceTaskQueueSize + allDataCacheNum + setSysActiveThreadNum));
+                Log.info("sourceThread:" + sourceThread);
+                Log.info("sourceTaskQueueSize:" + sourceTaskQueueSize);
+                Log.info("setSysActiveThreadNum:" + setSysActiveThreadNum);
+                Log.info("targetActiveThreadNum:" + targetActiveThreadNum);
+                Log.info("allDataCacheNum:" + allDataCacheNum);
+                Log.info("getAllDbTable:" + getAllDbTable);
                 if ((sourceThread + sourceTaskQueueSize + sourceTaskQueueSize + allDataCacheNum + setSysActiveThreadNum + targetActiveThreadNum) == 0 && getAllDbTable) {
                     Thread.sleep(10000);
                     try {
-                        SourceTaskPoolManager.shuntDownNow(configuration.getProName());
+
                         TargetTaskPoolManager.shuntDownNow(configuration.getProName());
+
+                    } catch (Exception e) {
+                        Log.info(e.getMessage());
+                    }
+                    try {
+                        SourceTaskPoolManager.shuntDownNow(configuration.getProName());
+                    } catch (Exception e) {
+                        Log.info(e.getMessage());
+                    }
+                    try {
                         SysPoolManager.shuntDownNow(configuration.getProName());
                     } catch (Exception e) {
-                        System.out.println(e.getMessage());
+                        Log.info(e.getMessage());
                     }
-                    MongoDbConnection.close(configuration.getSourceDsName());
-                    MongoDbConnection.close(configuration.getTargetDsName());
-                    MySqlConnection.close("1");
-                    System.out.println("procName:" + configuration.getProName() + "关闭成功");
-
+                    memoryCache.gcMemoryCache();
+                    MongodbTargetTask.setIsStopFlagOfTarget(configuration.getProName(), false);
+//                    MongoDbConnection.close(configuration.getTargetName());
+//                    MongoDbConnection.close(configuration.getSourceName());
+                    //MySqlConnection.close("1");
+                    Log.info("procName:" + configuration.getProName() + "关闭成功");
+                    Thread.sleep(10000);
                     break;
                 } else if ((sourceThread + sourceTaskQueueSize + sourceTaskQueueSize + allDataCacheNum + setSysActiveThreadNum) == 0 && getAllDbTable) {
-                    MongodbTargetTask.setIsStopFlagOfTarget(configuration.getProName());
+                    MongodbTargetTask.setIsStopFlagOfTarget(configuration.getProName(), true);
                 }
             } catch (InterruptedException e) {
                 e.printStackTrace();

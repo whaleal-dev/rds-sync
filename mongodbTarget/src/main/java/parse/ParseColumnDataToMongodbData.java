@@ -22,7 +22,7 @@ public class ParseColumnDataToMongodbData {
         EnumColumnDataType enumColumnDataType = EnumColumnDataType.valueOf(type);
         switch (enumColumnDataType) {
             case DATETIMECOLUMN:
-                return new Date((long)columnData.getData());
+                return new Date((long) columnData.getData());
             case TIMESTAMPCOLUMN:
                 return new BsonTimestamp(Long.parseLong(columnData.getData().toString()));
             case JSONCOLUMN:
@@ -36,6 +36,7 @@ public class ParseColumnDataToMongodbData {
             case OBJECTIDCOLUMN:
             case BOOLCOLUMN:
             case DATECOLUMN:
+            case NULLCOLUMN:
             default:
                 return columnData.getData();
         }
