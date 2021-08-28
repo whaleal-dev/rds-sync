@@ -1,5 +1,7 @@
 package common.dbtype;
 
+import org.bson.conversions.Bson;
+
 /**
  * MongoDB数据类型类
  *

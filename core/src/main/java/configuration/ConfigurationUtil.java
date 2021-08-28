@@ -23,7 +23,7 @@ public class ConfigurationUtil {
         configuration.setFilterDdl(false);
         configuration.setCollectionExistDrop(true);
         configuration.setCreateIndex(true);
-        configuration.setTargetThreadNum(1);
+        configuration.setTargetThreadNum(5);
         configuration.setSourceThreadNum(2);
         configuration.setCacheNum(20);
         configuration.setCacheSize(20);

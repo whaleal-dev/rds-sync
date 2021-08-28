@@ -10,7 +10,6 @@ import java.util.Map;
  */
 public class MongoDbTypeNumber {
     public static final Map<String, Integer> typeNumberMap = new HashMap<>();
-
     static {
         typeNumberMap.put("double", 1);
         typeNumberMap.put("string", 2);

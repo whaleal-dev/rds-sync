@@ -40,6 +40,10 @@ public class SourceTaskPoolManager extends ThreadPoolManager {
         return sourceThreadPoolManager.get(procName);
     }
 
+    public static void deleteSourceTaskPoolManager(String procName) {
+        sourceThreadPoolManager.remove(procName);
+    }
+
     public static void addSourceTaskPoolManager(String procName, SourceTaskPoolManager sourceTaskPoolManager) {
         if (!sourceThreadPoolManager.containsKey(procName)) {
             sourceThreadPoolManager.put(procName, sourceTaskPoolManager);
@@ -64,5 +68,7 @@ public class SourceTaskPoolManager extends ThreadPoolManager {
 
     public static void shuntDownNow(String procName) {
         sourceThreadPoolManager.get(procName).executorService.shutdownNow();
+        sourceThreadPoolManager.get(procName).executorService = null;
+        deleteSourceTaskPoolManager(procName);
     }
 }

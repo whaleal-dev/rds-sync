@@ -15,15 +15,15 @@ import lombok.ToString;
 @AllArgsConstructor
 @ToString
 public class DateTimeColumn extends AbstractColumn {
-    private String data;
+    private Long data;
 
-    public DateTimeColumn(String columnName, String object) {
+    public DateTimeColumn(String columnName, Long object) {
         this.columnName = columnName;
         this.data = object;
     }
 
     @Override
-    public String getData() {
+    public Long getData() {
         return this.data;
     }
 }
