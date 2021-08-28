@@ -30,11 +30,11 @@ public class Configuration {
     /**
      * 源端数据源名称
      */
-    private String sourceName;
+    private String sourceDsName;
     /**
      * 目标数据源名称
      */
-    protected String targetName;
+    protected String targetDsName;
     /**
      * 同步模式
      */

@@ -32,7 +32,7 @@ public class MongodbSource extends SourceMetadata {
     MongoClient mongoClient = null;
 
     public MongodbSource(Configuration configuration, MemoryCache memoryCache) {
-        this.sourceName = configuration.getSourceName();
+        this.sourceName = configuration.getSourceDsName();
         this.taskName = configuration.getTaskName();
         this.proName = configuration.getProName();
         this.dbTableWhite = configuration.getDbTableWhite();

@@ -23,19 +23,19 @@ import java.util.Map;
  */
 public class TestMain {
     public static void main(String[] args) {
-        Map<String, Object> map = MySqlConnection.getJdbcTemplate("1").queryForMap("select * from photon.program where proc_name='proc1'  ");
-        System.out.println(map);
+
         testMongoDbToMongoDb();
-        MySqlConnection.close("1");
+        testMongoDbToMongoDb();
+        testMongoDbToMongoDb();
     }
 
 
     public static void testMongoDbToMongoDb() {
         Configuration configuration = ConfigurationUtil.getConfiguration("proc1");
 
-        MongoDbConnection.getMongoClient(configuration.getSourceName(), DataSourceUtil.getDataSourceByDsName(configuration.getProName(), configuration.getSourceName()));
+        MongoDbConnection.getMongoClient(configuration.getSourceDsName(), DataSourceUtil.getDataSourceByDsName(configuration.getProName(), configuration.getSourceDsName()));
 
-        MongoDbConnection.getMongoClient(configuration.getTargetName(), DataSourceUtil.getDataSourceByDsName(configuration.getProName(), configuration.getTargetName()));
+        MongoDbConnection.getMongoClient(configuration.getTargetDsName(), DataSourceUtil.getDataSourceByDsName(configuration.getProName(), configuration.getTargetDsName()));
 
         MemoryCache memoryCache = new MemoryCache(configuration.getTaskName(),
                 configuration.getProName(), configuration.getCacheNum(), configuration.getCacheSize(), true);
@@ -85,8 +85,8 @@ public class TestMain {
                     } catch (Exception e) {
                         System.out.println(e.getMessage());
                     }
-                    MongoDbConnection.close(configuration.getTargetName());
-                    MongoDbConnection.close(configuration.getSourceName());
+                    MongoDbConnection.close(configuration.getSourceDsName());
+                    MongoDbConnection.close(configuration.getTargetDsName());
                     MySqlConnection.close("1");
                     System.out.println("procName:" + configuration.getProName() + "关闭成功");
 

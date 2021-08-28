@@ -30,7 +30,7 @@ public abstract class AbstractTargetTask implements Runnable {
     protected MemoryCache memoryCache;
 
     public AbstractTargetTask(Configuration configuration, MemoryCache memoryCache) {
-        this.targetDsName = configuration.getTargetName();
+        this.targetDsName = configuration.getTargetDsName();
         this.taskName = configuration.getTaskName();
         this.proName = configuration.getProName();
         this.memoryCache = memoryCache;
