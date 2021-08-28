@@ -20,4 +20,12 @@ public class ArrayColumn extends AbstractColumn {
         return this.data;
     }
 
+    @Override
+    public String toString() {
+        StringBuilder stringBuilder = new StringBuilder();
+        for (Object object : data) {
+            stringBuilder.append(object.toString());
+        }
+        return stringBuilder.toString();
+    }
 }
