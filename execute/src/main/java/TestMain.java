@@ -105,9 +105,8 @@ public class TestMain {
                     } catch (Exception e) {
                         Log.info(e.getMessage());
                     }
-                    memoryCache.gcMemoryCache();
                     MysqlTargetTask.setIsStopFlagOfTarget(configuration.getProName(), false);
-
+                    memoryCache.gcMemoryCache();
                     Log.info("procName:" + configuration.getProName() + "关闭成功");
                     Thread.sleep(10000);
                     break;

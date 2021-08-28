@@ -24,6 +24,7 @@ public class MysqlTarget {
 
     public void startToTarget() {
         for (int i = 0; i < configuration.getTargetThreadNum(); i++) {
+            TargetTaskPoolManager.setTargetActiveThreadNum(procName, 1);
             TargetTaskPoolManager.submit(procName, new MysqlTargetTask(configuration, memoryCache));
         }
     }

@@ -18,7 +18,7 @@ public class ConfigurationUtil {
         configuration.setSourceDsName(map.get("source_ds_name").toString());
         configuration.setTargetDsName(map.get("target_ds_name").toString());
         configuration.setSyncMode("all");
-        configuration.setDbTableWhite("photon.sourceOffset");
+        configuration.setDbTableWhite("photon.apply");
         configuration.setFilterDdl(false);
         configuration.setCollectionExistDrop(true);
         configuration.setCreateIndex(true);
