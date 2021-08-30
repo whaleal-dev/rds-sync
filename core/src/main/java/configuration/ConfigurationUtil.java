@@ -39,22 +39,23 @@ public class ConfigurationUtil {
         }
         Object filterDdl = map.get("filter_ddl");
         if (filterDdl != null) {
+            System.out.println(filterDdl);
             configuration.setFilterDdl(false);
-            if ((Integer) filterDdl == 1) {
+            if ((Boolean) filterDdl ) {
                 configuration.setFilterDdl(true);
             }
         }
         Object collectionExistDrop = map.get("collection_exist_drop");
         if (collectionExistDrop != null) {
             configuration.setCollectionExistDrop(false);
-            if ((Integer) collectionExistDrop == 1) {
+            if ((Boolean) collectionExistDrop) {
                 configuration.setCollectionExistDrop(true);
             }
         }
         Object createIndex = map.get("create_index");
         if (createIndex != null) {
             configuration.setCreateIndex(false);
-            if ((Integer) createIndex == 1) {
+            if ((Boolean) createIndex) {
                 configuration.setCreateIndex(true);
             }
         }
@@ -91,7 +92,7 @@ public class ConfigurationUtil {
         Object syncParallel = map.get("sync_parallel");
         if (syncParallel != null) {
             configuration.setSyncParallel(false);
-            if ((Integer) syncParallel == 1) {
+            if ((Boolean) syncParallel ) {
                 configuration.setSyncParallel(true);
             }
         }
