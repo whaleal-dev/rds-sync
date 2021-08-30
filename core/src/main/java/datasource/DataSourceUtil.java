@@ -1,16 +1,25 @@
 package datasource;
 
 import common.photonV.entity.Datasource;
+import conf.Configuration;
+import configuration.ConfigurationUtil;
 import dbconnection.mysql.MySqlConnection;
+import org.apache.commons.dbcp.BasicDataSource;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.util.Map;
 
 /**
- * @description:
+ * 数据源的工具类
+ * 根据程序的配置文件去查询到一个Datasource
+ * 根据程序的名字获取到一个Datasource
+ *
  * @author: lhp
  * @time: 2021/8/27 3:19 下午
+ * @date 2021/08/30
  */
 public class DataSourceUtil {
+
 
     public static Datasource getDataSourceByDsName(String procName, String dsName) {
         Map<String, Object> map = MySqlConnection.getJdbcTemplate("1").queryForMap("select * from photon.datasource where name='" + dsName + "' ");
