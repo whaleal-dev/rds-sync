@@ -13,8 +13,9 @@
         <module>mongodbSource</module>
         <module>mongodbTarget</module>
         <module>execute</module>
-        <module>mysqlTargetByLhp</module>
+        <module>mysqlTarget</module>
         <module>core</module>
+        <module>realTimeOfMongoDb</module>
     </modules>
     <properties>
         <maven.compiler.source>8</maven.compiler.source>

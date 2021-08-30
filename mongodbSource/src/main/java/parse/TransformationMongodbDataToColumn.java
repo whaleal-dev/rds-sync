@@ -81,7 +81,7 @@ public class TransformationMongodbDataToColumn {
 
     public static void main(String[] args) {
 
-        BsonTimestamp bsonTimestamp = new BsonTimestamp(System.currentTimeMillis() / 1000);
-        System.out.println();
+        BsonTimestamp bsonTimestamp = new BsonTimestamp(System.currentTimeMillis());
+        System.out.println(bsonTimestamp.getValue());
     }
 }

@@ -17,16 +17,15 @@ import thread.TargetTaskPoolManager;
  */
 @AllArgsConstructor
 @NoArgsConstructor
-public class MysqlTargetLhp  {
-
+public class MysqlTarget {
     private Configuration configuration;
     private MemoryCache memoryCache;
     private String procName;
 
     public void startToTarget() {
         for (int i = 0; i < configuration.getTargetThreadNum(); i++) {
+            TargetTaskPoolManager.setTargetActiveThreadNum(procName, 1);
             TargetTaskPoolManager.submit(procName, new MysqlTargetTask(configuration, memoryCache));
         }
-
     }
 }

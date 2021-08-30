@@ -40,6 +40,7 @@ public class MongodbTargetTask extends AbstractTargetTask {
 
 
     private List<WriteModel<Document>> writeModels = new ArrayList<>();
+
     private volatile static Map<String, AtomicBoolean> isStop = new ConcurrentHashMap<>();
 
     public MongodbTargetTask(Configuration configuration, MemoryCache memoryCache) {
@@ -82,7 +83,7 @@ public class MongodbTargetTask extends AbstractTargetTask {
                     this.dbTableName = batchDataEntity.getDbTableName();
                     //  System.out.println("target:" + atomicInteger.addAndGet(batchDataEntity.getDataList().size()));
                     // 判断操作行为。如果为INSERTMANY类型，直接应用数据。
-                    parseColumnDataToDocument(batchDataEntity);
+                    parseColumnDataToTargetData(batchDataEntity);
                     bulkExecute(dbTableName, -1);
                 } else {
                     // System.out.println("我是空数据");
@@ -95,7 +96,7 @@ public class MongodbTargetTask extends AbstractTargetTask {
     }
 
     @Override
-    public void parseColumnDataToDocument(BatchDataEntity batchDataEntity) {
+    public void parseColumnDataToTargetData(BatchDataEntity batchDataEntity) {
         List<List<AbstractColumn>> dataList = batchDataEntity.getDataList();
         for (List<AbstractColumn> columnList : dataList) {
             Document document = new Document();
