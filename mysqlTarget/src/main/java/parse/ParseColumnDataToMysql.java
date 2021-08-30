@@ -33,6 +33,7 @@ public class ParseColumnDataToMysql {
             case LONGCOLUMN:
             case DOUBLECOLUMN:
             case FLOATCOLUMN:
+                return columnData.getData();
             case TIMESTAMPCOLUMN:
 //                return columnData.getData();
                 return null;

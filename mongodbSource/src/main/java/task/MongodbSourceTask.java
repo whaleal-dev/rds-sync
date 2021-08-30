@@ -158,7 +158,7 @@ public class MongodbSourceTask implements Runnable, SourceTaskInterface {
         batchDataEntity.setBatchNo(System.currentTimeMillis());
         // 推送数据到缓存区中
         memoryCache.putData(batchDataEntity);
-       // System.out.println("sourceNum:" + atomicInteger.addAndGet(batchDataEntity.getDataList().size()));
+        System.out.println("sourceNum:" + atomicInteger.addAndGet(batchDataEntity.getDataList().size()));
         this.dataList = new ArrayList<>();
         this.cache = 0;
     }

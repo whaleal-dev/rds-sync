@@ -14,6 +14,7 @@ public class ConfigurationUtil {
     public static Configuration getConfiguration(String procName) {
         Configuration configuration = new Configuration();
         Map<String, Object> map = MySqlConnection.getJdbcTemplate("1").queryForMap("select * from photon.program where proc_name='" + procName + "' ");
+        configuration.setTaskName("task1");
         configuration.setProName(map.get("proc_name").toString());
         configuration.setSourceDsName(map.get("source_ds_name").toString());
         configuration.setTargetDsName(map.get("target_ds_name").toString());

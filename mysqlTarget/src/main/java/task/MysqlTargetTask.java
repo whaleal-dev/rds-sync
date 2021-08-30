@@ -52,9 +52,11 @@ public class MysqlTargetTask extends AbstractTargetTask {
      * 拼接后的sql
      */
     private List<String> sqlList = new ArrayList<>();
-    public static void setIsStopFlagOfTarget(String procName,boolean value) {
+
+    public static void setIsStopFlagOfTarget(String procName, boolean value) {
         isStop.get(procName).set(value);
     }
+
     public MysqlTargetTask(Configuration configuration, MemoryCache memoryCache) {
         super(configuration, memoryCache);
         this.connection = MySqlConnection.getConnection(this.targetDsName);
@@ -134,8 +136,11 @@ public class MysqlTargetTask extends AbstractTargetTask {
         }
     }
 
+    static AtomicInteger atomicInteger = new AtomicInteger();
+
     @Override
     public void bulkExecute(String dbTable, long batchNo) {
+        System.out.println("targetNum:" + atomicInteger.addAndGet(sqlList.size()));
         try {
             Statement statement = connection.createStatement();
             connection.setAutoCommit(false);
@@ -294,7 +299,7 @@ public class MysqlTargetTask extends AbstractTargetTask {
                     String alterSql = "alter table " + dbTableName + " modify column" + columnTypeTemp.toString() + " ";
                     MySqlConnection.getJdbcTemplate(dsName).execute(alterSql);
                     columnTypeMap.put((dsName + ":" + dbTableName + ":" + columnName).toUpperCase(), columnTypeTemp);
-                    Log.info(columnType.getLength()+"."+columnType.getPrecision()+"    =   "+columnValue.getColumnName()+"    =   "+columnValue.getData()+"    =   "+alterSql);
+                    Log.info(columnType.getLength() + "." + columnType.getPrecision() + "    =   " + columnValue.getColumnName() + "    =   " + columnValue.getData() + "    =   " + alterSql);
                 }
             }
         }
