@@ -1,7 +1,10 @@
 package conf;
 
+import common.dataclass.Range;
 import constant.Key;
 import constant.utils.Constant;
+import datasource.DataSourceUtil;
+import dbconnection.mysql.MySqlConnection;
 import exception.DBUtilErrorCode;
 import exception.PhotonTException;
 import org.apache.commons.lang3.StringUtils;
@@ -18,30 +21,31 @@ import java.util.List;
 import static conf.DBUtil.closeDBResources;
 
 public class SingleTableSplitUtil {
-    private static final Logger LOG = LoggerFactory
-            .getLogger(SingleTableSplitUtil.class);
+//    private static final Logger LOG = LoggerFactory
+//            .getLogger(SingleTableSplitUtil.class);
 
-    private SingleTableSplitUtil() {
-    }
+//    private SingleTableSplitUtil() {
+//    }
 
     //对单表进行分表
     // tempSlice 临时分片配置 = configuration
     // tempNum = 1.0 * adviceNumber / tableNumber ， tempNum再向上取整 = eachTableShouldSplittedNumber
     // adviceNum = eachTableShouldSplittedNumber
-    public static List<Configuration> splitSingleTable(
-            Configuration configuration, int adviceNum) {
+    public static List<Range> splitSingleTable(Configuration configuration, String table, int adviceNum) {
         //插件参数集合
-        List<Configuration> pluginParams = new ArrayList<Configuration>();
+        List<Range> pluginParams = new ArrayList<Range>();
         //范围集合
         List<String> rangeList;
         //从配置中取分片字段 splitPk
-        String splitPkName = configuration.getString(Key.SPLIT_PK);
+        //TODO 智能取分片字段
+        String splitPkName = configuration.getSplitPk();
         //从配置中取列 column
-        String column = configuration.getString(Key.COLUMN);
+        //默认 *
+        String column = "*";
         //取table
-        String table = configuration.getString(Key.TABLE);
+        //
         //取where 取不到就为null
-        String where = configuration.getString(Key.WHERE, null);
+        String where = null;
         //配置中有无where
         boolean hasWhere = StringUtils.isNotBlank(where);
 
@@ -50,24 +54,26 @@ public class SingleTableSplitUtil {
         // Pair Java中的配对
         // minMaxPK 最小到最大字段
 
-        Pair<Object, Object> minMaxPK = getPkRange(configuration);
+        Pair<Object, Object> minMaxPK = getPkRange(configuration, table, where);
         if (null == minMaxPK) {
             throw PhotonTException.asDataXException(DBUtilErrorCode.ILLEGAL_SPLIT_PK,
                     "根据切分主键切分表失败. DataX 仅支持切分主键为一个,并且类型为整数或者字符串类型. 请尝试使用其他的切分主键或者联系 DBA 进行处理.");
         }
-
-        configuration.set(Key.QUERY_SQL, buildQuerySql(column, table, where));
+        Range range = new Range();
+        range.setDbTableName(table);
+        range.setQuery(buildQuerySql(column, table, where));
+//        configuration.set(Key.QUERY_SQL, buildQuerySql(column, table, where));
 
         // 切分后获取到的 start/end 有 Null 的情况
         if (null == minMaxPK.getLeft() || null == minMaxPK.getRight()) {
-            pluginParams.add(configuration);
+            pluginParams.add(range);
             return pluginParams;
         }
 
         boolean isStringType = Constant.PK_TYPE_STRING.equals(configuration
-                .getString(Constant.PK_TYPE));
+                .getPK_TYPE());
         boolean isLongType = Constant.PK_TYPE_LONG.equals(configuration
-                .getString(Constant.PK_TYPE));
+                .getPK_TYPE());
 
         if (isStringType) {
             rangeList = RangeSplitWrap.splitAndWrap(
@@ -88,29 +94,26 @@ public class SingleTableSplitUtil {
         List<String> allQuerySql = new ArrayList<String>();
 
         if (null != rangeList && !rangeList.isEmpty()) {
-            for (String range : rangeList) {
-                Configuration tempConfig = configuration.clone();
+            for (String range1 : rangeList) {
 
                 tempQuerySql = buildQuerySql(column, table, where)
-                        + (hasWhere ? " and " : " where ") + range;
+                        + (hasWhere ? " and " : " where ") + range1;
 
                 allQuerySql.add(tempQuerySql);
-                tempConfig.set(Key.QUERY_SQL, tempQuerySql);
-                pluginParams.add(tempConfig);
+                range.setQuery(tempQuerySql);
+                pluginParams.add(range);
             }
         } else {
             //pluginParams.add(configuration); // this is wrong for new & old split
-            Configuration tempConfig = configuration.clone();
             tempQuerySql = buildQuerySql(column, table, where)
                     + (hasWhere ? " and " : " where ")
                     + String.format(" %s IS NOT NULL", splitPkName);
             allQuerySql.add(tempQuerySql);
-            tempConfig.set(Key.QUERY_SQL, tempQuerySql);
-            pluginParams.add(tempConfig);
+            range.setQuery(tempQuerySql);
+            pluginParams.add(range);
         }
 
         // deal pk is null
-        Configuration tempConfig = configuration.clone();
         tempQuerySql =
 
                 buildQuerySql(column, table, where)
@@ -119,11 +122,11 @@ public class SingleTableSplitUtil {
 
         allQuerySql.add(tempQuerySql);
 
-        LOG.info("After split(), allQuerySql=[\n{}\n].",
-                StringUtils.join(allQuerySql, "\n"));
+//        LOG.info("After split(), allQuerySql=[\n{}\n].",
+//                StringUtils.join(allQuerySql, "\n"));
 
-        tempConfig.set(Key.QUERY_SQL, tempQuerySql);
-        pluginParams.add(tempConfig);
+        range.setQuery(tempQuerySql);
+        pluginParams.add(range);
 
         return pluginParams;
     }
@@ -146,43 +149,33 @@ public class SingleTableSplitUtil {
     }
 
     @SuppressWarnings("resource")
-    private static Pair<Object, Object> getPkRange(Configuration configuration) {
+    private static Pair<Object, Object> getPkRange(Configuration configuration, String table, String where) {
         //字段构建的范围 sql pkRangeSQL
-        String pkRangeSQL = genPKRangeSQL(configuration);
+        String pkRangeSQL = genPKRangeSQL(configuration, table, where);
         //取配置中的 fetchSize
-        int fetchSize = configuration.getInt(Constant.FETCH_SIZE);
+        int fetchSize = configuration.getFetchSize();
         //取配置中的 jdbcURL
-        String jdbcURL = configuration.getString(Key.JDBC_URL);
+//        String jdbcURL = configuration.getString(Key.JDBC_URL);
         //取配置中的 username
-        String username = configuration.getString(Key.USERNAME);
+//        String username = configuration.getString(Key.USERNAME);
         //取配置中的 password
-        String password = configuration.getString(Key.PASSWORD);
+//        String password = configuration.getString(Key.PASSWORD);
         //取配置中的 table
-        String table = configuration.getString(Key.TABLE);
         //获取连接
-        Connection conn = DBUtil.connect(jdbcURL, username, password);
+        Connection conn = MySqlConnection.getConnection(configuration.getSourceDsName(),
+                DataSourceUtil.getDataSourceByDsName(configuration.getSourceDsName()));
         //字段构建的范围 sql pkRangeSQL
-        Pair<Object, Object> minMaxPK = checkSplitPk(conn, pkRangeSQL, fetchSize, table, username, configuration);
+        Pair<Object, Object> minMaxPK = checkSplitPk(conn, pkRangeSQL, fetchSize, configuration);
         closeDBResources(null, null, conn);
         return minMaxPK;
-    }
-
-    public static void precheckSplitPk(Connection conn, String pkRangeSQL, int fetchSize,
-                                       String table, String username) {
-        Pair<Object, Object> minMaxPK = checkSplitPk(conn, pkRangeSQL, fetchSize, table, username, null);
-        if (null == minMaxPK) {
-            throw PhotonTException.asDataXException(DBUtilErrorCode.ILLEGAL_SPLIT_PK,
-                    "根据切分主键切分表失败. DataX 仅支持切分主键为一个,并且类型为整数或者字符串类型. 请尝试使用其他的切分主键或者联系 DBA 进行处理.");
-        }
     }
 
     /**
      * 检测splitPk的配置是否正确。
      * configuration为null, 是precheck的逻辑，不需要回写PK_TYPE到configuration中
      */
-    private static Pair<Object, Object> checkSplitPk(Connection conn, String pkRangeSQL, int fetchSize, String table,
-                                                     String username, Configuration configuration) {
-        LOG.info("split pk [sql={}] is running... ", pkRangeSQL);
+    private static Pair<Object, Object> checkSplitPk(Connection conn, String pkRangeSQL, int fetchSize,
+                                                     Configuration configuration) {
         ResultSet rs = null;
         Pair<Object, Object> minMaxPK = null;
         try {
@@ -198,8 +191,7 @@ public class SingleTableSplitUtil {
                 // pk 是 string 类型
                 if (isStringType(rsMetaData.getColumnType(1))) {
                     if (configuration != null) {
-                        configuration
-                                .set(Constant.PK_TYPE, Constant.PK_TYPE_STRING);
+                        configuration.setPK_TYPE(Constant.PK_TYPE_STRING);
                     }
                     //异步获取 resultSet 的 next()
                     while (DBUtil.asyncResultSetNext(rs)) {
@@ -210,7 +202,7 @@ public class SingleTableSplitUtil {
                     // pk 是 long 类型
                 } else if (isLongType(rsMetaData.getColumnType(1))) {
                     if (configuration != null) {
-                        configuration.set(Constant.PK_TYPE, Constant.PK_TYPE_LONG);
+                        configuration.setPK_TYPE(Constant.PK_TYPE_LONG);
                     }
                     //异步获取 resultSet 的 next()
                     while (DBUtil.asyncResultSetNext(rs)) {
@@ -280,14 +272,14 @@ public class SingleTableSplitUtil {
                 || type == Types.NVARCHAR;
     }
 
-    private static String genPKRangeSQL(Configuration configuration) {
+    private static String genPKRangeSQL(Configuration configuration, String table, String where) {
         //去掉SPLIT_PK前面和后面的空格
-        String splitPK = configuration.getString(Key.SPLIT_PK).trim();
+        String splitPK = configuration.getSplitPk().trim();
         //去掉TABLE前面和后面的空格
-        String table = configuration.getString(Key.TABLE).trim();
+        String table1 = table.trim();
         //取配置中where 没有where就为null
-        String where = configuration.getString(Key.WHERE, null);
-        return genPKSql(splitPK, table, where);
+//        String where = configuration.getString(Key.WHERE, null);
+        return genPKSql(splitPK, table1, where);
     }
 
     public static String genPKSql(String splitPK, String table, String where) {

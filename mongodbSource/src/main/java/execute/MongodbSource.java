@@ -73,7 +73,7 @@ public class MongodbSource extends SourceMetadata {
             while (mongoCursorOfTable.hasNext()) {
                 String tableName = mongoCursorOfTable.next();
                 String dbTable = dbName + "." + tableName;
-                if ((dbTable).matches(dbTableWhite)) {
+                if (dbTable.matches(dbTableWhite)) {
                     dbTables.put(dbTable, dbTable);
                 }
             }

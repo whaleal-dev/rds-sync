@@ -1,13 +1,10 @@
 package conf;
 
 import cache.MemoryCache;
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
-import java.util.Arrays;
-import java.util.List;
 
 /**
  * @author: lhp
@@ -87,4 +84,24 @@ public class Configuration {
      * 在增量中每个数据源解析数据的线程
      */
     private int incrementParseThreadNum;
+    /**
+     * 切表字段
+     */
+    private String splitPk;
+    /**
+     * PK_TYPE
+     */
+    private Object PK_TYPE;
+    /**
+     * 为避免导入hive小文件 默认基数为5，可以通过 splitFactor 配置基数
+     */
+    private Integer splitFactor = 5;
+    /**
+     *
+     */
+    private Integer fetchSize = 500;
+    /**
+     * 切分数
+     */
+    private Integer adviceNumber = 1;
 }

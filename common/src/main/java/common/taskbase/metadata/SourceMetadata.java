@@ -1,6 +1,7 @@
 package common.taskbase.metadata;
 
 import cache.MemoryCache;
+import common.taskbase.MysqlSourceTaskInfo;
 import common.taskbase.SourceTaskInfo;
 import conf.Configuration;
 
