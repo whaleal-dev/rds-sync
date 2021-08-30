@@ -32,7 +32,7 @@ public class MongodbSource extends SourceMetadata {
     MongoClient mongoClient = null;
 
     public MongodbSource(Configuration configuration, MemoryCache memoryCache) {
-        this.sourceName = configuration.getSourceName();
+        this.sourceName = configuration.getSourceDsName();
         this.taskName = configuration.getTaskName();
         this.proName = configuration.getProName();
         this.dbTableWhite = configuration.getDbTableWhite();
@@ -61,7 +61,7 @@ public class MongodbSource extends SourceMetadata {
         MongoCursor<String> mongoCursorOfDb = mongoIterableOfDb.iterator();
         // 遍历库列表
         while (mongoCursorOfDb.hasNext()) {
-            System.out.println(dbTables);
+            //System.out.println(dbTables);
             String dbName = mongoCursorOfDb.next();
             if (dbName.equalsIgnoreCase("admin") || dbName.equalsIgnoreCase("local") || dbName.equalsIgnoreCase("config")) {
                 Log.info("admin,local,config库数据不进行同步");
@@ -102,7 +102,7 @@ public class MongodbSource extends SourceMetadata {
             public void run() {
                 while (rangeMap.hasNext()) {
                     SysPoolManager.setSysActiveThreadNum(proName, 1);
-                    System.out.println("getSysThreadNum1:" + SysPoolManager.setSysActiveThreadNum(proName, 0));
+                    //System.out.println("getSysThreadNum1:" + SysPoolManager.setSysActiveThreadNum(proName, 0));
                     Map.Entry<Integer, Range> next = rangeMap.next();
                     Range rangeOfTable = next.getValue();
                     while (rangeOfTable.getMinId() != null) {
@@ -112,7 +112,7 @@ public class MongodbSource extends SourceMetadata {
                         pushTaskMeta(proName, taskMetadata);
                     }
                     SysPoolManager.setSysActiveThreadNum(proName, -1);
-                    System.out.println("getSysThreadNum2:" + SysPoolManager.setSysActiveThreadNum(proName, 0));
+                    //System.out.println("getSysThreadNum2:" + SysPoolManager.setSysActiveThreadNum(proName, 0));
                 }
             }
         };

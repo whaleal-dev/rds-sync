@@ -14,16 +14,15 @@ public class ConfigurationUtil {
     public static Configuration getConfiguration(String procName) {
         Configuration configuration = new Configuration();
         Map<String, Object> map = MySqlConnection.getJdbcTemplate("1").queryForMap("select * from photon.program where proc_name='" + procName + "' ");
-        configuration.setTargetName("1");
         configuration.setProName(map.get("proc_name").toString());
-        configuration.setSourceName(map.get("source_ds_name").toString());
-        configuration.setTargetName(map.get("target_ds_name").toString());
+        configuration.setSourceDsName(map.get("source_ds_name").toString());
+        configuration.setTargetDsName(map.get("target_ds_name").toString());
         configuration.setSyncMode("all");
-        configuration.setDbTableWhite("photon.+");
+        configuration.setDbTableWhite("photon.apply");
         configuration.setFilterDdl(false);
         configuration.setCollectionExistDrop(true);
         configuration.setCreateIndex(true);
-        configuration.setTargetThreadNum(1);
+        configuration.setTargetThreadNum(5);
         configuration.setSourceThreadNum(2);
         configuration.setCacheNum(20);
         configuration.setCacheSize(20);

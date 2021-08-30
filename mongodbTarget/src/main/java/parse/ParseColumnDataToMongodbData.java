@@ -8,22 +8,23 @@ import org.bson.Document;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Date;
 
 
 /**
  * @author liheping
  */
 public class ParseColumnDataToMongodbData {
-    private static DateTimeFormatter timestampSimpleDateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    private static DateTimeFormatter timestampSimpleDateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSz");
 
     public static Object parseColumnData(AbstractColumn columnData) {
         String type = columnData.getClass().getSimpleName().toUpperCase();
         EnumColumnDataType enumColumnDataType = EnumColumnDataType.valueOf(type);
         switch (enumColumnDataType) {
             case DATETIMECOLUMN:
-                return LocalDateTime.parse(columnData.getData().toString(), timestampSimpleDateFormat);
+                return new Date((long) columnData.getData());
             case TIMESTAMPCOLUMN:
-                return new BsonTimestamp(Long.parseLong(columnData.getData().toString()));
+                return new BsonTimestamp((long) (columnData.getData()));
             case JSONCOLUMN:
                 return Document.parse(columnData.getData().toString());
             case ARRAYCOLUMN:
@@ -35,6 +36,7 @@ public class ParseColumnDataToMongodbData {
             case OBJECTIDCOLUMN:
             case BOOLCOLUMN:
             case DATECOLUMN:
+            case NULLCOLUMN:
             default:
                 return columnData.getData();
         }

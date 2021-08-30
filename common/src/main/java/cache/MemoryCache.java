@@ -174,4 +174,12 @@ public class MemoryCache {
         }
         return sum;
     }
+
+    public void gcMemoryCache() {
+        for (int i = 0; i < cacheNum; i++) {
+            cacheList[i] = null;
+            isUseState[i] = null;
+        }
+
+    }
 }

@@ -22,7 +22,9 @@ public class SysPoolManager extends ThreadPoolManager {
     }
 
     private static Map<String, AtomicInteger> sysActiveThreadNum = new ConcurrentHashMap<>();
-
+    public static void deleteSysPoolManager(String procName) {
+        sysThreadPoolManager.remove(procName);
+    }
     public static int setSysActiveThreadNum(String procName, int num) {
         if (!sysActiveThreadNum.containsKey(procName)) {
             synchronized (SysPoolManager.class) {
@@ -64,6 +66,8 @@ public class SysPoolManager extends ThreadPoolManager {
 
     public static void shuntDownNow(String procName) {
         sysThreadPoolManager.get(procName).executorService.shutdownNow();
+        sysThreadPoolManager.get(procName).executorService = null;
+        deleteSysPoolManager(procName);
     }
 }
 

@@ -1,6 +1,7 @@
 package thread;
 
 import conf.Configuration;
+import util.Log;
 
 import java.util.Map;
 import java.util.concurrent.*;
@@ -17,6 +18,11 @@ public class TargetTaskPoolManager extends ThreadPoolManager {
 
     public TargetTaskPoolManager(String procName, int corePoolSize, int maximumPoolSize) {
         super(procName, corePoolSize, maximumPoolSize);
+        Log.info("targetActiveThreadNum" + targetActiveThreadNum.toString());
+    }
+
+    public static void deleteSTargetTaskPoolManager(String procName) {
+        targetThreadPoolManager.remove(procName);
     }
 
     public static int setTargetActiveThreadNum(String procName, int num) {
@@ -63,7 +69,9 @@ public class TargetTaskPoolManager extends ThreadPoolManager {
     }
 
     public static void shuntDownNow(String procName) {
-        targetThreadPoolManager.get(procName).executorService.shutdown();
+        targetThreadPoolManager.get(procName).executorService.shutdownNow();
+        targetThreadPoolManager.get(procName).executorService = null;
+        deleteSTargetTaskPoolManager(procName);
     }
 }
 

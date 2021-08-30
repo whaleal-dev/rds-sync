@@ -5,14 +5,16 @@ import common.column.AbstractColumn;
 import common.columnclass.ColumnType;
 import common.dataclass.BatchDataEntity;
 import common.dbtype.DbTypeFlag;
+import common.dbtype.EnumColumnDataType;
+import common.dbtype.EnumMySqlDataType;
+import common.dbtype.MySqlType;
 import common.taskbase.AbstractTargetTask;
 import conf.Configuration;
-
 import dbconnection.mysql.MySqlConnection;
-import lombok.NoArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
 import parse.ParseColumnDataToMysql;
 import parse.ParseTypeFromColumn;
+import thread.TargetTaskPoolManager;
 import util.Log;
 
 import java.sql.Connection;
@@ -21,6 +23,7 @@ import java.sql.Statement;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 
@@ -32,9 +35,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class MysqlTargetTask extends AbstractTargetTask {
 
-    private static Map<String, ColumnType> columnTypeMap = new ConcurrentHashMap<>();
+    private static volatile Map<String, ColumnType> columnTypeMap = new ConcurrentHashMap<>();
+
     private static volatile Set<String> dbTableSet = new CopyOnWriteArraySet<>();
 
+    private volatile static Map<String, AtomicBoolean> isStop = new ConcurrentHashMap<>();
     /**
      * jdbcTemplate
      */
@@ -43,12 +48,24 @@ public class MysqlTargetTask extends AbstractTargetTask {
      * 数据源链接tcp
      */
     private Connection connection;
-
-    private List<String> writeModels = new ArrayList<>();
-
+    /**
+     * 拼接后的sql
+     */
+    private List<String> sqlList = new ArrayList<>();
+    public static void setIsStopFlagOfTarget(String procName,boolean value) {
+        isStop.get(procName).set(value);
+    }
     public MysqlTargetTask(Configuration configuration, MemoryCache memoryCache) {
         super(configuration, memoryCache);
         this.connection = MySqlConnection.getConnection(this.targetDsName);
+        this.jdbcTemplate = MySqlConnection.getJdbcTemplate(this.dbTableName);
+        if (!isStop.containsKey(proName)) {
+            synchronized (MysqlTargetTask.class) {
+                if (!isStop.containsKey(proName)) {
+                    isStop.put(proName, new AtomicBoolean());
+                }
+            }
+        }
     }
 
     @Override
@@ -56,7 +73,6 @@ public class MysqlTargetTask extends AbstractTargetTask {
         applyData();
     }
 
-    static AtomicInteger atomicInteger = new AtomicInteger();
 
     /**
      * applyData 应用数据
@@ -65,21 +81,27 @@ public class MysqlTargetTask extends AbstractTargetTask {
      */
     @Override
     public void applyData() {
-        Log.info("启动targetMysql任务:" + this.targetDsName);
+        Log.info("启动target任务:" + this.targetDsName);
         while (true) {
-            BatchDataEntity batchDataEntity = memoryCache.getData();
             try {
+                if (isStop.get(proName).get()) {
+                    // System.out.println("targetTask-1");
+                    TargetTaskPoolManager.setTargetActiveThreadNum(proName, -1);
+                    //  System.out.println("setTargetActiveThreadNum" + TargetTaskPoolManager.setTargetActiveThreadNum(proName, 0));
+                    break;
+                }
+                BatchDataEntity batchDataEntity = memoryCache.getData();
                 // 从缓存中获取一批数据
                 if (batchDataEntity != null) {
                     // 当前任务拉取的mongoNamespace
+                    this.dbTableName = batchDataEntity.getDbTableName();
                     if (!dbTableSet.contains(batchDataEntity.getDbTableName().toUpperCase())) {
                         createTableByCommonDataEntity(batchDataEntity.getDbTableName(), batchDataEntity.getDataList().get(0), targetDsName);
                     }
-                    System.out.println("targetMysql:" + atomicInteger.addAndGet(batchDataEntity.getDataList().size()));
+                    //  System.out.println("target:" + atomicInteger.addAndGet(batchDataEntity.getDataList().size()));
                     // 判断操作行为。如果为INSERTMANY类型，直接应用数据。
-                    parseColumnDataToDocument(batchDataEntity);
-                    bulkExecute(this.writeModels, "", -1);
-                    this.writeModels = new ArrayList<>();
+                    parseColumnDataToTargetData(batchDataEntity);
+                    bulkExecute(dbTableName, -1);
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -89,10 +111,12 @@ public class MysqlTargetTask extends AbstractTargetTask {
     }
 
     @Override
-    public void parseColumnDataToDocument(BatchDataEntity batchDataEntity) {
+    public void parseColumnDataToTargetData(BatchDataEntity batchDataEntity) {
 
         List<List<AbstractColumn>> dataList = batchDataEntity.getDataList();
+
         for (List<AbstractColumn> columnList : dataList) {
+            checkDataIsCorrect(columnList, targetDsName, dbTableName);
             String insertSql = "insert into " + batchDataEntity.getDbTableName();
             String columns = "(";
             String values = "values(";
@@ -106,38 +130,12 @@ public class MysqlTargetTask extends AbstractTargetTask {
             columns += ")";
             values += ") ";
             insertSql = insertSql + columns + values;
-            writeModels.add(insertSql);
+            sqlList.add(insertSql);
         }
     }
 
     @Override
     public void bulkExecute(String dbTable, long batchNo) {
-
-    }
-
-    /**
-     * createConnection 创建mysql的tcp链接
-     *
-     * @desc 创建mysql的tcp链接
-     */
-    private void createConnection() {
-        try {
-            this.connection = this.jdbcTemplate.getDataSource().getConnection();
-        } catch (Exception e) {
-            e.printStackTrace();
-            Log.error(e.getMessage());
-        }
-    }
-
-
-    /**
-     * bulkExecute 批量写数据
-     *
-     * @param sqlList 数据集合
-     * @desc 批量写数据
-     */
-    public void bulkExecute(List<String> sqlList, String dbTable, long batchNo) {
-
         try {
             Statement statement = connection.createStatement();
             connection.setAutoCommit(false);
@@ -161,9 +159,11 @@ public class MysqlTargetTask extends AbstractTargetTask {
             } catch (SQLException exception) {
                 exception.printStackTrace();
             }
-
+        } finally {
+            this.sqlList = new ArrayList<>();
         }
     }
+
 
     /**
      * getTableInfoByTableName 获取表结构
@@ -198,7 +198,7 @@ public class MysqlTargetTask extends AbstractTargetTask {
                     columnAndType.setLength(Integer.parseInt(columnTypeArray[1]));
                 }
             }
-            columnTypeMap.put((dbTable + ":" + columnName).toUpperCase(), columnAndType);
+            columnTypeMap.put((targetDsName + ":" + dbTable + ":" + columnName).toUpperCase(), columnAndType);
         }
         dbTableSet.add((dbTable).toUpperCase());
         return mysqlColumnMap.size();
@@ -235,4 +235,68 @@ public class MysqlTargetTask extends AbstractTargetTask {
         Log.info("dbTableName:" + dbTable + ",createSql: " + createSql);
     }
 
+    /**
+     * checkInsertAndUpdateIsCorrect 检查表信息中是否和document字段匹配
+     *
+     * @param columnDataList
+     * @param dsName
+     * @desc 检查表信息中是否和document字段匹配
+     */
+    public static void checkDataIsCorrect(List<AbstractColumn> columnDataList, String dsName, String dbTable) {
+        try {
+            for (AbstractColumn columnValue : columnDataList) {
+                if (columnValue.getData() == null) {
+                    continue;
+                }
+                String columnName = columnValue.getColumnName();
+                if (columnTypeMap.containsKey((dsName + ":" + dbTable + ":" + columnName).toUpperCase())) {
+                    detectionLength(dbTable, columnName, columnValue, dsName);
+                } else {
+                    //修改表结构增加字段
+                    String addColumnSql = "alter table " + dbTable + " add column ";
+                    ColumnType columnType = ParseTypeFromColumn.parseType(columnValue);
+                    addColumnSql += columnType.toString();
+                    synchronized (MysqlTargetTask.class) {
+                        // dcl
+                        if (!columnTypeMap.containsKey((dsName + ":" + dbTable + ":" + columnName).toUpperCase())) {
+                            MySqlConnection.getJdbcTemplate(dsName).execute(addColumnSql);
+                            Log.info("addColumnSql:" + addColumnSql);
+                            columnTypeMap.put((dsName + ":" + dbTable + ":" + columnName).toUpperCase(), columnType);
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            Log.error(e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+
+    /**
+     * detectionTypeAndLength 探测类型长度是否正确
+     *
+     * @param dbTableName
+     * @param columnName
+     * @param columnValue
+     * @param columnName
+     * @param dsName
+     * @desc 探测类型长度是否正确。此代码需要大幅度优化
+     */
+    public static void detectionLength(String dbTableName, String columnName, AbstractColumn columnValue, String dsName) {
+        ColumnType columnType = columnTypeMap.get((dsName + ":" + dbTableName + ":" + columnName).toUpperCase());
+        boolean isAlter = ParseTypeFromColumn.isModifyTypeOrLength(columnValue, columnType);
+        if (isAlter) {
+            synchronized (MysqlTargetTask.class) {
+                columnType = columnTypeMap.get((dsName + ":" + dbTableName + ":" + columnName).toUpperCase());
+                if (ParseTypeFromColumn.isModifyTypeOrLength(columnValue, columnType)) {
+                    ColumnType columnTypeTemp = ParseTypeFromColumn.parseType(columnValue);
+                    String alterSql = "alter table " + dbTableName + " modify column" + columnTypeTemp.toString() + " ";
+                    MySqlConnection.getJdbcTemplate(dsName).execute(alterSql);
+                    columnTypeMap.put((dsName + ":" + dbTableName + ":" + columnName).toUpperCase(), columnTypeTemp);
+                    Log.info(columnType.getLength()+"."+columnType.getPrecision()+"    =   "+columnValue.getColumnName()+"    =   "+columnValue.getData()+"    =   "+alterSql);
+                }
+            }
+        }
+    }
 }

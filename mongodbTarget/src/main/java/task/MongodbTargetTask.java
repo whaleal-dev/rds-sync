@@ -40,6 +40,7 @@ public class MongodbTargetTask extends AbstractTargetTask {
 
 
     private List<WriteModel<Document>> writeModels = new ArrayList<>();
+
     private volatile static Map<String, AtomicBoolean> isStop = new ConcurrentHashMap<>();
 
     public MongodbTargetTask(Configuration configuration, MemoryCache memoryCache) {
@@ -54,8 +55,8 @@ public class MongodbTargetTask extends AbstractTargetTask {
         }
     }
 
-    public static void setIsStopFlagOfTarget(String procName) {
-        isStop.get(procName).set(true);
+    public static void setIsStopFlagOfTarget(String procName,boolean value) {
+        isStop.get(procName).set(value);
     }
 
     @Override
@@ -70,10 +71,9 @@ public class MongodbTargetTask extends AbstractTargetTask {
         while (true) {
             try {
                 if (isStop.get(proName).get()) {
-                    System.out.println("targetTask-1");
-
+                    // System.out.println("targetTask-1");
                     TargetTaskPoolManager.setTargetActiveThreadNum(proName, -1);
-                    System.out.println("setTargetActiveThreadNum" + TargetTaskPoolManager.setTargetActiveThreadNum(proName, 0));
+                    //  System.out.println("setTargetActiveThreadNum" + TargetTaskPoolManager.setTargetActiveThreadNum(proName, 0));
                     break;
                 }
                 BatchDataEntity batchDataEntity = memoryCache.getData();
@@ -83,20 +83,20 @@ public class MongodbTargetTask extends AbstractTargetTask {
                     this.dbTableName = batchDataEntity.getDbTableName();
                     //  System.out.println("target:" + atomicInteger.addAndGet(batchDataEntity.getDataList().size()));
                     // 判断操作行为。如果为INSERTMANY类型，直接应用数据。
-                    parseColumnDataToDocument(batchDataEntity);
+                    parseColumnDataToTargetData(batchDataEntity);
                     bulkExecute(dbTableName, -1);
                 } else {
-                    System.out.println("我是空数据");
+                    // System.out.println("我是空数据");
                 }
             } catch (Exception e) {
                 e.printStackTrace();
-               System.out.println(e.getMessage());
+                Log.error(e.getMessage());
             }
         }
     }
 
     @Override
-    public void parseColumnDataToDocument(BatchDataEntity batchDataEntity) {
+    public void parseColumnDataToTargetData(BatchDataEntity batchDataEntity) {
         List<List<AbstractColumn>> dataList = batchDataEntity.getDataList();
         for (List<AbstractColumn> columnList : dataList) {
             Document document = new Document();
@@ -119,7 +119,7 @@ public class MongodbTargetTask extends AbstractTargetTask {
             this.mongoClient.getDatabase(dbName).
                     getCollection(tableName).bulkWrite(writeModels, new BulkWriteOptions().ordered(false));
         } catch (Exception e) {
-         //   Log.error(e.getMessage());
+              Log.error(e.getMessage());
         } finally {
             writeModels = new ArrayList<>();
         }

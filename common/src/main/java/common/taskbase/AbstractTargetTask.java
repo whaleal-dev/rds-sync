@@ -30,7 +30,7 @@ public abstract class AbstractTargetTask implements Runnable {
     protected MemoryCache memoryCache;
 
     public AbstractTargetTask(Configuration configuration, MemoryCache memoryCache) {
-        this.targetDsName = configuration.getTargetName();
+        this.targetDsName = configuration.getTargetDsName();
         this.taskName = configuration.getTaskName();
         this.proName = configuration.getProName();
         this.memoryCache = memoryCache;
@@ -45,12 +45,12 @@ public abstract class AbstractTargetTask implements Runnable {
     public abstract void applyData();
 
     /**
-     * parseColumnDataToDocument 解析数据
+     * parseColumnDataToTargetData 解析数据
      *
      * @param batchDataEntity
      * @desc 解析数据
      */
-    public abstract void parseColumnDataToDocument(BatchDataEntity batchDataEntity);
+    public abstract void parseColumnDataToTargetData(BatchDataEntity batchDataEntity);
 
     /**
      * bulkExecute 批量写数据
