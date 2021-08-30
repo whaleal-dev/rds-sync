@@ -1,6 +1,7 @@
 package configuration;
 
 import conf.Configuration;
+import dbconnection.MetadataConnection;
 import dbconnection.mysql.MySqlConnection;
 
 import java.util.Map;
@@ -13,24 +14,99 @@ import java.util.Map;
 public class ConfigurationUtil {
     public static Configuration getConfiguration(String procName) {
         Configuration configuration = new Configuration();
-        Map<String, Object> map = MySqlConnection.getJdbcTemplate("1").queryForMap("select * from photon.program where proc_name='" + procName + "' ");
-        configuration.setTaskName("task1");
-        configuration.setProName(map.get("proc_name").toString());
-        configuration.setSourceDsName(map.get("source_ds_name").toString());
-        configuration.setTargetDsName(map.get("target_ds_name").toString());
-        configuration.setSyncMode("all");
-        configuration.setDbTableWhite("photon.apply");
-        configuration.setFilterDdl(false);
-        configuration.setCollectionExistDrop(true);
-        configuration.setCreateIndex(true);
-        configuration.setTargetThreadNum(5);
-        configuration.setSourceThreadNum(2);
-        configuration.setCacheNum(20);
-        configuration.setCacheSize(20);
-        configuration.setDataBatchSize(128);
-        configuration.setSyncParallel(false);
-        configuration.setStartIncrementTime((int) (System.currentTimeMillis() / 1000));
-        configuration.setIncrementParseThreadNum(5);
+        configuration.setProName(procName);
+        Map<String, Object> map = MetadataConnection.getJdbcTemplate().queryForMap("select * from photon.program where proc_name='" + procName + "' ");
+
+        Object taskName = map.get("task_name");
+        if (taskName != null) {
+            configuration.setTaskName(taskName.toString());
+        }
+        Object sourceDsName = map.get("source_ds_name");
+        if (sourceDsName != null) {
+            configuration.setSourceDsName(sourceDsName.toString());
+        }
+        Object targetDsName = map.get("target_ds_name");
+        if (targetDsName != null) {
+            configuration.setTargetDsName(targetDsName.toString());
+        }
+        Object dbTableWhite = map.get("db_table_white");
+        if (dbTableWhite != null) {
+            configuration.setTargetDsName(dbTableWhite.toString());
+        }
+        Object syncMode = map.get("sync_mode");
+        if (syncMode != null) {
+            configuration.setSyncMode(syncMode.toString());
+        }
+        Object filterDdl = map.get("filter_ddl");
+        if (filterDdl != null) {
+            configuration.setFilterDdl(false);
+            if ((Integer) filterDdl == 1) {
+                configuration.setFilterDdl(true);
+            }
+        }
+        Object collectionExistDrop = map.get("collection_exist_drop");
+        if (collectionExistDrop != null) {
+            configuration.setCollectionExistDrop(false);
+            if ((Integer) collectionExistDrop == 1) {
+                configuration.setCollectionExistDrop(true);
+            }
+        }
+        Object createIndex = map.get("create_index");
+        if (createIndex != null) {
+            configuration.setCreateIndex(false);
+            if ((Integer) createIndex == 1) {
+                configuration.setCreateIndex(true);
+            }
+        }
+        Object targetThreadNum = map.get("target_thread_num");
+        if (targetThreadNum != null) {
+            configuration.setTargetThreadNum((Integer) targetThreadNum);
+        } else {
+            configuration.setTargetThreadNum(5);
+        }
+        Object sourceThreadNum = map.get("source_thread_num");
+        if (sourceThreadNum != null) {
+            configuration.setSourceThreadNum((Integer) targetThreadNum);
+        } else {
+            configuration.setSourceThreadNum(3);
+        }
+        Object cacheSize = map.get("cache_size");
+        if (cacheSize != null) {
+            configuration.setCacheSize((Integer) cacheSize);
+        } else {
+            configuration.setCacheSize(20);
+        }
+        Object cacheNum = map.get("cache_num");
+        if (cacheNum != null) {
+            configuration.setCacheNum((Integer) cacheNum);
+        } else {
+            configuration.setCacheNum(20);
+        }
+        Object dataBatchSize = map.get("data_batch_size");
+        if (dataBatchSize != null) {
+            configuration.setDataBatchSize((Integer) dataBatchSize);
+        } else {
+            configuration.setDataBatchSize(128);
+        }
+        Object syncParallel = map.get("sync_parallel");
+        if (syncParallel != null) {
+            configuration.setSyncParallel(false);
+            if ((Integer) syncParallel == 1) {
+                configuration.setSyncParallel(true);
+            }
+        }
+        Object startIncrementTime = map.get("start_increment_time");
+        if (startIncrementTime != null) {
+            configuration.setStartIncrementTime((Integer) startIncrementTime);
+        } else {
+            configuration.setStartIncrementTime((int) (System.currentTimeMillis() / 1000));
+        }
+        Object incrementParseThreadNum = map.get("increment_parse_thread_num");
+        if (incrementParseThreadNum != null) {
+            configuration.setIncrementParseThreadNum((Integer) incrementParseThreadNum);
+        } else {
+            configuration.setIncrementParseThreadNum(5);
+        }
         return configuration;
     }
 

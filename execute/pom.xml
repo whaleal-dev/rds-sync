@@ -25,7 +25,7 @@
         </dependency>
         <dependency>
             <groupId>com.jinmu.info</groupId>
-            <artifactId>mysqlTargetByLhp</artifactId>
+            <artifactId>mysqlTarget</artifactId>
             <version>1.0-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>

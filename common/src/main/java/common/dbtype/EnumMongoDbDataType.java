@@ -27,7 +27,6 @@ public enum EnumMongoDbDataType {
     DATE("DATE");
 
     private final String upperCase;
-
     EnumMongoDbDataType(String upperCase) {
         this.upperCase = upperCase;
     }

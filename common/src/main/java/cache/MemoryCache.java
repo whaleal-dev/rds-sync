@@ -103,23 +103,20 @@ public class MemoryCache {
                 isUseState[partition].set(false);
                 IdlingTimes++;
                 if (IdlingTimes++ > cacheNum * 2) {
-                    isWhile = false;
                     break;
                 }
             }
             // 若没有获取对缓存区的次数大于cacheNum * 5，则进行睡眠1s
             else if (IdlingTimes++ > cacheNum * 2) {
                 try {
-                    //    judgePutGetBalance();
                     TimeUnit.SECONDS.sleep(1);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
-
-                //设置空跑次数为 (cacheNum * 5) - cacheNum
-                IdlingTimes = (int) (cacheNum * 1.8);
+//                //设置空跑次数为 (cacheNum * 5) - cacheNum
+//                IdlingTimes = (int) (cacheNum * 1.8);
                 waitTimes.increment();
-                isWhile = false;
+//                isWhile = false;
                 break;
             }
         }
@@ -180,6 +177,5 @@ public class MemoryCache {
             cacheList[i] = null;
             isUseState[i] = null;
         }
-
     }
 }

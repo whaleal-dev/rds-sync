@@ -16,12 +16,13 @@ public class ArrayColumn extends AbstractColumn {
     }
 
     @Override
-    public Object getData() {
+    public List<Object> getData() {
         return this.data;
     }
 
     @Override
     public String toString() {
+        // 放在出现[@的数据
         StringBuilder stringBuilder = new StringBuilder();
         for (Object object : data) {
             stringBuilder.append(object.toString());

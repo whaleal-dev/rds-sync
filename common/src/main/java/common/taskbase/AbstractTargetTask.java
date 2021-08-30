@@ -17,7 +17,7 @@ public abstract class AbstractTargetTask implements Runnable {
     /**
      * dbTableName
      */
-    protected String dbTableName="";
+    protected String dbTableName = "";
     /**
      * 任务名称
      */
@@ -26,7 +26,9 @@ public abstract class AbstractTargetTask implements Runnable {
      * 程序名称
      */
     protected String proName;
-
+    /**
+     * 数据缓存类
+     */
     protected MemoryCache memoryCache;
 
     public AbstractTargetTask(Configuration configuration, MemoryCache memoryCache) {
@@ -55,8 +57,9 @@ public abstract class AbstractTargetTask implements Runnable {
     /**
      * bulkExecute 批量写数据
      *
+     * @param dbTable
+     * @param batchNo
      * @desc 批量写数据
      */
-
     public abstract void bulkExecute(String dbTable, long batchNo);
 }

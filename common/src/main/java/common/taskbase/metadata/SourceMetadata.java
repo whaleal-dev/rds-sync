@@ -1,12 +1,10 @@
 package common.taskbase.metadata;
 
 import cache.MemoryCache;
-import common.taskbase.MysqlSourceTaskInfo;
 import common.taskbase.SourceTaskInfo;
 import conf.Configuration;
 
 import java.sql.SQLException;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
@@ -22,7 +20,9 @@ public abstract class SourceMetadata {
      * 配置文件类
      */
     protected Configuration configuration;
-
+    /**
+     * 数据缓存类
+     */
     protected MemoryCache memoryCache;
     /**
      * 源端数据源名称

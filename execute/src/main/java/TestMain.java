@@ -2,6 +2,7 @@ import cache.MemoryCache;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCursor;
 import common.OplogMetadata;
+import common.photonV.entity.TaskTrigger;
 import conf.Configuration;
 
 import configuration.ConfigurationUtil;
@@ -16,7 +17,9 @@ import task.*;
 import thread.SourceTaskPoolManager;
 import thread.SysPoolManager;
 import thread.TargetTaskPoolManager;
+import trigger.TriggerUtil;
 import util.Log;
+import util.StringUtil;
 
 import java.util.Date;
 
@@ -26,41 +29,46 @@ import java.util.Date;
  * @time: 2021/8/23 3:29 下午
  */
 public class TestMain {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws InterruptedException {
 
-        testRealTimeOfMongodb();
-        Configuration configuration = ConfigurationUtil.getConfiguration("proc3");
-
+//        Configuration configuration = ConfigurationUtil.getConfiguration("proc3");
+//        MongoClient mongoClient = MongoDbConnection.getMongoClient(configuration.getSourceDsName(), DataSourceUtil.getDataSourceByDsName(configuration.getProName(), configuration.getSourceDsName()));
+//        MongoCursor<String> photon = mongoClient.getDatabase("photon").listCollectionNames().iterator();
+//        while (photon.hasNext()){
+//            String s = photon.next().toString();
+//            System.out.println(s+"   "+mongoClient.getDatabase("photon").getCollection(s).countDocuments());
+//        }
+//        Thread.sleep(10000);
+        testMongoDbToMongoDb();
 
     }
 
     public static void testRealTimeOfMongodb() {
         Configuration configuration = ConfigurationUtil.getConfiguration("proc3");
         configuration.setDbTableWhite("\\w.+");
-        MongoDbConnection.getMongoClient(configuration.getSourceDsName(), DataSourceUtil.getDataSourceByDsName(configuration.getProName(), configuration.getSourceDsName()));
+        MongoDbConnection.getMongoClient(configuration.getSourceDsName(), DataSourceUtil.getDataSourceByDsName( configuration.getSourceDsName()));
 
-        MongoDbConnection.getMongoClient(configuration.getTargetDsName(), DataSourceUtil.getDataSourceByDsName(configuration.getProName(), configuration.getTargetDsName()));
+        MongoDbConnection.getMongoClient(configuration.getTargetDsName(), DataSourceUtil.getDataSourceByDsName(configuration.getTargetDsName()));
 
 
         SourceTaskPoolManager sourceTaskPoolManager = new SourceTaskPoolManager(configuration.getProName(), configuration.getSourceThreadNum(), configuration.getSourceThreadNum());
-        SourceTaskPoolManager.addSourceTaskPoolManager(configuration.getProName(), sourceTaskPoolManager);
+
 
 
         TargetTaskPoolManager targetTaskPoolManager = new
                 TargetTaskPoolManager(configuration.getProName(), 10,
                 10);
-        TargetTaskPoolManager.addTargetTaskPoolManager(configuration.getProName(), targetTaskPoolManager);
 
         OplogMetadata oplogMetadata = new OplogMetadata(configuration);
 
-        TargetTaskPoolManager.submit(configuration.getProName(),new OplogWriteTask(oplogMetadata));
-        TargetTaskPoolManager.submit(configuration.getProName(),new OplogNsBucketTask(oplogMetadata,configuration.getCacheSize()));
-        TargetTaskPoolManager.submit(configuration.getProName(),new OplogNsTask(configuration.getDbTableWhite(),oplogMetadata));
-        TargetTaskPoolManager.submit(configuration.getProName(),new OplogReadTask(configuration, (int)(System.currentTimeMillis()/1000)
+        TargetTaskPoolManager.submit(configuration.getProName(), new OplogWriteTask(oplogMetadata));
+        TargetTaskPoolManager.submit(configuration.getProName(), new OplogNsBucketTask(oplogMetadata, configuration.getCacheSize()));
+        TargetTaskPoolManager.submit(configuration.getProName(), new OplogNsTask(configuration.getDbTableWhite(), oplogMetadata));
+        TargetTaskPoolManager.submit(configuration.getProName(), new OplogReadTask(configuration, (int) (System.currentTimeMillis() / 1000)
                 , 0, 0, oplogMetadata));
-        for (int i = 0; i < 2 ; i++) {
-            TargetTaskPoolManager.submit(configuration.getProName(),new OplogWriteTask(oplogMetadata));
-            TargetTaskPoolManager.submit(configuration.getProName(),new OplogNsBucketTask(oplogMetadata,configuration.getCacheSize()));
+        for (int i = 0; i < 2; i++) {
+            TargetTaskPoolManager.submit(configuration.getProName(), new OplogWriteTask(oplogMetadata));
+            TargetTaskPoolManager.submit(configuration.getProName(), new OplogNsBucketTask(oplogMetadata, configuration.getCacheSize()));
         }
 
     }
@@ -68,10 +76,10 @@ public class TestMain {
     public static void testMongoDbToMysql() {
 
         Configuration configuration = ConfigurationUtil.getConfiguration("proc2");
+        configuration.setDbTableWhite("photon.col4");
+        MongoDbConnection.getMongoClient(configuration.getSourceDsName(), DataSourceUtil.getDataSourceByDsName( configuration.getSourceDsName()));
 
-        MongoDbConnection.getMongoClient(configuration.getSourceDsName(), DataSourceUtil.getDataSourceByDsName(configuration.getProName(), configuration.getSourceDsName()));
-
-        MySqlConnection.getJdbcTemplate(configuration.getTargetDsName(), DataSourceUtil.getDataSourceByDsName(configuration.getProName(), configuration.getTargetDsName()));
+        MySqlConnection.getConnection(configuration.getTargetDsName(), DataSourceUtil.getDataSourceByDsName(configuration.getTargetDsName()));
 
         MemoryCache memoryCache = new MemoryCache(configuration.getTaskName(),
                 configuration.getProName(), configuration.getCacheNum(), configuration.getCacheSize(), true);
@@ -80,15 +88,15 @@ public class TestMain {
         configuration.setMemoryCache(memoryCache);
 
         SourceTaskPoolManager sourceTaskPoolManager = new SourceTaskPoolManager(configuration.getProName(), configuration.getSourceThreadNum(), configuration.getSourceThreadNum());
-        SourceTaskPoolManager.addSourceTaskPoolManager(configuration.getProName(), sourceTaskPoolManager);
+
 
         SysPoolManager sysPoolManager = new SysPoolManager(configuration.getProName(), 2, 3);
-        SysPoolManager.addSysTaskPoolManager(configuration.getProName(), sysPoolManager);
+
 
         TargetTaskPoolManager targetTaskPoolManager = new
-                TargetTaskPoolManager(configuration.getProName(), 1,
-                1);
-        TargetTaskPoolManager.addTargetTaskPoolManager(configuration.getProName(), targetTaskPoolManager);
+                TargetTaskPoolManager(configuration.getProName(), 10,
+                10);
+
 
         MongodbSource mongodbSource = new MongodbSource(configuration, memoryCache);
         mongodbSource.createTask();
@@ -115,17 +123,17 @@ public class TestMain {
                 if ((sourceThread + sourceTaskQueueSize + sourceTaskQueueSize + allDataCacheNum + setSysActiveThreadNum + targetActiveThreadNum) == 0 && getAllDbTable) {
                     Thread.sleep(10000);
                     try {
-                        TargetTaskPoolManager.shuntDownNow(configuration.getProName());
+                        TargetTaskPoolManager.destroy(configuration.getProName());
                     } catch (Exception e) {
                         Log.info(e.getMessage());
                     }
                     try {
-                        SourceTaskPoolManager.shuntDownNow(configuration.getProName());
+                        SourceTaskPoolManager.destroy(configuration.getProName());
                     } catch (Exception e) {
                         Log.info(e.getMessage());
                     }
                     try {
-                        SysPoolManager.shuntDownNow(configuration.getProName());
+                        SysPoolManager.destroy(configuration.getProName());
                     } catch (Exception e) {
                         Log.info(e.getMessage());
                     }
@@ -144,13 +152,23 @@ public class TestMain {
         }
     }
 
+    public static TaskTrigger generateTaskTriggerInfo(String taskName, String procName) {
+        TaskTrigger taskTrigger = new TaskTrigger();
+        taskTrigger.setId(StringUtil.generateUUID());
+        taskTrigger.setTaskName(taskName);
+        taskTrigger.setProcName(procName);
+        return taskTrigger;
+    }
+
     public static void testMongoDbToMongoDb() {
 
+
         Configuration configuration = ConfigurationUtil.getConfiguration("proc1");
+        TaskTrigger taskTrigger = generateTaskTriggerInfo(configuration.getTaskName(), configuration.getProName());
+        TriggerUtil.insertTriggerInfo(taskTrigger);
+        MongoDbConnection.getMongoClient(configuration.getSourceDsName(), DataSourceUtil.getDataSourceByDsName( configuration.getSourceDsName()));
 
-        MongoDbConnection.getMongoClient(configuration.getSourceDsName(), DataSourceUtil.getDataSourceByDsName(configuration.getProName(), configuration.getSourceDsName()));
-
-        MongoDbConnection.getMongoClient(configuration.getTargetDsName(), DataSourceUtil.getDataSourceByDsName(configuration.getProName(), configuration.getTargetDsName()));
+        MongoDbConnection.getMongoClient(configuration.getTargetDsName(), DataSourceUtil.getDataSourceByDsName( configuration.getTargetDsName()));
 
         MemoryCache memoryCache = new MemoryCache(configuration.getTaskName(),
                 configuration.getProName(), configuration.getCacheNum(), configuration.getCacheSize(), true);
@@ -159,15 +177,15 @@ public class TestMain {
         configuration.setMemoryCache(memoryCache);
 
         SourceTaskPoolManager sourceTaskPoolManager = new SourceTaskPoolManager(configuration.getProName(), configuration.getSourceThreadNum(), configuration.getSourceThreadNum());
-        SourceTaskPoolManager.addSourceTaskPoolManager(configuration.getProName(), sourceTaskPoolManager);
+
 
         SysPoolManager sysPoolManager = new SysPoolManager(configuration.getProName(), 2, 3);
-        SysPoolManager.addSysTaskPoolManager(configuration.getProName(), sysPoolManager);
+
 
         TargetTaskPoolManager targetTaskPoolManager = new
                 TargetTaskPoolManager(configuration.getProName(), 1,
                 1);
-        TargetTaskPoolManager.addTargetTaskPoolManager(configuration.getProName(), targetTaskPoolManager);
+
 
         MongodbTarget mongodbTarget = new MongodbTarget(configuration, memoryCache, configuration.getProName());
         mongodbTarget.startToTarget();
@@ -195,18 +213,18 @@ public class TestMain {
                     Thread.sleep(10000);
                     try {
 
-                        TargetTaskPoolManager.shuntDownNow(configuration.getProName());
+                        TargetTaskPoolManager.destroy(configuration.getProName());
 
                     } catch (Exception e) {
                         Log.info(e.getMessage());
                     }
                     try {
-                        SourceTaskPoolManager.shuntDownNow(configuration.getProName());
+                        SourceTaskPoolManager.destroy(configuration.getProName());
                     } catch (Exception e) {
                         Log.info(e.getMessage());
                     }
                     try {
-                        SysPoolManager.shuntDownNow(configuration.getProName());
+                        SysPoolManager.destroy(configuration.getProName());
                     } catch (Exception e) {
                         Log.info(e.getMessage());
                     }
@@ -216,6 +234,8 @@ public class TestMain {
 //                    MongoDbConnection.close(configuration.getSourceName());
                     //MySqlConnection.close("1");
                     Log.info("procName:" + configuration.getProName() + "关闭成功");
+                    taskTrigger.setState("success");
+                    TriggerUtil.updateTriggerInfo(taskTrigger);
                     Thread.sleep(10000);
                     break;
                 } else if ((sourceThread + sourceTaskQueueSize + sourceTaskQueueSize + allDataCacheNum + setSysActiveThreadNum) == 0 && getAllDbTable) {

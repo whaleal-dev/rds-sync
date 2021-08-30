@@ -1,8 +1,10 @@
 package datasource;
 
 import common.photonV.entity.Datasource;
+import dbconnection.MetadataConnection;
 import dbconnection.mysql.MySqlConnection;
 
+import java.util.Date;
 import java.util.Map;
 
 /**
@@ -12,34 +14,56 @@ import java.util.Map;
  */
 public class DataSourceUtil {
 
-    public static Datasource getDataSourceByDsName(String procName, String dsName) {
-        Map<String, Object> map = MySqlConnection.getJdbcTemplate("1").queryForMap("select * from photon.datasource where name='" + dsName + "' ");
-        Datasource dataSource = new Datasource();
-        dataSource.setId(map.get("id").toString());
-        dataSource.setName(map.get("name").toString());
-        dataSource.setType(map.get("type").toString());
-        dataSource.setDsDatabase(map.get("ds_database").toString());
-        dataSource.setUsername(map.get("username").toString());
-        dataSource.setPassword(map.get("password").toString());
-        dataSource.setId(map.get("ip").toString());
-        dataSource.setUrl(map.get("url").toString());
-        dataSource.setPort((String) map.get("port"));
-        return dataSource;
-    }
-
     public static Datasource getDataSourceByDsName(String dsName) {
-        Map<String, Object> map = MySqlConnection.getJdbcTemplate("1").queryForMap("select * from photon.datasource where name='" + dsName + "' ");
+        Map<String, Object> map = MetadataConnection.getJdbcTemplate().queryForMap("select * from photon.datasource where name='" + dsName + "' ");
         Datasource dataSource = new Datasource();
-        dataSource.setId(map.get("id").toString());
-        dataSource.setName(map.get("name").toString());
-        dataSource.setType(map.get("type").toString());
-        dataSource.setDsDatabase(map.get("ds_database").toString());
-        dataSource.setUsername(map.get("username").toString());
-        dataSource.setPassword(map.get("password").toString());
-        dataSource.setId(map.get("ip").toString());
-        dataSource.setUrl(map.get("url").toString());
-        dataSource.setPort((String) map.get("port"));
+        dataSource.setName(dsName.toString());
+
+        Object type = map.get("type");
+        if (type != null) {
+            dataSource.setType(type.toString());
+        }
+        Object dsDatabase = map.get("ds_database");
+        if (type != null) {
+            dataSource.setDsDatabase(dsDatabase.toString());
+        }
+        Object dsSchema = map.get("ds_schema");
+        if (dsSchema != null) {
+            dataSource.setDsSchema(dsSchema.toString());
+        }
+        Object userName = map.get("username");
+        if (userName != null) {
+            dataSource.setUsername(userName.toString());
+        }
+        Object password = map.get("password");
+        if (password != null) {
+            dataSource.setPassword(password.toString());
+        }
+        Object url = map.get("url");
+        if (url != null) {
+            dataSource.setUrl(url.toString());
+        }
+        Object ip = map.get("ip");
+        if (ip != null) {
+            dataSource.setId(ip.toString());
+        }
+        Object port = map.get("port");
+        if (port != null) {
+            dataSource.setPort(port.toString());
+        }
+        Object status = map.get("status");
+        if (status != null) {
+            dataSource.setStatus((Short) status);
+        }
+
+        Object remark = map.get("remark");
+        if (remark != null) {
+            dataSource.setRemark(remark.toString());
+        }
+        Object dsOption = map.get("ds_option");
+        if (dsOption != null) {
+            dataSource.setDsOption(dsOption.toString());
+        }
         return dataSource;
     }
-
 }

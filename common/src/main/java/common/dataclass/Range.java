@@ -43,7 +43,7 @@ public class Range {
      */
     private int _idType;
     /**
-     * 查询语句
+     * 查询语句 一般为sql
      */
     private String query;
 }

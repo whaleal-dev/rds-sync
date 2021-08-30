@@ -15,5 +15,10 @@ public interface SourceTaskInterface {
      */
     void getDataFromCollection();
 
+    /**
+     * putDataToCache 放数据到缓存对象中
+     *
+     * @desc 放数据到缓存对象中
+     */
     void putDataToCache();
 }

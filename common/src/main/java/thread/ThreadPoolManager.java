@@ -5,12 +5,15 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * @description:
+ * @description: 线程池的父类
  * @author: lhp
  * @time: 2021/8/25 2:01 下午
  */
 public class ThreadPoolManager {
 
+    /**
+     * 程序名称
+     */
     protected String procName;
     /**
      * 核心线程数
