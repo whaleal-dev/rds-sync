@@ -5,8 +5,8 @@ import common.column.AbstractColumn;
 import common.dataclass.BatchDataEntity;
 import common.taskbase.SourceTaskInterface;
 import common.taskbase.metadata.SourceTaskInfo1;
-import conf.DBUtil;
 import conf.DataUtil;
+import dbconnection.mysql.MySqlConnection;
 import util.*;
 
 import java.sql.Connection;
@@ -48,7 +48,7 @@ public class MysqlSourceTask implements Runnable, SourceTaskInterface {
 
     public MysqlSourceTask(SourceTaskInfo1 taskMetadata, String procName, MemoryCache memoryCache, int dataBatchSize) {
         this.taskMetadata = taskMetadata;
-        this.connection = DBUtil.getConnection(taskMetadata);
+        this.connection = MySqlConnection.getConnection(procName);
         this.memoryCache = memoryCache;
         this.dataBatchSize = dataBatchSize;
     }
@@ -64,7 +64,7 @@ public class MysqlSourceTask implements Runnable, SourceTaskInterface {
     @Override
     public void getDataFromCollection(){
         String sql = this.taskMetadata.getRangeSql();
-        Connection conn = DBUtil.getConnection(this.taskMetadata);
+        Connection conn = MySqlConnection.getConnection();
         //读取表中的数据
         DataUtil dataUtil = new DataUtil(conn);
         //得到 datalist
@@ -80,23 +80,6 @@ public class MysqlSourceTask implements Runnable, SourceTaskInterface {
         }
         Log.info("source任务查询完毕:" + this.taskMetadata.toString());
     }
-
-//    /**
-//     * putDataToCache 推送数据到缓存区中
-//     *
-//     * @desc 推送数据到缓存区中
-//     */
-//    @Override
-//    public void dataTransformation(Object document) {
-//        List<AbstractColumn> abstractColumns = new ArrayList<>();
-//        Iterator<Map.Entry<String, Object>> iterator = ((Document) document).entrySet().iterator();
-//        while (iterator.hasNext()) {
-//            Map.Entry<String, Object> next = iterator.next();
-//            AbstractColumn abstractColumn = TransformationMongodbDataToColumn.parseValue(next.getKey(), next.getValue());
-//            abstractColumns.add(abstractColumn);
-//        }
-//        this.dataList.add(abstractColumns);
-//    }
 
     static AtomicInteger atomicInteger = new AtomicInteger();
 

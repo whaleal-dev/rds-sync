@@ -3,17 +3,25 @@ package main;
 
 import cache.MemoryCache;
 import com.alibaba.fastjson.JSONObject;
-import common.taskbase.metadata.SourceMetadata1;
+import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoCursor;
+import com.mongodb.client.MongoIterable;
+import common.dataclass.Range;
+import common.taskbase.SourceTaskInfo;
+import common.taskbase.metadata.SourceMetadata;
 import common.taskbase.metadata.SourceTaskInfo1;
 import conf.Configuration;
 import conf.DBUtil;
 import conf.ReaderSplitUtil;
 import constant.Key;
+import dbconnection.mongodb.MongoDbConnection;
+import dbconnection.mysql.MySqlConnection;
 import org.apache.commons.lang3.StringUtils;
 import task.MysqlSourceTask;
 import thread.SourceTaskPoolManager;
 import thread.SysPoolManager;
 import util.Log;
+
 import java.io.File;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
@@ -27,114 +35,122 @@ import java.util.concurrent.TimeUnit;
  * @author: jy
  * @Date: 2021/08/25
  */
-public class MysqlSource extends SourceMetadata1 {
+public class MysqlSource extends SourceMetadata {
+    Connection connection = null;
 
     public MysqlSource(Configuration configuration, MemoryCache memoryCache) {
-        File file = new File("/Users/jiangyun/Documents/3.json");
-        this.configuration = Configuration.from(file);
-        this.taskName = configuration.getString("taskName", "");
-        this.proName = configuration.getString("proName", "");
+        this.sourceName = configuration.getSourceName();
+        this.taskName = configuration.getTaskName();
+        this.proName = configuration.getProName();
+        this.dbTableWhite = configuration.getDbTableWhite();
         this.memoryCache = memoryCache;
-
-        procSourceTask.put(proName, taskMetadataQueue1);
+        procSourceTask.put(proName, taskMetadataQueue);
+        connection = MySqlConnection.getConnection(sourceName);
     }
 
     @Override
-    public void createTask() throws SQLException {
+    public void createTask() {
+
+        // 遍历执行源数据源抽取
+        // 获取数据源的全部库表
+        getAllDbCollections(sourceName);
         // 启动获取提交Task任务的线程
         submitSourceTask();
-        // 遍历执行源数据源抽取
-//        File file = new File("/Users/jiangyun/Documents/3.json");
-        // 获取数据源的全部库表
-        getAllDbTables(configuration);
         // 开始遍历抽取该数据源的所有库表
-        startFromSource(configuration, false);
-        isOver = true;
+        startFromSource(sourceName, false);
+
+
     }
 
     @Override
-    public void startFromSource(Configuration conf, boolean isParallel) {
-        Iterator<Map.Entry<String, String>> mapIterator = dbTables.entrySet().iterator();
-        while (mapIterator.hasNext()) {
-            Map.Entry<String, String> next = mapIterator.next();
-            createSourceEntity(conf, next.getValue());
-        }
-    }
-
-    @Override
-    public void createSourceEntity(Configuration conf, String dbTableName) {
-        //根据总配置进行切分配置
-        List<Configuration> list = ReaderSplitUtil.doSplit(conf, conf.getInt("adviceNumber", 2));
-        for (Configuration splitConf : list) {
-            Runnable runnable = new Runnable() {
-                @Override
-                public void run() {
-                    SourceTaskInfo1 taskMetadata = SourceTaskInfo1.builder().rangeSql(splitConf.getString(Key.QUERY_SQL))
-                            .sourceUrl(splitConf.getString(Key.JDBC_URL)).databaseType(splitConf.getString(Key.DATABASE_TYPE))
-                            .sourceUsername(splitConf.getString(Key.USERNAME)).sourcePassword(splitConf.getString(Key.PASSWORD))
-                            .sourceDatabase(splitConf.getString(Key.DATABASE)).sourceTable(splitConf.getString(Key.TABLE))
-                            .targetUrl(splitConf.getString("target.jdbcUrl")).targetUsername(splitConf.getString("target.username", null))
-                            .targetPassword(splitConf.getString("target.password", null)).targetDatabase(splitConf.getString(Key.DATABASE))
-                            .targetCollection(StringUtils.strip(splitConf.getString("target.collection"), "[]").replaceAll("\"", "")).dataBatchSize(splitConf.getInt("dataBatchSize"))
-                            .build();
-                    Log.info("taskMetadata配置信息:" + taskMetadata.toString());
-                    pushTaskMeta(proName, taskMetadata);
-                }
-            };
-            SysPoolManager.submit(proName, runnable);
-        }
-    }
-    
-    @Override
-    public void getAllDbTables(Configuration conf) throws SQLException {
-        List<JSONObject> connConfList = conf.getList(Key.CONNECTION, JSONObject.class);
-        Connection conn = DBUtil.getConnection(conf);
+    public void getAllDbCollections(String sourceName) throws SQLException {
+        Connection conn = MySqlConnection.getConnection(sourceName);
         DatabaseMetaData metaData = conn.getMetaData();
         String[] types = {"TABLE"};
         ResultSet rs = metaData.getTables(null, null, "%", types);
         Map<String, String> dbTables = new HashMap<>();
-        while(rs.next()){
+        while (rs.next()) {
             //1 TABLE_CAT String => table catalog (may be null)
             //2 TABLE_SCHEM String => table schema (may be null)
             //3 TABLE_NAME String => table name
             String table = rs.getString(3);
             //读取配置中的table
-            String tableConf = StringUtils.strip(connConfList.get(0).getString(Key.TABLE), "[]")
-                    .replaceAll("\"", "");
-            if (table.equals(tableConf)) {
-                dbTables.put(table, tableConf);
-            }
+                dbTables.put(table, table);
         }
         rs.close();
-        Log.info("sourceName:  " + conf.getString("database") + ",全量同步的表列表:  " + dbTables);
+        Log.info("sourceName:  ,全量同步的表列表:  " + dbTables);
     }
 
     @Override
-    public  void  submitSourceTask() {
+    public void startFromSource(String sourceName, boolean isParallel) {
+        Iterator<Map.Entry<String, String>> mapIterator = dbTables.entrySet().iterator();
+        while (mapIterator.hasNext()) {
+            Map.Entry<String, String> next = mapIterator.next();
+            createSourceEntity(sourceName, next.getValue());
+            dbTables.remove(next.getKey());
+        }
+        isGetAllDbTable = true;
+    }
+
+    @Override
+    public void createSourceEntity(String sourceName, String dbTableName) {
+        MongodbSourceSplitRange source = new MongodbSourceSplitRange(sourceName);
+        Map<Integer, Range> map = source.getIdTypes(dbTableName);
+        Iterator<Map.Entry<Integer, Range>> rangeMap = map.entrySet().iterator();
         Runnable runnable = new Runnable() {
             @Override
             public void run() {
-                while (true) {
-                    try {
-                        if (taskMetadataQueue1.size() == 0) {
-                            TimeUnit.SECONDS.sleep(2);
-                        }
-                        SourceTaskInfo1 taskMetadata = taskMetadataQueue1.poll();
-                        if (taskMetadata != null) {
-                            SourceTaskPoolManager.submit(proName, new MysqlSourceTask(taskMetadata, proName, memoryCache, 128));
-                        }
-                    } catch (InterruptedException e) {
-                        Log.error(e.getMessage());
+                while (rangeMap.hasNext()) {
+                    SysPoolManager.setSysActiveThreadNum(proName, 1);
+                    //System.out.println("getSysThreadNum1:" + SysPoolManager.setSysActiveThreadNum(proName, 0));
+                    Map.Entry<Integer, Range> next = rangeMap.next();
+                    Range rangeOfTable = next.getValue();
+                    while (rangeOfTable.getMinId() != null) {
+                        Range range = source.splitRange(dbTableName, rangeOfTable, next.getKey());
+                        SourceTaskInfo taskMetadata = new SourceTaskInfo(range, dbTableName, sourceName);
+                        // Log.info("taskMetadata配置信息:" + taskMetadata.toString());
+                        pushTaskMeta(proName, taskMetadata);
                     }
+                    SysPoolManager.setSysActiveThreadNum(proName, -1);
+                    //System.out.println("getSysThreadNum2:" + SysPoolManager.setSysActiveThreadNum(proName, 0));
                 }
             }
         };
         SysPoolManager.submit(proName, runnable);
     }
 
-    protected static Map<String, Queue<SourceTaskInfo1>> procSourceTask = new ConcurrentHashMap<>();
+    @Override
+    public void submitSourceTask() {
+        Runnable runnable = new Runnable() {
+            @Override
+            public void run() {
+                while (true) {
+                    try {
+                        SourceTaskInfo taskMetadata = taskMetadataQueue.poll();
+                        if (taskMetadata != null) {
+                            SourceTaskPoolManager.setSourceActiveThreadNum(proName, 1);
+                            SourceTaskPoolManager.submit(proName, new MongodbSourceTask(taskMetadata, proName, memoryCache, 128));
+                        } else {
+                            if (taskMetadataQueue.size() == 0 && isGetAllDbTable && dbTables.size() == 0 && SysPoolManager.setSysActiveThreadNum(proName, 0) == 0) {
+                                break;
+                            }
+                            TimeUnit.SECONDS.sleep(2);
+                        }
 
-    public static void pushTaskMeta(String procName, SourceTaskInfo1 taskMetadata) {
+                    } catch (InterruptedException e) {
+                        Log.error(e.getMessage());
+                        break;
+                    }
+
+                }
+            }
+        };
+        SysPoolManager.submit(proName, runnable);
+    }
+
+    protected static Map<String, Queue<SourceTaskInfo>> procSourceTask = new ConcurrentHashMap<>();
+
+    public static void pushTaskMeta(String procName, SourceTaskInfo taskMetadata) {
         procSourceTask.get(procName).add(taskMetadata);
     }
 
