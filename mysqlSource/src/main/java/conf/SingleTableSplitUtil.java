@@ -1,44 +1,30 @@
 package conf;
 
 import common.dataclass.Range;
-import constant.Key;
-import constant.utils.Constant;
 import datasource.DataSourceUtil;
 import dbconnection.mysql.MySqlConnection;
-import exception.DBUtilErrorCode;
-import exception.PhotonTException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import util.Log;
 
 import java.math.BigInteger;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-import static conf.DBUtil.closeDBResources;
 
 public class SingleTableSplitUtil {
-//    private static final Logger LOG = LoggerFactory
-//            .getLogger(SingleTableSplitUtil.class);
 
-//    private SingleTableSplitUtil() {
-//    }
-
-    //对单表进行分表
-    // tempSlice 临时分片配置 = configuration
-    // tempNum = 1.0 * adviceNumber / tableNumber ， tempNum再向上取整 = eachTableShouldSplittedNumber
-    // adviceNum = eachTableShouldSplittedNumber
     public static List<Range> splitSingleTable(Configuration configuration, String table, int adviceNum) {
-        //插件参数集合
+
         List<Range> pluginParams = new ArrayList<Range>();
-        //范围集合
-        List<String> rangeList;
+        List<String> rangeList = null;
         //从配置中取分片字段 splitPk
         //TODO 智能取分片字段
-        String splitPkName = configuration.getSplitPk();
+        String splitPkName = null;
+        boolean hasSplitPk = StringUtils.isNotBlank(splitPkName);
+        splitPkName = hasSplitPk ? configuration.getSplitPk() : SingleTableSplitUtil.getPK(table, configuration);
         //从配置中取列 column
         //默认 *
         String column = "*";
@@ -56,11 +42,10 @@ public class SingleTableSplitUtil {
 
         Pair<Object, Object> minMaxPK = getPkRange(configuration, table, where);
         if (null == minMaxPK) {
-            throw PhotonTException.asDataXException(DBUtilErrorCode.ILLEGAL_SPLIT_PK,
-                    "根据切分主键切分表失败. DataX 仅支持切分主键为一个,并且类型为整数或者字符串类型. 请尝试使用其他的切分主键或者联系 DBA 进行处理.");
+            Log.error("根据切分主键切分表失败. DataX 仅支持切分主键为一个,并且类型为整数或者字符串类型. 请尝试使用其他的切分主键或者联系 DBA 进行处理.");
         }
         Range range = new Range();
-        range.setDbTableName(table);
+
         range.setQuery(buildQuerySql(column, table, where));
 //        configuration.set(Key.QUERY_SQL, buildQuerySql(column, table, where));
 
@@ -70,9 +55,9 @@ public class SingleTableSplitUtil {
             return pluginParams;
         }
 
-        boolean isStringType = Constant.PK_TYPE_STRING.equals(configuration
+        boolean isStringType = "pkTypeString".equals(configuration
                 .getPK_TYPE());
-        boolean isLongType = Constant.PK_TYPE_LONG.equals(configuration
+        boolean isLongType = "pkTypeLong".equals(configuration
                 .getPK_TYPE());
 
         if (isStringType) {
@@ -86,8 +71,7 @@ public class SingleTableSplitUtil {
                     new BigInteger(minMaxPK.getRight().toString()),
                     adviceNum, splitPkName);
         } else {
-            throw PhotonTException.asDataXException(DBUtilErrorCode.ILLEGAL_SPLIT_PK,
-                    "您配置的切分主键(splitPk) 类型 DataX 不支持. DataX 仅支持切分主键为一个,并且类型为整数或者字符串类型. 请尝试使用其他的切分主键或者联系 DBA 进行处理.");
+            Log.error("您配置的切分主键(splitPk) 类型 DataX 不支持. DataX 仅支持切分主键为一个,并且类型为整数或者字符串类型. 请尝试使用其他的切分主键或者联系 DBA 进行处理.");
         }
 
         String tempQuerySql;
@@ -100,6 +84,8 @@ public class SingleTableSplitUtil {
                         + (hasWhere ? " and " : " where ") + range1;
 
                 allQuerySql.add(tempQuerySql);
+                range = new Range();
+                range.setDbTableName(table);
                 range.setQuery(tempQuerySql);
                 pluginParams.add(range);
             }
@@ -109,6 +95,8 @@ public class SingleTableSplitUtil {
                     + (hasWhere ? " and " : " where ")
                     + String.format(" %s IS NOT NULL", splitPkName);
             allQuerySql.add(tempQuerySql);
+            range = new Range();
+            range.setDbTableName(table);
             range.setQuery(tempQuerySql);
             pluginParams.add(range);
         }
@@ -124,7 +112,8 @@ public class SingleTableSplitUtil {
 
 //        LOG.info("After split(), allQuerySql=[\n{}\n].",
 //                StringUtils.join(allQuerySql, "\n"));
-
+        range = new Range();
+        range.setDbTableName(table);
         range.setQuery(tempQuerySql);
         pluginParams.add(range);
 
@@ -137,11 +126,11 @@ public class SingleTableSplitUtil {
 
         if (StringUtils.isBlank(where)) {
             // "select %s from %s ";
-            querySql = String.format(Constant.QUERY_SQL_TEMPLATE_WITHOUT_WHERE,
+            querySql = String.format("select %s from %s ",
                     column, table);
         } else {
             // "select %s from %s where (%s)";
-            querySql = String.format(Constant.QUERY_SQL_TEMPLATE, column,
+            querySql = String.format("select %s from %s where (%s)", column,
                     table, where);
         }
 
@@ -166,7 +155,7 @@ public class SingleTableSplitUtil {
                 DataSourceUtil.getDataSourceByDsName(configuration.getSourceDsName()));
         //字段构建的范围 sql pkRangeSQL
         Pair<Object, Object> minMaxPK = checkSplitPk(conn, pkRangeSQL, fetchSize, configuration);
-        closeDBResources(null, null, conn);
+
         return minMaxPK;
     }
 
@@ -180,7 +169,7 @@ public class SingleTableSplitUtil {
         Pair<Object, Object> minMaxPK = null;
         try {
             try {
-                rs = DBUtil.query(conn, pkRangeSQL, fetchSize);
+                rs = MySqlConnection.query(conn, pkRangeSQL, fetchSize);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -191,10 +180,10 @@ public class SingleTableSplitUtil {
                 // pk 是 string 类型
                 if (isStringType(rsMetaData.getColumnType(1))) {
                     if (configuration != null) {
-                        configuration.setPK_TYPE(Constant.PK_TYPE_STRING);
+                        configuration.setPK_TYPE("pkTypeString");
                     }
                     //异步获取 resultSet 的 next()
-                    while (DBUtil.asyncResultSetNext(rs)) {
+                    while (MySqlConnection.asyncResultSetNext(rs)) {
                         //左元素是 min，右元素是 max
                         minMaxPK = new ImmutablePair<Object, Object>(
                                 rs.getString(1), rs.getString(2));
@@ -202,10 +191,10 @@ public class SingleTableSplitUtil {
                     // pk 是 long 类型
                 } else if (isLongType(rsMetaData.getColumnType(1))) {
                     if (configuration != null) {
-                        configuration.setPK_TYPE(Constant.PK_TYPE_LONG);
+                        configuration.setPK_TYPE("pkTypeLong");
                     }
                     //异步获取 resultSet 的 next()
-                    while (DBUtil.asyncResultSetNext(rs)) {
+                    while (MySqlConnection.asyncResultSetNext(rs)) {
                         //左元素是 min，右元素是 max
                         minMaxPK = new ImmutablePair<Object, Object>(
                                 rs.getString(1), rs.getString(2));
@@ -213,24 +202,19 @@ public class SingleTableSplitUtil {
                         // check: string shouldn't contain '.', for oracle
                         String minMax = rs.getString(1) + rs.getString(2);
                         if (StringUtils.contains(minMax, '.')) {
-                            throw PhotonTException.asDataXException(DBUtilErrorCode.ILLEGAL_SPLIT_PK,
-                                    "您配置的DataX切分主键(splitPk)有误. 因为您配置的切分主键(splitPk) 类型 DataX 不支持. DataX 仅支持切分主键为一个,并且类型为整数或者字符串类型. 请尝试使用其他的切分主键或者联系 DBA 进行处理.");
+                            Log.error("您配置的DataX切分主键(splitPk)有误. 因为您配置的切分主键(splitPk) 类型 DataX 不支持. DataX 仅支持切分主键为一个,并且类型为整数或者字符串类型. 请尝试使用其他的切分主键或者联系 DBA 进行处理.");
                         }
                     }
                 } else {
-                    throw PhotonTException.asDataXException(DBUtilErrorCode.ILLEGAL_SPLIT_PK,
-                            "您配置的DataX切分主键(splitPk)有误. 因为您配置的切分主键(splitPk) 类型 DataX 不支持. DataX 仅支持切分主键为一个,并且类型为整数或者字符串类型. 请尝试使用其他的切分主键或者联系 DBA 进行处理.");
+                    Log.error("您配置的DataX切分主键(splitPk)有误. 因为您配置的切分主键(splitPk) 类型 DataX 不支持. DataX 仅支持切分主键为一个,并且类型为整数或者字符串类型. 请尝试使用其他的切分主键或者联系 DBA 进行处理.");
                 }
             } else {
-                throw PhotonTException.asDataXException(DBUtilErrorCode.ILLEGAL_SPLIT_PK,
-                        "您配置的DataX切分主键(splitPk)有误. 因为您配置的切分主键(splitPk) 类型 DataX 不支持. DataX 仅支持切分主键为一个,并且类型为整数或者字符串类型. 请尝试使用其他的切分主键或者联系 DBA 进行处理.");
+                Log.error("您配置的DataX切分主键(splitPk)有误. 因为您配置的切分主键(splitPk) 类型 DataX 不支持. DataX 仅支持切分主键为一个,并且类型为整数或者字符串类型. 请尝试使用其他的切分主键或者联系 DBA 进行处理.");
             }
-        } catch (PhotonTException e) {
-            throw e;
         } catch (Exception e) {
-            throw PhotonTException.asDataXException(DBUtilErrorCode.ILLEGAL_SPLIT_PK, "DataX尝试切分表发生错误. 请检查您的配置并作出修改.", e);
+            Log.error("DataX尝试切分表发生错误. 请检查您的配置并作出修改." + e.getMessage());
         } finally {
-            closeDBResources(rs, null, null);
+           MySqlConnection.closeDBResources(rs, null, null);
         }
 
         return minMaxPK;
@@ -250,8 +234,7 @@ public class SingleTableSplitUtil {
                 ret = true;
             }
         } catch (Exception e) {
-            throw PhotonTException.asDataXException(DBUtilErrorCode.ILLEGAL_SPLIT_PK,
-                    "DataX获取切分主键(splitPk)字段类型失败. 该错误通常是系统底层异常导致. 请联系旺旺:askdatax或者DBA处理.");
+            Log.error("DataX获取切分主键(splitPk)字段类型失败. 该错误通常是系统底层异常导致. 请联系旺旺:askdatax或者DBA处理.");
         }
         return ret;
     }
@@ -273,13 +256,15 @@ public class SingleTableSplitUtil {
     }
 
     private static String genPKRangeSQL(Configuration configuration, String table, String where) {
+        String splitPkName = null;
+        boolean hasSplitPk = StringUtils.isNotBlank(splitPkName);
+        splitPkName = hasSplitPk ? configuration.getSplitPk().trim() : SingleTableSplitUtil.getPK(table, configuration);
         //去掉SPLIT_PK前面和后面的空格
-        String splitPK = configuration.getSplitPk().trim();
         //去掉TABLE前面和后面的空格
         String table1 = table.trim();
         //取配置中where 没有where就为null
 //        String where = configuration.getString(Key.WHERE, null);
-        return genPKSql(splitPK, table1, where);
+        return genPKSql(splitPkName, table1, where);
     }
 
     public static String genPKSql(String splitPK, String table, String where) {
@@ -295,6 +280,30 @@ public class SingleTableSplitUtil {
                     pkRangeSQL, where, splitPK);
         }
         return pkRangeSQL;
+    }
+
+    /**
+     * 获取表主键字段名
+     *
+     * @param table
+     * @param configuration
+     * @return
+     */
+    public static String getPK(String table, Configuration configuration) {
+        Connection conn = MySqlConnection.getConnection(configuration.getSourceDsName(),
+                DataSourceUtil.getDataSourceByDsName(configuration.getSourceDsName()));
+        String PKName = null;
+        try {
+            DatabaseMetaData dmd = conn.getMetaData();
+            String[] tables = StringUtils.split(table,".");
+            ResultSet rs = dmd.getPrimaryKeys(null, "%", tables[1]);
+            rs.next();
+            PKName = rs.getString("column_name");
+            rs.close();
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
+        return PKName;
     }
 
 

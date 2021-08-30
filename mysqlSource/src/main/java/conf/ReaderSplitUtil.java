@@ -1,9 +1,7 @@
 package conf;
 
 import common.dataclass.Range;
-import constant.CommonConstant;
-import constant.Key;
-import constant.utils.Constant;
+import datasource.DataSourceUtil;
 import dbconnection.mysql.MySqlConnection;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
@@ -24,10 +22,7 @@ import java.util.regex.Pattern;
 
 public class ReaderSplitUtil {
 
-    private static final Logger LOG = LoggerFactory.getLogger(ReaderSplitUtil.class);
 
-    private static Pattern mysqlPattern = Pattern.compile("jdbc:mysql://(.+):\\d+/.+");
-    private static Pattern oraclePattern = Pattern.compile("jdbc:oracle:thin:@(.+):\\d+:.+");
 
     //RangeList
     public static List<Range> doSplit(Configuration configuration, int adviceNumber, int tableNumber) throws SQLException {
@@ -77,9 +72,9 @@ public class ReaderSplitUtil {
 //            if (isTableMode) {
                 // 已在之前进行了扩展和`处理，可以直接使用
                 //取配置里面的表 table
-                List<String> tables = getDbTables(configuration.getSourceDsName(), configuration.getDbTableWhite());
-
-                Validate.isTrue(null != tables && !tables.isEmpty(), "您读取数据库表配置错误.");
+                List<String> tables = getDbTables(configuration);
+                //TODO
+//                Validate.isTrue(null != tables && !tables.isEmpty(), "您读取数据库表配置错误.");
                 //TODO
                 String splitPk = configuration.getSplitPk();
                 //最终切分份数不一定等于 eachTableShouldSplittedNumber
@@ -141,24 +136,12 @@ public class ReaderSplitUtil {
         return (int) Math.ceil(tempNum);
     }
 
-    public static String parseIpFromJdbcUrl(String jdbcUrl) {
 
-        Matcher mysql = mysqlPattern.matcher(jdbcUrl);
-        if (mysql.matches()) {
-            return mysql.group(1);
-        }
-        Matcher oracle = oraclePattern.matcher(jdbcUrl);
-        if (oracle.matches()) {
-            return oracle.group(1);
-        }
-        return null;
-    }
-
-    public static List<String> getDbTables(String sourceName, String dbTableWhite) throws SQLException {
+    public static List<String> getDbTables(Configuration configuration) throws SQLException {
 //        List<JSONObject> connConfList = conf.getList(Key.CONNECTION, JSONObject.class);
 //        Connection conn = DBUtil.getConnection(conf);
         //获取连接
-        Connection conn = MySqlConnection.getConnection(sourceName);
+        Connection conn = MySqlConnection.getConnection(configuration.getSourceDsName(), DataSourceUtil.getDataSourceByDsName(configuration.getSourceDsName()));
         DatabaseMetaData metaData = conn.getMetaData();
         String[] types = {"TABLE"};
         ResultSet rs = metaData.getTables(null, null, "%", types);
@@ -174,7 +157,7 @@ public class ReaderSplitUtil {
             //读取配置中的table
 //            String tableConf = StringUtils.strip(connConfList.get(0).getString(Key.TABLE), "[]").replaceAll("\"", "");
             String dbTable = dbName + "." + tableName;
-            if (dbTable.matches(dbTableWhite)) {
+            if (dbTable.matches(configuration.getDbTableWhite())) {
                 dbTables.add(dbTable);
             }
         }
@@ -182,32 +165,8 @@ public class ReaderSplitUtil {
         return dbTables;
     }
 
-    public static int getTableNumber(String sourceName, String dbTableWhite) throws SQLException {
-//        List<JSONObject> connConfList = conf.getList(Key.CONNECTION, JSONObject.class);
-//        Connection conn = DBUtil.getConnection(conf);
-        //获取连接
-        Connection conn = MySqlConnection.getConnection(sourceName);
-        DatabaseMetaData metaData = conn.getMetaData();
-        String[] types = {"TABLE"};
-        ResultSet rs = metaData.getTables(null, null, "%", types);
-        List<String> dbTables = new ArrayList<>();
-        while(rs.next()){
-            //1 TABLE_CAT String => table catalog (may be null)
-            //2 TABLE_SCHEM String => table schema (may be null)
-            //3 TABLE_NAME String => table name
-            //获取数据库表名
-            String tableName = rs.getString(3);
-            //获取数据库名
-            String dbName = rs.getString(1);
-            //读取配置中的table
-//            String tableConf = StringUtils.strip(connConfList.get(0).getString(Key.TABLE), "[]").replaceAll("\"", "");
-            String dbTable = dbName + "." + tableName;
-            if (dbTable.matches(dbTableWhite)) {
-                dbTables.add(dbTable);
-            }
-        }
-        rs.close();
-        int tableNumber = dbTables.size();
+    public static int getTableNumber(Configuration configuration) throws SQLException {
+        int tableNumber = ReaderSplitUtil.getDbTables(configuration).size();
         return tableNumber;
     }
 

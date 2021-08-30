@@ -1,6 +1,7 @@
 package task;
 
 import cache.MemoryCache;
+import com.mongodb.bulk.BulkWriteResult;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.model.BulkWriteOptions;
 import com.mongodb.client.model.InsertOneModel;
@@ -116,8 +117,9 @@ public class MongodbTargetTask extends AbstractTargetTask {
             }
             String dbName = dbTable.split("\\.", 2)[0];
             String tableName = dbTable.split("\\.", 2)[1];
-            this.mongoClient.getDatabase(dbName).
+            BulkWriteResult bulkWriteResult = this.mongoClient.getDatabase(dbName).
                     getCollection(tableName).bulkWrite(writeModels, new BulkWriteOptions().ordered(false));
+            System.out.println(bulkWriteResult);
         } catch (Exception e) {
               Log.error(e.getMessage());
         } finally {
