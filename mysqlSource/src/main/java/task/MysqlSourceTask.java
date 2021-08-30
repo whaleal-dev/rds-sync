@@ -121,7 +121,7 @@ public class MysqlSourceTask implements Runnable, SourceTaskInterface {
                 //遍历rs中的属性与值
                 for (int i = 1; i <= md.getColumnCount(); i++) {
                     //属性名下划线改驼峰
-                    String columnName = CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, md.getColumnName(i));
+                    String columnName = md.getColumnName(i);
                     //值
                     Object values = rs.getObject(md.getColumnName(i));
                     AbstractColumn abstractColumn = TransformationMysqlDataToColumn.parseValue(columnName, values);

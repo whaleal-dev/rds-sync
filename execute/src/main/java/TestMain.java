@@ -226,8 +226,8 @@ public class TestMain {
     public static void testMysqlToMongoDb() {
         //获取配置
         Configuration configuration = ConfigurationUtil.getConfiguration("proc2");
-        configuration.setDbTableWhite("community.community_dict");
-        configuration.setSplitPk("dict_id");
+        configuration.setDbTableWhite("community.sys_user.*");
+//        configuration.setSplitPk("dict_id");
 //        configuration.setDbTableWhite("\\w.+");
 
         //mysql 源连接

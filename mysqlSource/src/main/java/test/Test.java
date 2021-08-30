@@ -5,8 +5,13 @@ import conf.Configuration;
 import conf.RangeSplitUtil;
 import conf.ReaderSplitUtil;
 import configuration.ConfigurationUtil;
+import datasource.DataSourceUtil;
+import dbconnection.mysql.MySqlConnection;
 
 import java.io.File;
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 
@@ -19,23 +24,29 @@ public class Test {
 
     public static void main(String[] args) throws SQLException {
         Configuration configuration = ConfigurationUtil.getConfiguration("proc2");
-//        Configuration configuration = Configuration.from(file);
         System.out.println("=========================================================================================");
         System.out.println("=======================================读取到配置如下=======================================");
         System.out.println("=========================================================================================");
         System.out.println(configuration);
         System.out.println("=========================================================================================");
+        Connection conn = MySqlConnection.getConnection(configuration.getSourceDsName(),
+                DataSourceUtil.getDataSourceByDsName(configuration.getSourceDsName()));
+        String pkName = getPK("community_article", conn);
+        System.out.println("pkName =       " + pkName);
+
 //        List<String> tables = ReaderSplitUtil.getDbTables(configuration);
 //        System.out.println("tables =  " + tables.toString());
 //        for (String table : tables){
 //            System.out.println("table =    " + table);
 //        }
-        List<Range> listRange = ReaderSplitUtil.doSplit(configuration, configuration.getAdviceNumber(),
-                ReaderSplitUtil.getTableNumber(configuration));
-        System.out.println("listRange =  " + listRange.toString());
-        for (Range splitRange : listRange){
-            System.out.println("splitRange =    " + splitRange);
-        }
+
+
+//        List<Range> listRange = ReaderSplitUtil.doSplit(configuration, configuration.getAdviceNumber(),
+//                ReaderSplitUtil.getTableNumber(configuration));
+//        System.out.println("listRange =  " + listRange.toString());
+//        for (Range splitRange : listRange){
+//            System.out.println("splitRange =    " + splitRange);
+//        }
 
 
 //        test1(configuration);
@@ -53,6 +64,20 @@ public class Test {
 //        System.out.println("taskMetadata =      " + taskMetadata);
 //        getDataFromCollection(configuration);
 //        getAllDbTables(configuration);
+    }
+
+    public static String getPK(String tableName, Connection conn) {
+        String PKName = null;
+        try {
+            DatabaseMetaData dmd = conn.getMetaData();
+            ResultSet rs = dmd.getPrimaryKeys(null, "%", tableName);
+            rs.next();
+            PKName = rs.getString("column_name");
+            rs.close();
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
+        return PKName;
     }
 
     public static void test1(Configuration conf) throws SQLException {
@@ -85,6 +110,19 @@ public class Test {
 //        Log.info("sourceName:  " + conf.getString("database") + ",全量同步的表列表:  " + dbTables);
     }
 
+
+    //        //方法二
+//        String sql = String.format("show index from %s", tableName);
+//        try {
+//            PreparedStatement ps = conn.prepareStatement(sql);
+//            ResultSet rs = ps.executeQuery();
+//            rs.next();
+//            PKName = rs.getString("column_name");
+//            rs.close();
+//            ps.close();
+//        } catch (SQLException throwables) {
+//            throwables.printStackTrace();
+//        }
     public static void getAllDbTables(Configuration conf) throws SQLException {
 //        List<JSONObject> connConfList = conf.getList("connection", JSONObject.class);
 //        String jdbcUrl = connConfList.get(3).getString(Key.JDBC_URL);
@@ -112,7 +150,7 @@ public class Test {
 //        Log.info("sourceName:  " + conf.getString("database") + ",全量同步的表列表:  " + dbTables);
     }
 
-    public static void getDataFromCollection(Configuration conf){
+    public static void getDataFromCollection(Configuration conf) {
 //
 //        MysqlSourceTaskInfo taskMetadata = new MysqlSourceTaskInfo();
 //        List<Configuration> listConf = ReaderSplitUtil.doSplit(conf, conf.getInt("adviceNumber", 2));
@@ -172,6 +210,5 @@ public class Test {
 //        }
 //        dataList.add(abstractColumns);
 //    }
-
-
 }
+

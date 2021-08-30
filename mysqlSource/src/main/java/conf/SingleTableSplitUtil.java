@@ -6,8 +6,6 @@ import dbconnection.mysql.MySqlConnection;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import util.Log;
 
 import java.math.BigInteger;
@@ -17,24 +15,16 @@ import java.util.List;
 
 
 public class SingleTableSplitUtil {
-//    private static final Logger LOG = LoggerFactory
-//            .getLogger(SingleTableSplitUtil.class);
 
-//    private SingleTableSplitUtil() {
-//    }
-
-    //对单表进行分表
-    // tempSlice 临时分片配置 = configuration
-    // tempNum = 1.0 * adviceNumber / tableNumber ， tempNum再向上取整 = eachTableShouldSplittedNumber
-    // adviceNum = eachTableShouldSplittedNumber
     public static List<Range> splitSingleTable(Configuration configuration, String table, int adviceNum) {
-        //插件参数集合
+
         List<Range> pluginParams = new ArrayList<Range>();
-        //范围集合
         List<String> rangeList = null;
         //从配置中取分片字段 splitPk
         //TODO 智能取分片字段
-        String splitPkName = configuration.getSplitPk();
+        String splitPkName = null;
+        boolean hasSplitPk = StringUtils.isNotBlank(splitPkName);
+        splitPkName = hasSplitPk ? configuration.getSplitPk() : SingleTableSplitUtil.getPK(table, configuration);
         //从配置中取列 column
         //默认 *
         String column = "*";
@@ -266,13 +256,15 @@ public class SingleTableSplitUtil {
     }
 
     private static String genPKRangeSQL(Configuration configuration, String table, String where) {
+        String splitPkName = null;
+        boolean hasSplitPk = StringUtils.isNotBlank(splitPkName);
+        splitPkName = hasSplitPk ? configuration.getSplitPk().trim() : SingleTableSplitUtil.getPK(table, configuration);
         //去掉SPLIT_PK前面和后面的空格
-        String splitPK = configuration.getSplitPk().trim();
         //去掉TABLE前面和后面的空格
         String table1 = table.trim();
         //取配置中where 没有where就为null
 //        String where = configuration.getString(Key.WHERE, null);
-        return genPKSql(splitPK, table1, where);
+        return genPKSql(splitPkName, table1, where);
     }
 
     public static String genPKSql(String splitPK, String table, String where) {
@@ -288,6 +280,30 @@ public class SingleTableSplitUtil {
                     pkRangeSQL, where, splitPK);
         }
         return pkRangeSQL;
+    }
+
+    /**
+     * 获取表主键字段名
+     *
+     * @param table
+     * @param configuration
+     * @return
+     */
+    public static String getPK(String table, Configuration configuration) {
+        Connection conn = MySqlConnection.getConnection(configuration.getSourceDsName(),
+                DataSourceUtil.getDataSourceByDsName(configuration.getSourceDsName()));
+        String PKName = null;
+        try {
+            DatabaseMetaData dmd = conn.getMetaData();
+            String[] tables = StringUtils.split(table,".");
+            ResultSet rs = dmd.getPrimaryKeys(null, "%", tables[1]);
+            rs.next();
+            PKName = rs.getString("column_name");
+            rs.close();
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
+        return PKName;
     }
 
 
