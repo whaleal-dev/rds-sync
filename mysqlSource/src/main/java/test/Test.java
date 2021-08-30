@@ -1,9 +1,14 @@
 package test;
 
+import common.dataclass.Range;
 import conf.Configuration;
+import conf.RangeSplitUtil;
+import conf.ReaderSplitUtil;
+import configuration.ConfigurationUtil;
 
 import java.io.File;
 import java.sql.SQLException;
+import java.util.List;
 
 /**
  * @author: jy
@@ -13,13 +18,26 @@ public class Test {
 
 
     public static void main(String[] args) throws SQLException {
-        File file = new File("/Users/jiangyun/Documents/3.json");
+        Configuration configuration = ConfigurationUtil.getConfiguration("proc2");
 //        Configuration configuration = Configuration.from(file);
         System.out.println("=========================================================================================");
         System.out.println("=======================================读取到配置如下=======================================");
         System.out.println("=========================================================================================");
-//        System.out.println(configuration);
+        System.out.println(configuration);
         System.out.println("=========================================================================================");
+//        List<String> tables = ReaderSplitUtil.getDbTables(configuration);
+//        System.out.println("tables =  " + tables.toString());
+//        for (String table : tables){
+//            System.out.println("table =    " + table);
+//        }
+        List<Range> listRange = ReaderSplitUtil.doSplit(configuration, configuration.getAdviceNumber(),
+                ReaderSplitUtil.getTableNumber(configuration));
+        System.out.println("listRange =  " + listRange.toString());
+        for (Range splitRange : listRange){
+            System.out.println("splitRange =    " + splitRange);
+        }
+
+
 //        test1(configuration);
 //        List<Configuration> listConf = ReaderSplitUtil.doSplit(configuration, configuration.getInt("adviceNumber", 2));
 //        Configuration splitConf = listConf.get(1);

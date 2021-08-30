@@ -2,7 +2,6 @@ package test;
 
 import conf.Configuration;
 import conf.ReaderSplitUtil;
-import constant.Key;
 
 import java.io.File;
 import java.util.List;

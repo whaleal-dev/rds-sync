@@ -1,24 +1,20 @@
 import cache.MemoryCache;
-import com.mongodb.client.MongoClient;
-import com.mongodb.client.MongoCursor;
 import common.OplogMetadata;
 import conf.Configuration;
-
 import configuration.ConfigurationUtil;
 import datasource.DataSourceUtil;
 import dbconnection.mongodb.MongoDbConnection;
 import dbconnection.mysql.MySqlConnection;
 import execute.MongodbSource;
 import execute.MongodbTarget;
+import execute.MysqlSource;
 import execute.MysqlTarget;
-import org.bson.Document;
 import task.*;
 import thread.SourceTaskPoolManager;
 import thread.SysPoolManager;
 import thread.TargetTaskPoolManager;
 import util.Log;
 
-import java.util.Date;
 
 /**
  * @description:
@@ -28,8 +24,7 @@ import java.util.Date;
 public class TestMain {
     public static void main(String[] args) {
 
-        testRealTimeOfMongodb();
-        Configuration configuration = ConfigurationUtil.getConfiguration("proc3");
+        testMysqlToMongoDb();
 
 
     }
@@ -53,14 +48,14 @@ public class TestMain {
 
         OplogMetadata oplogMetadata = new OplogMetadata(configuration);
 
-        TargetTaskPoolManager.submit(configuration.getProName(),new OplogWriteTask(oplogMetadata));
-        TargetTaskPoolManager.submit(configuration.getProName(),new OplogNsBucketTask(oplogMetadata,configuration.getCacheSize()));
-        TargetTaskPoolManager.submit(configuration.getProName(),new OplogNsTask(configuration.getDbTableWhite(),oplogMetadata));
-        TargetTaskPoolManager.submit(configuration.getProName(),new OplogReadTask(configuration, (int)(System.currentTimeMillis()/1000)
+        TargetTaskPoolManager.submit(configuration.getProName(), new OplogWriteTask(oplogMetadata));
+        TargetTaskPoolManager.submit(configuration.getProName(), new OplogNsBucketTask(oplogMetadata, configuration.getCacheSize()));
+        TargetTaskPoolManager.submit(configuration.getProName(), new OplogNsTask(configuration.getDbTableWhite(), oplogMetadata));
+        TargetTaskPoolManager.submit(configuration.getProName(), new OplogReadTask(configuration, (int) (System.currentTimeMillis() / 1000)
                 , 0, 0, oplogMetadata));
-        for (int i = 0; i < 2 ; i++) {
-            TargetTaskPoolManager.submit(configuration.getProName(),new OplogWriteTask(oplogMetadata));
-            TargetTaskPoolManager.submit(configuration.getProName(),new OplogNsBucketTask(oplogMetadata,configuration.getCacheSize()));
+        for (int i = 0; i < 2; i++) {
+            TargetTaskPoolManager.submit(configuration.getProName(), new OplogWriteTask(oplogMetadata));
+            TargetTaskPoolManager.submit(configuration.getProName(), new OplogNsBucketTask(oplogMetadata, configuration.getCacheSize()));
         }
 
     }
@@ -180,6 +175,94 @@ public class TestMain {
                 int sourceThread = SourceTaskPoolManager.setSourceActiveThreadNum(configuration.getProName(), 0);
                 boolean getAllDbTable = mongodbSource.isGetAllDbTable();
                 int sourceTaskQueueSize = mongodbSource.getTaskMetadataQueueSize();
+                int setSysActiveThreadNum = SysPoolManager.setSysActiveThreadNum(configuration.getProName(), 0);
+                int targetActiveThreadNum = TargetTaskPoolManager.setTargetActiveThreadNum(configuration.getProName(), 0);
+                int allDataCacheNum = memoryCache.getAllDataCacheNum();
+                Log.info(setSysActiveThreadNum + "");
+                Log.info("sum:" + (sourceThread + sourceTaskQueueSize + sourceTaskQueueSize + allDataCacheNum + setSysActiveThreadNum));
+                Log.info("sourceThread:" + sourceThread);
+                Log.info("sourceTaskQueueSize:" + sourceTaskQueueSize);
+                Log.info("setSysActiveThreadNum:" + setSysActiveThreadNum);
+                Log.info("targetActiveThreadNum:" + targetActiveThreadNum);
+                Log.info("allDataCacheNum:" + allDataCacheNum);
+                Log.info("getAllDbTable:" + getAllDbTable);
+                if ((sourceThread + sourceTaskQueueSize + sourceTaskQueueSize + allDataCacheNum + setSysActiveThreadNum + targetActiveThreadNum) == 0 && getAllDbTable) {
+                    Thread.sleep(10000);
+                    try {
+
+                        TargetTaskPoolManager.shuntDownNow(configuration.getProName());
+
+                    } catch (Exception e) {
+                        Log.info(e.getMessage());
+                    }
+                    try {
+                        SourceTaskPoolManager.shuntDownNow(configuration.getProName());
+                    } catch (Exception e) {
+                        Log.info(e.getMessage());
+                    }
+                    try {
+                        SysPoolManager.shuntDownNow(configuration.getProName());
+                    } catch (Exception e) {
+                        Log.info(e.getMessage());
+                    }
+                    memoryCache.gcMemoryCache();
+                    MongodbTargetTask.setIsStopFlagOfTarget(configuration.getProName(), false);
+//                    MongoDbConnection.close(configuration.getTargetName());
+//                    MongoDbConnection.close(configuration.getSourceName());
+                    //MySqlConnection.close("1");
+                    Log.info("procName:" + configuration.getProName() + "关闭成功");
+                    Thread.sleep(10000);
+                    break;
+                } else if ((sourceThread + sourceTaskQueueSize + sourceTaskQueueSize + allDataCacheNum + setSysActiveThreadNum) == 0 && getAllDbTable) {
+                    MongodbTargetTask.setIsStopFlagOfTarget(configuration.getProName(), true);
+                }
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+        }
+    }
+
+    public static void testMysqlToMongoDb() {
+        //获取配置
+        Configuration configuration = ConfigurationUtil.getConfiguration("proc2");
+        configuration.setDbTableWhite("community.community_dict");
+        configuration.setSplitPk("dict_id");
+//        configuration.setDbTableWhite("\\w.+");
+
+        //mysql 源连接
+        MySqlConnection.getJdbcTemplate(configuration.getTargetDsName(), DataSourceUtil.getDataSourceByDsName(configuration.getProName(), configuration.getSourceDsName()));
+        //mongodb 目标连接
+        MongoDbConnection.getMongoClient(configuration.getTargetDsName(), DataSourceUtil.getDataSourceByDsName(configuration.getProName(), configuration.getTargetDsName()));
+        //缓存
+        MemoryCache memoryCache = new MemoryCache(configuration.getTaskName(),
+                configuration.getProName(), configuration.getCacheNum(), configuration.getCacheSize(), true);
+        //配置缓存
+        configuration.setMemoryCache(memoryCache);
+        //源线程池
+        SourceTaskPoolManager sourceTaskPoolManager = new SourceTaskPoolManager(configuration.getProName(),
+                3, 3);
+        SourceTaskPoolManager.addSourceTaskPoolManager(configuration.getProName(), sourceTaskPoolManager);
+        //系统线程池
+        SysPoolManager sysPoolManager = new SysPoolManager(configuration.getProName(), 5, 5);
+        SysPoolManager.addSysTaskPoolManager(configuration.getProName(), sysPoolManager);
+        //目标线程池
+        TargetTaskPoolManager targetTaskPoolManager = new TargetTaskPoolManager(configuration.getProName(),
+                5, 5);
+        TargetTaskPoolManager.addTargetTaskPoolManager(configuration.getProName(), targetTaskPoolManager);
+
+        MongodbTarget mongodbTarget = new MongodbTarget(configuration, memoryCache, configuration.getProName());
+        mongodbTarget.startToTarget();
+
+        MysqlSource mysqlSource = new MysqlSource(configuration, memoryCache);
+        mysqlSource.createTask();
+
+        while (true) {
+            try {
+                Thread.sleep(10000);
+                int sourceThread = SourceTaskPoolManager.setSourceActiveThreadNum(configuration.getProName(), 0);
+                boolean getAllDbTable = mysqlSource.isGetAllDbTable();
+                int sourceTaskQueueSize = mysqlSource.getTaskMetadataQueueSize();
                 int setSysActiveThreadNum = SysPoolManager.setSysActiveThreadNum(configuration.getProName(), 0);
                 int targetActiveThreadNum = TargetTaskPoolManager.setTargetActiveThreadNum(configuration.getProName(), 0);
                 int allDataCacheNum = memoryCache.getAllDataCacheNum();

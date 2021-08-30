@@ -1,6 +1,7 @@
 package dbconnection.mysql;
 
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.mongodb.client.MongoClient;
 import common.photonV.entity.Datasource;
 import org.apache.commons.dbcp.BasicDataSource;
@@ -8,9 +9,11 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import util.Log;
 
 import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.*;
 
 /**
  * mysql链接类
@@ -174,4 +177,80 @@ public class MySqlConnection {
 
         getJdbcTemplate("1", datasource);
     }
+
+    public static void closeDBResources(ResultSet rs, Statement stmt,
+                                        Connection conn) {
+        if (null != rs) {
+            try {
+                rs.close();
+            } catch (SQLException unused) {
+            }
+        }
+
+        if (null != stmt) {
+            try {
+                stmt.close();
+            } catch (SQLException unused) {
+            }
+        }
+
+        if (null != conn) {
+            try {
+                conn.close();
+            } catch (SQLException unused) {
+            }
+        }
+    }
+
+    public static ResultSet query(Connection conn, String sql, int fetchSize)
+            throws SQLException {
+        // 默认3600 s 的query Timeout
+        return query(conn, sql, fetchSize, 172800);
+    }
+
+    public static ResultSet query(Connection conn, String sql, int fetchSize, int queryTimeout)
+            throws SQLException {
+        // make sure autocommit is off
+        conn.setAutoCommit(false);
+        // ？
+        Statement stmt = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY,
+                ResultSet.CONCUR_READ_ONLY);
+        stmt.setFetchSize(fetchSize);
+        stmt.setQueryTimeout(queryTimeout);
+        return query(stmt, sql);
+    }
+
+    public static ResultSet query(Statement stmt, String sql)
+            throws SQLException {
+        return stmt.executeQuery(sql);
+    }
+
+    public static boolean asyncResultSetNext(final ResultSet resultSet) {
+        return asyncResultSetNext(resultSet, 3600);
+    }
+
+    public static boolean asyncResultSetNext(final ResultSet resultSet, int timeout) {
+        Future<Boolean> future = rsExecutors.get().submit(new Callable<Boolean>() {
+            @Override
+            public Boolean call() throws Exception {
+                return resultSet.next();
+            }
+        });
+        try {
+            return future.get(timeout, TimeUnit.SECONDS);
+        } catch (Exception e) {
+            Log.error(e.getMessage());
+        }
+        return false;
+    }
+
+    private static final ThreadLocal<ExecutorService> rsExecutors = new ThreadLocal<ExecutorService>() {
+        @Override
+        protected ExecutorService initialValue() {
+            return Executors.newFixedThreadPool(1, new ThreadFactoryBuilder()
+                    .setNameFormat("rsExecutors-%d")
+                    .setDaemon(true)
+                    .build());
+        }
+    };
 }

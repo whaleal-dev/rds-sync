@@ -2,7 +2,6 @@ package parse;
 
 import com.google.gson.Gson;
 import common.column.*;
-import common.dbtype.EnumMongoDbDataType;
 import common.dbtype.EnumMySqlDataType;
 
 import java.math.BigDecimal;
@@ -58,7 +57,7 @@ public class TransformationMysqlDataToColumn {
             case TIMESTAMP:
                 return new TimestampColumn(columnName, (Long) object);
             case DATETIME:
-                return new DateTimeColumn(columnName, (String) object);
+                return new DateTimeColumn(columnName, (Long) object);
             case TINYBLOB:
             case BLOB:
             case MEDIUMBLOB:
