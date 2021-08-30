@@ -4,6 +4,7 @@ import cache.MemoryCache;
 import common.taskbase.SourceTaskInfo;
 import conf.Configuration;
 
+import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Queue;
@@ -77,7 +78,7 @@ public abstract class SourceMetadata {
      * @param sourceName 数据源名称
      * @desc 获取数据源中所有的库表名
      */
-    public abstract void getAllDbCollections(String sourceName);
+    public abstract void getAllDbCollections(String sourceName) throws SQLException;
 
     /**
      * startFromSource 把所有库表的中数据进行分片和创造

@@ -12,6 +12,7 @@
         <module>common</module>
         <module>mongodbSource</module>
         <module>mongodbTarget</module>
+        <module>mysqlSource</module>
         <module>execute</module>
         <module>mysqlTarget</module>
         <module>core</module>
