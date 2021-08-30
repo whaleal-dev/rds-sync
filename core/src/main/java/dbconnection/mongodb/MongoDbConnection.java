@@ -27,7 +27,7 @@ public class MongoDbConnection {
      * @param dsName
      * @desc 创造mongodb客户端。dcl检查
      */
-    public static synchronized void createMonoDbClient(String dsName, Datasource datasource) {
+    public static void createMonoDbClient(String dsName, Datasource datasource) {
         if (mongoClientMap.containsKey(dsName)) {
             return;
         }
@@ -42,10 +42,7 @@ public class MongoDbConnection {
      * @return MongoClient
      * @desc 获取mongodb客户端
      */
-    public static MongoClient getMongoClient(String dsName, Datasource datasource) {
-        if (!mongoClientMap.containsKey(dsName)) {
-            createMonoDbClient(dsName, datasource);
-        }
+    public static MongoClient getMongoClient(String dsName) {
         return mongoClientMap.get(dsName);
     }
 

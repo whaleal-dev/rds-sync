@@ -25,7 +25,6 @@ public class MySqlConnection {
     private static Map<String, Connection> connectionMysqlMap = new ConcurrentHashMap<>();
 
 
-
     private static synchronized void getBasicDataSource(String dsName, Datasource datasource) {
         if (jdbcTemplateMysqlMap.containsKey(dsName)) {
             return;
@@ -50,7 +49,7 @@ public class MySqlConnection {
      * @return JdbcTemplate
      * @desc 获取mysql的Jdbc
      */
-    public static Connection getConnection(String dsName, Datasource datasource) {
+    public static Connection createConnection(String dsName, Datasource datasource) {
         if (!jdbcTemplateMysqlMap.containsKey(dsName)) {
             getBasicDataSource(dsName, datasource);
         }
@@ -75,6 +74,17 @@ public class MySqlConnection {
      */
     public static JdbcTemplate getJdbcTemplate(String dsName) {
         return jdbcTemplateMysqlMap.get(dsName);
+    }
+
+    /**
+     * getJdbcTemplate 获取mysql的Jdbc
+     *
+     * @param dsName
+     * @return JdbcTemplate
+     * @desc 获取mysql的Jdbc
+     */
+    public static Connection getConnection(String dsName) {
+        return connectionMysqlMap.get(dsName);
     }
 
     /**

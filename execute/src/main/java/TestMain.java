@@ -46,9 +46,9 @@ public class TestMain {
     public static void testRealTimeOfMongodb() {
         Configuration configuration = ConfigurationUtil.getConfiguration("proc3");
         configuration.setDbTableWhite("\\w.+");
-        MongoDbConnection.getMongoClient(configuration.getSourceDsName(), DataSourceUtil.getDataSourceByDsName( configuration.getSourceDsName()));
+        MongoDbConnection.createMonoDbClient(configuration.getSourceDsName(), DataSourceUtil.getDataSourceByDsName( configuration.getSourceDsName()));
 
-        MongoDbConnection.getMongoClient(configuration.getTargetDsName(), DataSourceUtil.getDataSourceByDsName(configuration.getTargetDsName()));
+        MongoDbConnection.createMonoDbClient(configuration.getTargetDsName(), DataSourceUtil.getDataSourceByDsName(configuration.getTargetDsName()));
 
 
         SourceTaskPoolManager sourceTaskPoolManager = new SourceTaskPoolManager(configuration.getProName(), configuration.getSourceThreadNum(), configuration.getSourceThreadNum());
@@ -77,9 +77,9 @@ public class TestMain {
 
         Configuration configuration = ConfigurationUtil.getConfiguration("proc2");
         configuration.setDbTableWhite("photon.col4");
-        MongoDbConnection.getMongoClient(configuration.getSourceDsName(), DataSourceUtil.getDataSourceByDsName( configuration.getSourceDsName()));
+        MongoDbConnection.createMonoDbClient(configuration.getSourceDsName(), DataSourceUtil.getDataSourceByDsName( configuration.getSourceDsName()));
 
-        MySqlConnection.getConnection(configuration.getTargetDsName(), DataSourceUtil.getDataSourceByDsName(configuration.getTargetDsName()));
+        MySqlConnection.createConnection(configuration.getTargetDsName(), DataSourceUtil.getDataSourceByDsName(configuration.getTargetDsName()));
 
         MemoryCache memoryCache = new MemoryCache(configuration.getTaskName(),
                 configuration.getProName(), configuration.getCacheNum(), configuration.getCacheSize(), true);
@@ -166,9 +166,9 @@ public class TestMain {
         Configuration configuration = ConfigurationUtil.getConfiguration("proc1");
         TaskTrigger taskTrigger = generateTaskTriggerInfo(configuration.getTaskName(), configuration.getProName());
         TriggerUtil.insertTriggerInfo(taskTrigger);
-        MongoDbConnection.getMongoClient(configuration.getSourceDsName(), DataSourceUtil.getDataSourceByDsName( configuration.getSourceDsName()));
+        MongoDbConnection.createMonoDbClient(configuration.getSourceDsName(), DataSourceUtil.getDataSourceByDsName( configuration.getSourceDsName()));
 
-        MongoDbConnection.getMongoClient(configuration.getTargetDsName(), DataSourceUtil.getDataSourceByDsName( configuration.getTargetDsName()));
+        MongoDbConnection.createMonoDbClient(configuration.getTargetDsName(), DataSourceUtil.getDataSourceByDsName( configuration.getTargetDsName()));
 
         MemoryCache memoryCache = new MemoryCache(configuration.getTaskName(),
                 configuration.getProName(), configuration.getCacheNum(), configuration.getCacheSize(), true);

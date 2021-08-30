@@ -3,6 +3,7 @@ package dbconnection.oracle;
 import common.photonV.entity.Datasource;
 import datasource.DBUtil;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.jdbc.core.JdbcTemplate;
 import util.Log;
 
 import java.sql.Connection;
@@ -21,7 +22,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @Slf4j
 public final class OracleConnection {
     private static Map<String, Connection> oracleConnectionMap = new ConcurrentHashMap<>();
-
+    private static Map<String, JdbcTemplate> jdbcTemplateOracleMap = new ConcurrentHashMap<>();
     /**
      * 根据数据库的名字或者数据源来获取连接
      *
@@ -29,31 +30,41 @@ public final class OracleConnection {
      * @param datasource 数据源
      * @return {@link Connection}
      */
-    public static Connection getConnection(String dsName, Datasource datasource) {
+    public static Connection createConnection(String dsName, Datasource datasource) {
         if (!oracleConnectionMap.containsKey(dsName)) {
             return oracleConnectionMap.get(dsName);
         }
         Connection connection = null;
         synchronized (OracleConnection.class) {
             if (!oracleConnectionMap.containsKey(dsName)) {
-                connection = getConnection(datasource);
+                connection = createConnection(datasource);
                 oracleConnectionMap.put(dsName, connection);
             }
             return connection;
         }
-//        BasicDataSource basicDataSource = new BasicDataSource();
-//        basicDataSource.setUrl("jdbc:mysql://192.168.3.19:3306/photon?useUnicode=true&characterEncoding=utf-8");
-//        basicDataSource.setUsername("root");
-//        basicDataSource.setPassword("123456");
     }
 
+    public static JdbcTemplate getJdbcTemplate(String dsName) {
+        return jdbcTemplateOracleMap.get(dsName);
+    }
+
+    /**
+     * getJdbcTemplate 获取mysql的Jdbc
+     *
+     * @param dsName
+     * @return JdbcTemplate
+     * @desc 获取mysql的Jdbc
+     */
+    public static Connection getConnection(String dsName) {
+        return oracleConnectionMap.get(dsName);
+    }
     /**
      * 根据datasource获取数据库的连接
      *
      * @param datasource 数据源
      * @return {@link Connection}
      */
-    public static synchronized Connection getConnection(Datasource datasource) {
+    public static synchronized Connection createConnection(Datasource datasource) {
         Connection connection = null;
         try {
             Class.forName("oracle.jdbc.OracleDriver");
@@ -89,13 +100,13 @@ public final class OracleConnection {
         }
     }
 
-    public static void main(String[] args) {
-        //getMongoClient("mongodb://admin:123456@192.168.3.172:6001/admin?authSource=admin");
-        //Map<String, Object> map = OracleConnection.getJdbcTemplate("1").queryForMap("select * from photon.datasource where name='mysql1' ");
-        Datasource proc3 = DBUtil.getSourceByProcName("proc3");
-        Connection connection = getConnection(proc3);
-        System.out.println(connection);
-        System.out.println(proc3.getDsDatabase());
-
-    }
+//    public static void main(String[] args) {
+//        //getMongoClient("mongodb://admin:123456@192.168.3.172:6001/admin?authSource=admin");
+//        //Map<String, Object> map = OracleConnection.getJdbcTemplate("1").queryForMap("select * from photon.datasource where name='mysql1' ");
+//        Datasource proc3 = DBUtil.getSourceByProcName("proc3");
+//        Connection connection = getConnection(proc3);
+//        System.out.println(connection);
+//        System.out.println(proc3.getDsDatabase());
+//
+//    }
 }
