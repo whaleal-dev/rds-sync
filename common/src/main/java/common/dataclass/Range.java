@@ -14,6 +14,7 @@ import lombok.*;
 @ToString
 @Builder
 public class Range {
+    private String columnName;
     /**
      * 最大值
      */
@@ -46,4 +47,5 @@ public class Range {
      * 查询语句 一般为sql
      */
     private String query;
+
 }
