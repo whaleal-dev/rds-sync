@@ -1,14 +1,17 @@
 package test;
 
+import common.dataclass.Range;
 import conf.Configuration;
 import configuration.ConfigurationUtil;
-import datasource.DataSourceUtil;
-import dbconnection.mysql.MySqlConnection;
+import sourcesplit.MysqlSourceSplitRange;
+import util.Log;
 
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author: jy
@@ -24,10 +27,32 @@ public class Test {
         System.out.println("=========================================================================================");
         System.out.println(configuration);
         System.out.println("=========================================================================================");
-        Connection conn = MySqlConnection.createConnection(configuration.getSourceDsName(),
-                DataSourceUtil.getDataSourceByDsName(configuration.getSourceDsName()));
-        String pkName = getPK("community_article", conn);
-        System.out.println("pkName =       " + pkName);
+        System.out.println("=========================================================================================");
+//        configuration.setDbTableWhite("(community.community_dict)||(community.sys_menu)");
+//        configuration.setDbTableWhite("(community.community_dict)||(community.sys_menu)||(community.community.banner)");
+//        configuration.setDbTableWhite("community.community_dict");
+//        configuration.setDbTableWhite("community.community_category");
+//        configuration.setDbTableWhite("community.sys_.*");
+        configuration.setAdviceNumber(2);
+        configuration.setDbTableWhite("community.sys_captcha");
+        List<Range> list = new ArrayList<>();
+        try {
+            System.out.println("====" + configuration);
+            list = MysqlSourceSplitRange.doSplit(configuration);
+        } catch (Exception e) {
+            e.printStackTrace();
+            Log.error(e.getMessage());
+        }
+        for (Range range : list) {
+            System.out.println("切分的range    =   " + range);
+        }
+        System.out.println("切分份数    =   " + list.size());
+
+
+//        Connection conn = MySqlConnection.createConnection(configuration.getSourceDsName(),
+//                DataSourceUtil.getDataSourceByDsName(configuration.getSourceDsName()));
+//        String pkName = getPK("community_article", conn);
+//        System.out.println("pkName =       " + pkName);
 
 //        List<String> tables = ReaderSplitUtil.getDbTables(configuration);
 //        System.out.println("tables =  " + tables.toString());

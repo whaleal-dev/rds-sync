@@ -5,10 +5,10 @@ import common.dataclass.Range;
 import common.taskbase.SourceTaskInfo;
 import common.taskbase.metadata.SourceMetadata;
 import conf.Configuration;
-import sourcesplit.ReaderSplitUtil;
 import datasource.DataSourceUtil;
 import dbconnection.mysql.MySqlConnection;
 import org.springframework.jdbc.core.JdbcTemplate;
+import sourcesplit.MysqlSourceSplitRange;
 import task.MysqlSourceTask;
 import thread.SourceTaskPoolManager;
 import thread.SysPoolManager;
@@ -51,61 +51,40 @@ public class MysqlSource extends SourceMetadata {
             e.printStackTrace();
             Log.error(e.getMessage());
         }
-        System.out.println("1========");
         // 启动获取提交Task任务的线程
         submitSourceTask();
-        System.out.println("2========");
         // 开始遍历抽取该数据源的所有库表
         startFromSource(sourceName, false);
-        System.out.println("3========");
     }
 
 
     @Override
     public void startFromSource(String sourceName, boolean isParallel) {
-        System.out.println("0========");
-        Iterator<Map.Entry<String, String>> mapIterator = dbTables.entrySet().iterator();
-        while (mapIterator.hasNext()) {
-            Map.Entry<String, String> next = mapIterator.next();
-            System.out.println("9======");
-            createSourceEntity(sourceName, next.getValue());
-            dbTables.remove(next.getKey());
-        }
+
+        createSourceEntity(sourceName,"");
+        dbTables=new ConcurrentHashMap<>();
         isGetAllDbTable = true;
+
     }
 
     @Override
     public void createSourceEntity(String sourceName, String dbTableName) {
-        System.out.println("7======");
-
-        Runnable runnable = new Runnable() {
-            @Override
-            public void run() {
-                System.out.println("8======");
-                //根据总配置进行切分配置
-                List<Range> list = new ArrayList<>();
-                try {
-                    System.out.println("====" + configuration);
-                    list = ReaderSplitUtil.doSplit(configuration, configuration.getAdviceNumber(),
-                            ReaderSplitUtil.getTableNumber(configuration));
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    Log.error(e.getMessage());
-                }
-                System.out.println("10======");
-                for (Range splitRange : list) {
-                    SysPoolManager.setSysActiveThreadNum(proName, 1);
-                    //TODO
-                    SourceTaskInfo taskMetadata = new SourceTaskInfo(splitRange,
-                            dbTableName, sourceName);
-                    System.out.println("6======");
-                    // Log.info("taskMetadata配置信息:" + taskMetadata.toString());
-                    pushTaskMeta(proName, taskMetadata);
-                    SysPoolManager.setSysActiveThreadNum(proName, -1);
-                }
-            }
-        };
-        SysPoolManager.submit(proName, runnable);
+        List<Range> list = new ArrayList<>();
+        try {
+            list = MysqlSourceSplitRange.doSplit(configuration);
+        } catch (Exception e) {
+            e.printStackTrace();
+            Log.error(e.getMessage());
+        }
+        for (Range splitRange : list) {
+            Log.info("切分数     =   " + list.size());
+            SysPoolManager.setSysActiveThreadNum(proName, 1);
+            SourceTaskInfo taskMetadata = new SourceTaskInfo(splitRange,
+                    splitRange.getDbTableName(), sourceName);
+            Log.error("taskMetadata" + taskMetadata);
+            pushTaskMeta(proName, taskMetadata);
+            SysPoolManager.setSysActiveThreadNum(proName, -1);
+        }
 
     }
 
@@ -114,6 +93,7 @@ public class MysqlSource extends SourceMetadata {
         List<Map<String, Object>> dbTableList = jdbcTemplate.queryForList("select * from information_schema.TABLES");
         for (Map dbTableMap : dbTableList) {
             String dbName = dbTableMap.get("TABLE_SCHEMA").toString();
+            //忽略 mysql 系统表
             if (dbName.equalsIgnoreCase("mysql") || dbName.equalsIgnoreCase("information_schema") ||
                     dbName.equalsIgnoreCase("sys")) {
                 continue;
@@ -125,7 +105,6 @@ public class MysqlSource extends SourceMetadata {
             }
         }
         Log.info("sourceName:" + sourceName + ",全量同步的表列表:" + dbTables);
-        System.out.println(taskMetadataQueue);
     }
 
     @Override
@@ -135,10 +114,8 @@ public class MysqlSource extends SourceMetadata {
             public void run() {
                 while (true) {
                     try {
-                        System.out.println("4========");
                         SourceTaskInfo taskMetadata = taskMetadataQueue.poll();
                         if (taskMetadata != null) {
-                            Log.info("MysqlSourceTaskInfo");
                             SourceTaskPoolManager.setSourceActiveThreadNum(proName, 1);
                             SourceTaskPoolManager.submit(proName, new MysqlSourceTask(taskMetadata, proName, memoryCache, 128));
                         } else {
@@ -147,7 +124,6 @@ public class MysqlSource extends SourceMetadata {
                             }
                             TimeUnit.SECONDS.sleep(2);
                         }
-
                     } catch (InterruptedException e) {
                         Log.error(e.getMessage());
                     }

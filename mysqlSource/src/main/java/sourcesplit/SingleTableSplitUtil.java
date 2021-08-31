@@ -9,6 +9,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import util.Log;
+import util.split.RangeSplitWrap;
 
 import java.math.BigInteger;
 import java.sql.*;
@@ -24,33 +25,21 @@ public class SingleTableSplitUtil {
         List<Range> pluginParams = new ArrayList<Range>();
         List<String> rangeList = null;
         //从配置中取分片字段 splitPk
-        //TODO 取主键
         String splitPkName = null;
         boolean hasSplitPk = StringUtils.isNotBlank(splitPkName);
         splitPkName = hasSplitPk ? configuration.getSplitPk() : SingleTableSplitUtil.getPK(table, configuration);
-        //从配置中取列 column
-        //默认 *
         String column = "*";
-        //取table
-        //
-        //取where 取不到就为null
         String where = null;
         //配置中有无where
         boolean hasWhere = StringUtils.isNotBlank(where);
-
-        //String splitMode = configuration.getString(Key.SPLIT_MODE, "");
-        //if (Constant.SPLIT_MODE_RANDOMSAMPLE.equals(splitMode) && DATABASE_TYPE == DataBaseType.Oracle) {
         // Pair Java中的配对
         // minMaxPK 最小到最大字段
-
         Pair<Object, Object> minMaxPK = getPkRange(configuration, table, where);
         if (null == minMaxPK) {
             Log.error("根据切分主键切分表失败. PhotonT 仅支持切分主键为一个,并且类型为整数或者字符串类型. 请尝试使用其他的切分主键或者联系 DBA 进行处理.");
         }
         Range range = new Range();
-
         range.setQuery(buildQuerySql(column, table, where));
-//        configuration.set(Key.QUERY_SQL, buildQuerySql(column, table, where));
 
         // 切分后获取到的 start/end 有 Null 的情况
         if (null == minMaxPK.getLeft() || null == minMaxPK.getRight()) {
@@ -82,10 +71,8 @@ public class SingleTableSplitUtil {
 
         if (null != rangeList && !rangeList.isEmpty()) {
             for (String range1 : rangeList) {
-
                 tempQuerySql = buildQuerySql(column, table, where)
                         + (hasWhere ? " and " : " where ") + range1;
-
                 allQuerySql.add(tempQuerySql);
                 range = new Range();
                 range.setDbTableName(table);
