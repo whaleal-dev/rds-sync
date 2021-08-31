@@ -44,7 +44,7 @@ public class DBUtil {
      * @return {@link Datasource}
      */
     public static Datasource getSourceByProcName(String procName) {
-        Configuration confByProcName = ConfigurationUtil.getConfByProcName(procName);
+        Configuration confByProcName = ConfigurationUtil.getConfiguration(procName);
         String sourName = confByProcName.getSourceDsName();
         JdbcTemplate jdbcTemplate = getJdbcTemplate();
         Map<String, Object> map = jdbcTemplate.queryForMap("select * from photon.datasource where name='" + sourName + "' ");

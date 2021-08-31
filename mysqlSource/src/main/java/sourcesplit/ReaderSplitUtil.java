@@ -1,30 +1,19 @@
-package conf;
+package sourcesplit;
 
 import common.dataclass.Range;
+import conf.Configuration;
 import datasource.DataSourceUtil;
 import dbconnection.mysql.MySqlConnection;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.Validate;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import util.Log;
 
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class ReaderSplitUtil {
 
-
-
-    //RangeList
     public static List<Range> doSplit(Configuration configuration, int adviceNumber, int tableNumber) throws SQLException {
         //TODO 判断表模式
 //        boolean isTableMode = configuration.getBool(Constant.IS_TABLE_MODE).booleanValue();
@@ -141,7 +130,7 @@ public class ReaderSplitUtil {
 //        List<JSONObject> connConfList = conf.getList(Key.CONNECTION, JSONObject.class);
 //        Connection conn = DBUtil.getConnection(conf);
         //获取连接
-        Connection conn = MySqlConnection.getConnection(configuration.getSourceDsName(), DataSourceUtil.getDataSourceByDsName(configuration.getSourceDsName()));
+        Connection conn = MySqlConnection.createConnection(configuration.getSourceDsName(), DataSourceUtil.getDataSourceByDsName(configuration.getSourceDsName()));
         DatabaseMetaData metaData = conn.getMetaData();
         String[] types = {"TABLE"};
         ResultSet rs = metaData.getTables(null, null, "%", types);

@@ -1,4 +1,4 @@
-package conf;
+package sourcesplit;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;

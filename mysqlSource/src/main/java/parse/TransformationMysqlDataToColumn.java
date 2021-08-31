@@ -6,6 +6,7 @@ import common.dbtype.EnumMySqlDataType;
 
 import java.math.BigDecimal;
 import java.sql.Blob;
+import java.sql.Timestamp;
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
 
@@ -55,7 +56,7 @@ public class TransformationMysqlDataToColumn {
                 return new DateColumn(columnName, (String) object);
             case TIME:
             case TIMESTAMP:
-                return new TimestampColumn(columnName, (Long) object);
+                return new TimestampColumn(columnName, ((Timestamp) object).getTime());
             case DATETIME:
                 return new DateTimeColumn(columnName, (Long) object);
             case TINYBLOB:

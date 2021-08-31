@@ -3,6 +3,7 @@ package dbconnection.oracle;
 import common.photonV.entity.Datasource;
 import datasource.DBUtil;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.dbcp.BasicDataSource;
 import org.springframework.jdbc.core.JdbcTemplate;
 import util.Log;
 
@@ -46,6 +47,15 @@ public final class OracleConnection {
 
     public static JdbcTemplate getJdbcTemplate(String dsName) {
         return jdbcTemplateOracleMap.get(dsName);
+    }
+
+    public static JdbcTemplate getJdbcTemplateBySource(Datasource datasource){
+        BasicDataSource basicDataSource = new BasicDataSource();
+        basicDataSource.setUrl(datasource.getUrl());
+        basicDataSource.setUsername(datasource.getUsername());
+        basicDataSource.setPassword(datasource.getPassword());
+        JdbcTemplate jdbcTemplate = new JdbcTemplate(basicDataSource);
+        return jdbcTemplate;
     }
 
     /**

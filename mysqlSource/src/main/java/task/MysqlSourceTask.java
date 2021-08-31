@@ -6,7 +6,6 @@ import common.column.AbstractColumn;
 import common.dataclass.BatchDataEntity;
 import common.taskbase.SourceTaskInfo;
 import common.taskbase.SourceTaskInterface;
-import conf.DataUtil;
 import dbconnection.mysql.MySqlConnection;
 import org.springframework.jdbc.core.JdbcTemplate;
 import parse.TransformationMysqlDataToColumn;
@@ -87,6 +86,7 @@ public class MysqlSourceTask implements Runnable, SourceTaskInterface {
             statement = connection.createStatement();
             ResultSet resultSet = statement.executeQuery(sql);
             while (resultSet.next()) {
+                System.out.println("getMysqlAbstractColumn == = = == = =");
                 getMysqlAbstractColumn(resultSet);
                 System.out.println("dataList    =    " + this.dataList);
                 if (cache++ > dataBatchSize) {

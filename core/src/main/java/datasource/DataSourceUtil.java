@@ -53,7 +53,7 @@ public class DataSourceUtil {
         }
         Object status = map.get("status");
         if (status != null) {
-            dataSource.setStatus((Short) status);
+            dataSource.setStatus((Boolean) status);
         }
 
         Object remark = map.get("remark");

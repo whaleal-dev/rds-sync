@@ -84,7 +84,7 @@ public class Datasource {
      * 状态：1启用 2禁用
      */
 
-    private Short status;
+    private Boolean status;
 
     /**
      * 创建时间
