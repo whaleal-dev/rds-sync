@@ -1,11 +1,5 @@
 package test;
 
-import conf.Configuration;
-import conf.ReaderSplitUtil;
-
-import java.io.File;
-import java.util.List;
-
 /**
  * mysql测试
  *

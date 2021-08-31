@@ -1,6 +1,5 @@
 package thread;
 
-import conf.Configuration;
 import util.Log;
 
 import java.util.Map;

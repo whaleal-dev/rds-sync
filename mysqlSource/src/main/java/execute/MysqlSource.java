@@ -5,7 +5,7 @@ import common.dataclass.Range;
 import common.taskbase.SourceTaskInfo;
 import common.taskbase.metadata.SourceMetadata;
 import conf.Configuration;
-import conf.ReaderSplitUtil;
+import sourcesplit.ReaderSplitUtil;
 import datasource.DataSourceUtil;
 import dbconnection.mysql.MySqlConnection;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -15,7 +15,6 @@ import thread.SysPoolManager;
 import util.Log;
 
 import java.sql.Connection;
-import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -38,7 +37,7 @@ public class MysqlSource extends SourceMetadata {
         this.dbTableWhite = configuration.getDbTableWhite();
         this.memoryCache = memoryCache;
         procSourceTask.put(proName, taskMetadataQueue);
-        connection = MySqlConnection.getConnection(sourceName, DataSourceUtil.getDataSourceByDsName(sourceName));
+        connection = MySqlConnection.createConnection(sourceName, DataSourceUtil.getDataSourceByDsName(sourceName));
         jdbcTemplate = MySqlConnection.getJdbcTemplate(sourceName);
     }
 
@@ -87,7 +86,7 @@ public class MysqlSource extends SourceMetadata {
                 List<Range> list = new ArrayList<>();
                 try {
                     System.out.println("====" + configuration);
-                    list = ReaderSplitUtil.doSplit(configuration, 2,
+                    list = ReaderSplitUtil.doSplit(configuration, configuration.getAdviceNumber(),
                             ReaderSplitUtil.getTableNumber(configuration));
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -98,7 +97,7 @@ public class MysqlSource extends SourceMetadata {
                     SysPoolManager.setSysActiveThreadNum(proName, 1);
                     //TODO
                     SourceTaskInfo taskMetadata = new SourceTaskInfo(splitRange,
-                            splitRange.getDbTableName(), sourceName);
+                            dbTableName, sourceName);
                     System.out.println("6======");
                     // Log.info("taskMetadata配置信息:" + taskMetadata.toString());
                     pushTaskMeta(proName, taskMetadata);

@@ -1,19 +1,14 @@
 package test;
 
-import common.dataclass.Range;
 import conf.Configuration;
-import conf.RangeSplitUtil;
-import conf.ReaderSplitUtil;
 import configuration.ConfigurationUtil;
 import datasource.DataSourceUtil;
 import dbconnection.mysql.MySqlConnection;
 
-import java.io.File;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.List;
 
 /**
  * @author: jy
@@ -29,7 +24,7 @@ public class Test {
         System.out.println("=========================================================================================");
         System.out.println(configuration);
         System.out.println("=========================================================================================");
-        Connection conn = MySqlConnection.getConnection(configuration.getSourceDsName(),
+        Connection conn = MySqlConnection.createConnection(configuration.getSourceDsName(),
                 DataSourceUtil.getDataSourceByDsName(configuration.getSourceDsName()));
         String pkName = getPK("community_article", conn);
         System.out.println("pkName =       " + pkName);

@@ -1,6 +1,8 @@
-package conf;
+package sourcesplit;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import common.dataclass.Range;
+import conf.Configuration;
 import datasource.DataSourceUtil;
 import dbconnection.mysql.MySqlConnection;
 import org.apache.commons.lang3.StringUtils;
@@ -12,6 +14,7 @@ import java.math.BigInteger;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.*;
 
 
 public class SingleTableSplitUtil {
@@ -21,7 +24,7 @@ public class SingleTableSplitUtil {
         List<Range> pluginParams = new ArrayList<Range>();
         List<String> rangeList = null;
         //从配置中取分片字段 splitPk
-        //TODO 智能取分片字段
+        //TODO 取主键
         String splitPkName = null;
         boolean hasSplitPk = StringUtils.isNotBlank(splitPkName);
         splitPkName = hasSplitPk ? configuration.getSplitPk() : SingleTableSplitUtil.getPK(table, configuration);
@@ -42,7 +45,7 @@ public class SingleTableSplitUtil {
 
         Pair<Object, Object> minMaxPK = getPkRange(configuration, table, where);
         if (null == minMaxPK) {
-            Log.error("根据切分主键切分表失败. DataX 仅支持切分主键为一个,并且类型为整数或者字符串类型. 请尝试使用其他的切分主键或者联系 DBA 进行处理.");
+            Log.error("根据切分主键切分表失败. PhotonT 仅支持切分主键为一个,并且类型为整数或者字符串类型. 请尝试使用其他的切分主键或者联系 DBA 进行处理.");
         }
         Range range = new Range();
 
@@ -71,7 +74,7 @@ public class SingleTableSplitUtil {
                     new BigInteger(minMaxPK.getRight().toString()),
                     adviceNum, splitPkName);
         } else {
-            Log.error("您配置的切分主键(splitPk) 类型 DataX 不支持. DataX 仅支持切分主键为一个,并且类型为整数或者字符串类型. 请尝试使用其他的切分主键或者联系 DBA 进行处理.");
+            Log.error("您配置的切分主键(splitPk) 类型 PhotonT 不支持. PhotonT 仅支持切分主键为一个,并且类型为整数或者字符串类型. 请尝试使用其他的切分主键或者联系 DBA 进行处理.");
         }
 
         String tempQuerySql;
@@ -102,16 +105,10 @@ public class SingleTableSplitUtil {
         }
 
         // deal pk is null
-        tempQuerySql =
-
-                buildQuerySql(column, table, where)
+        tempQuerySql = buildQuerySql(column, table, where)
                         + (hasWhere ? " and " : " where ")
                         + String.format(" %s IS NULL", splitPkName);
-
         allQuerySql.add(tempQuerySql);
-
-//        LOG.info("After split(), allQuerySql=[\n{}\n].",
-//                StringUtils.join(allQuerySql, "\n"));
         range = new Range();
         range.setDbTableName(table);
         range.setQuery(tempQuerySql);
@@ -120,20 +117,15 @@ public class SingleTableSplitUtil {
         return pluginParams;
     }
 
-    public static String buildQuerySql(String column, String table,
-                                       String where) {
+    public static String buildQuerySql(String column, String table, String where) {
         String querySql;
-
         if (StringUtils.isBlank(where)) {
-            // "select %s from %s ";
             querySql = String.format("select %s from %s ",
                     column, table);
         } else {
-            // "select %s from %s where (%s)";
             querySql = String.format("select %s from %s where (%s)", column,
                     table, where);
         }
-
         return querySql;
     }
 
@@ -143,15 +135,8 @@ public class SingleTableSplitUtil {
         String pkRangeSQL = genPKRangeSQL(configuration, table, where);
         //取配置中的 fetchSize
         int fetchSize = configuration.getFetchSize();
-        //取配置中的 jdbcURL
-//        String jdbcURL = configuration.getString(Key.JDBC_URL);
-        //取配置中的 username
-//        String username = configuration.getString(Key.USERNAME);
-        //取配置中的 password
-//        String password = configuration.getString(Key.PASSWORD);
-        //取配置中的 table
         //获取连接
-        Connection conn = MySqlConnection.getConnection(configuration.getSourceDsName(),
+        Connection conn = MySqlConnection.createConnection(configuration.getSourceDsName(),
                 DataSourceUtil.getDataSourceByDsName(configuration.getSourceDsName()));
         //字段构建的范围 sql pkRangeSQL
         Pair<Object, Object> minMaxPK = checkSplitPk(conn, pkRangeSQL, fetchSize, configuration);
@@ -169,7 +154,7 @@ public class SingleTableSplitUtil {
         Pair<Object, Object> minMaxPK = null;
         try {
             try {
-                rs = MySqlConnection.query(conn, pkRangeSQL, fetchSize);
+                rs = SingleTableSplitUtil.query(conn, pkRangeSQL, fetchSize);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -183,7 +168,7 @@ public class SingleTableSplitUtil {
                         configuration.setPK_TYPE("pkTypeString");
                     }
                     //异步获取 resultSet 的 next()
-                    while (MySqlConnection.asyncResultSetNext(rs)) {
+                    while (SingleTableSplitUtil.asyncResultSetNext(rs)) {
                         //左元素是 min，右元素是 max
                         minMaxPK = new ImmutablePair<Object, Object>(
                                 rs.getString(1), rs.getString(2));
@@ -194,7 +179,7 @@ public class SingleTableSplitUtil {
                         configuration.setPK_TYPE("pkTypeLong");
                     }
                     //异步获取 resultSet 的 next()
-                    while (MySqlConnection.asyncResultSetNext(rs)) {
+                    while (SingleTableSplitUtil.asyncResultSetNext(rs)) {
                         //左元素是 min，右元素是 max
                         minMaxPK = new ImmutablePair<Object, Object>(
                                 rs.getString(1), rs.getString(2));
@@ -202,19 +187,19 @@ public class SingleTableSplitUtil {
                         // check: string shouldn't contain '.', for oracle
                         String minMax = rs.getString(1) + rs.getString(2);
                         if (StringUtils.contains(minMax, '.')) {
-                            Log.error("您配置的DataX切分主键(splitPk)有误. 因为您配置的切分主键(splitPk) 类型 DataX 不支持. DataX 仅支持切分主键为一个,并且类型为整数或者字符串类型. 请尝试使用其他的切分主键或者联系 DBA 进行处理.");
+                            Log.error("您配置的切分主键(splitPk)有误. 因为您配置的切分主键(splitPk) 类型 PhotonT 不支持. PhotonT 仅支持切分主键为一个,并且类型为整数或者字符串类型. 请尝试使用其他的切分主键或者联系 DBA 进行处理.");
                         }
                     }
                 } else {
-                    Log.error("您配置的DataX切分主键(splitPk)有误. 因为您配置的切分主键(splitPk) 类型 DataX 不支持. DataX 仅支持切分主键为一个,并且类型为整数或者字符串类型. 请尝试使用其他的切分主键或者联系 DBA 进行处理.");
+                    Log.error("您配置的切分主键(splitPk)有误. 因为您配置的切分主键(splitPk) 类型 PhotonT 不支持. PhotonT 仅支持切分主键为一个,并且类型为整数或者字符串类型. 请尝试使用其他的切分主键或者联系 DBA 进行处理.");
                 }
             } else {
-                Log.error("您配置的DataX切分主键(splitPk)有误. 因为您配置的切分主键(splitPk) 类型 DataX 不支持. DataX 仅支持切分主键为一个,并且类型为整数或者字符串类型. 请尝试使用其他的切分主键或者联系 DBA 进行处理.");
+                Log.error("您配置的切分主键(splitPk)有误. 因为您配置的切分主键(splitPk) 类型 PhotonT 不支持. PhotonT 仅支持切分主键为一个,并且类型为整数或者字符串类型. 请尝试使用其他的切分主键或者联系 DBA 进行处理.");
             }
         } catch (Exception e) {
-            Log.error("DataX尝试切分表发生错误. 请检查您的配置并作出修改." + e.getMessage());
+            Log.error("PhotonT 尝试切分表发生错误. 请检查您的配置并作出修改." + e.getMessage());
         } finally {
-           MySqlConnection.closeDBResources(rs, null, null);
+            SingleTableSplitUtil.closeDBResources(rs, null, null);
         }
 
         return minMaxPK;
@@ -234,7 +219,7 @@ public class SingleTableSplitUtil {
                 ret = true;
             }
         } catch (Exception e) {
-            Log.error("DataX获取切分主键(splitPk)字段类型失败. 该错误通常是系统底层异常导致. 请联系旺旺:askdatax或者DBA处理.");
+            Log.error("PhotonT 获取切分主键(splitPk)字段类型失败. 该错误通常是系统底层异常导致. 请联系 DBA 处理.");
         }
         return ret;
     }
@@ -290,7 +275,7 @@ public class SingleTableSplitUtil {
      * @return
      */
     public static String getPK(String table, Configuration configuration) {
-        Connection conn = MySqlConnection.getConnection(configuration.getSourceDsName(),
+        Connection conn = MySqlConnection.createConnection(configuration.getSourceDsName(),
                 DataSourceUtil.getDataSourceByDsName(configuration.getSourceDsName()));
         String PKName = null;
         try {
@@ -306,5 +291,111 @@ public class SingleTableSplitUtil {
         return PKName;
     }
 
+    /**
+     * a wrapped method to execute select-like sql statement .
+     *
+     * @param conn Database connection .
+     * @param sql  sql statement to be executed
+     * @return a {@link ResultSet}
+     * @throws SQLException if occurs SQLException.
+     */
+    public static ResultSet query(Connection conn, String sql, int fetchSize)
+            throws SQLException {
+        // 默认3600 s 的query Timeout
+        return query(conn, sql, fetchSize, 172800);
+    }
+
+    /**
+     * a wrapped method to execute select-like sql statement .
+     *
+     * @param conn         Database connection .
+     * @param sql          sql statement to be executed
+     * @param fetchSize
+     * @param queryTimeout unit:second
+     * @return
+     * @throws SQLException
+     */
+    public static ResultSet query(Connection conn, String sql, int fetchSize, int queryTimeout)
+            throws SQLException {
+        // make sure autocommit is off
+        conn.setAutoCommit(false);
+        // ？
+        Statement stmt = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY,
+                ResultSet.CONCUR_READ_ONLY);
+        stmt.setFetchSize(fetchSize);
+        stmt.setQueryTimeout(queryTimeout);
+        return query(stmt, sql);
+    }
+
+    /**
+     * a wrapped method to execute select-like sql statement .
+     *
+     * @param stmt {@link Statement}
+     * @param sql  sql statement to be executed
+     * @return a {@link ResultSet}
+     * @throws SQLException if occurs SQLException.
+     */
+    public static ResultSet query(Statement stmt, String sql)
+            throws SQLException {
+        return stmt.executeQuery(sql);
+    }
+
+    /**
+     * 异步获取resultSet的next(),注意，千万不能应用在数据的读取中。只能用在meta的获取
+     * @param resultSet
+     * @return
+     */
+    public static boolean asyncResultSetNext(final ResultSet resultSet) {
+        return asyncResultSetNext(resultSet, 3600);
+    }
+
+    public static boolean asyncResultSetNext(final ResultSet resultSet, int timeout) {
+        Future<Boolean> future = rsExecutors.get().submit(new Callable<Boolean>() {
+            @Override
+            public Boolean call() throws Exception {
+                return resultSet.next();
+            }
+        });
+        try {
+            return future.get(timeout, TimeUnit.SECONDS);
+        } catch (Exception e) {
+            Log.error("异步获取ResultSet失败" + e.getMessage());
+        }
+        return Boolean.FALSE;
+    }
+
+    private static final ThreadLocal<ExecutorService> rsExecutors = new ThreadLocal<ExecutorService>() {
+        @Override
+        protected ExecutorService initialValue() {
+            return Executors.newFixedThreadPool(1, new ThreadFactoryBuilder()
+                    .setNameFormat("rsExecutors-%d")
+                    .setDaemon(true)
+                    .build());
+        }
+    };
+
+    public static void closeDBResources(ResultSet rs, Statement stmt,
+                                        Connection conn) {
+        if (null != rs) {
+            try {
+                rs.close();
+            } catch (SQLException unused) {
+            }
+        }
+
+        if (null != stmt) {
+            try {
+                stmt.close();
+            } catch (SQLException unused) {
+            }
+        }
+
+        if (null != conn) {
+            try {
+                conn.close();
+            } catch (SQLException unused) {
+            }
+        }
+    }
 
 }

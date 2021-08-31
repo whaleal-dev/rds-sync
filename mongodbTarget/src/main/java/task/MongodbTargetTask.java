@@ -119,9 +119,10 @@ public class MongodbTargetTask extends AbstractTargetTask {
             String tableName = dbTable.split("\\.", 2)[1];
             BulkWriteResult bulkWriteResult = this.mongoClient.getDatabase(dbName).
                     getCollection(tableName).bulkWrite(writeModels, new BulkWriteOptions().ordered(false));
-            System.out.println(bulkWriteResult);
+           Log.error("bulkWriteResult"+bulkWriteResult);
         } catch (Exception e) {
-              Log.error(e.getMessage());
+            e.printStackTrace();
+            Log.error(e.getMessage());
         } finally {
             writeModels = new ArrayList<>();
         }
