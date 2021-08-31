@@ -20,24 +20,24 @@ public class MysqlSourceSplitRange {
         int adviceNumber = configuration.getAdviceNumber();
         int tableNumber = MysqlSourceSplitRange.getTableNumber(configuration);
         int eachTableShouldSplittedNumber = -1;
-            // adviceNumber这里是并发task数量
-            // eachTableShouldSplittedNumber是单表应该切分的份数, 向上取整可能和adviceNumber没有比例关系了已经
-            eachTableShouldSplittedNumber = calculateEachTableShouldSplittedNumber(
-                    adviceNumber, tableNumber);
+        // adviceNumber这里是并发task数量
+        // eachTableShouldSplittedNumber是单表应该切分的份数, 向上取整可能和adviceNumber没有比例关系了已经
+        eachTableShouldSplittedNumber = calculateEachTableShouldSplittedNumber(
+                adviceNumber, tableNumber);
         List<Range> splittedRanges = new ArrayList<Range>();
-                List<String> tables = getDbTables(configuration);
-                //单表
-                if (tables.size() == 1) {
-                    //TODO
-                    /*Integer splitFactor = configuration.getSplitFactor();
-                    eachTableShouldSplittedNumber = eachTableShouldSplittedNumber * splitFactor;*/
-                }
-                for (String table : tables) {
-                    String tempTable = table;
-                    List<Range> splittedSlices = SingleTableSplitUtil
-                            .splitSingleTable(configuration, tempTable, eachTableShouldSplittedNumber);
-                    splittedRanges.addAll(splittedSlices);
-                }
+        List<String> tables = getDbTables(configuration);
+        //单表
+        //TODO
+        /*if (tables.size() == 1) {
+            Integer splitFactor = configuration.getSplitFactor();
+            eachTableShouldSplittedNumber = eachTableShouldSplittedNumber * splitFactor;
+        }*/
+        for (String table : tables) {
+            String tempTable = table;
+            List<Range> splittedSlices = SingleTableSplitUtil
+                    .splitSingleTable(configuration, tempTable, eachTableShouldSplittedNumber);
+            splittedRanges.addAll(splittedSlices);
+        }
 
         return splittedRanges;
     }

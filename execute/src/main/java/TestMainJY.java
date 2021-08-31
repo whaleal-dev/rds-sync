@@ -24,7 +24,7 @@ import util.StringUtil;
  * @author: lhp
  * @time: 2021/8/23 3:29 下午
  */
-public class TestMain {
+public class TestMainJY {
     public static void main(String[] args) throws InterruptedException {
 
 //        Configuration configuration = ConfigurationUtil.getConfiguration("proc3");
@@ -255,7 +255,7 @@ public class TestMain {
 //        configuration.setDbTableWhite("community.sys_captcha");
 //        configuration.setAdviceNumber(4);
 //        configuration.setDbTableWhite("(community.community_dict)||(community.sys_captcha)");
-
+//        configuration.setDbTableWhite("community.+");
         configuration.setDbTableWhite("community.sys_.*");
         configuration.setAdviceNumber(5);
 
