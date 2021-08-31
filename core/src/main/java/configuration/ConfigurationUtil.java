@@ -31,7 +31,7 @@ public class ConfigurationUtil {
         }
         Object dbTableWhite = map.get("db_table_white");
         if (dbTableWhite != null) {
-            configuration.setTargetDsName(dbTableWhite.toString());
+            configuration.setDbTableWhite(dbTableWhite.toString());
         }
         Object syncMode = map.get("sync_mode");
         if (syncMode != null) {

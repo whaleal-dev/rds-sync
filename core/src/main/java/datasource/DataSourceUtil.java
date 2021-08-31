@@ -17,7 +17,7 @@ public class DataSourceUtil {
     public static Datasource getDataSourceByDsName(String dsName) {
         Map<String, Object> map = MetadataConnection.getJdbcTemplate().queryForMap("select * from photon.datasource where name='" + dsName + "' ");
         Datasource dataSource = new Datasource();
-        dataSource.setName(dsName.toString());
+        dataSource.setName(dsName);
 
         Object type = map.get("type");
         if (type != null) {
