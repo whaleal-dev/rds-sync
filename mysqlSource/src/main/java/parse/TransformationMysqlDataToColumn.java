@@ -55,6 +55,7 @@ public class TransformationMysqlDataToColumn {
             case DATE:
                 return new DateColumn(columnName, (String) object);
             case TIME:
+                return new TimestampColumn(columnName, (Long) object);
             case TIMESTAMP:
                 return new TimestampColumn(columnName, ((Timestamp) object).getTime());
             case DATETIME:

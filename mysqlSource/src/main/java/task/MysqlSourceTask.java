@@ -1,7 +1,6 @@
 package task;
 
 import cache.MemoryCache;
-import com.google.common.base.CaseFormat;
 import common.column.AbstractColumn;
 import common.dataclass.BatchDataEntity;
 import common.taskbase.SourceTaskInfo;
@@ -61,6 +60,8 @@ public class MysqlSourceTask implements Runnable, SourceTaskInterface {
 
     public static AtomicInteger sourceThreadNum = new AtomicInteger(0);
 
+    static AtomicInteger atomicInteger = new AtomicInteger();
+
     public MysqlSourceTask(SourceTaskInfo taskMetadata, String procName, MemoryCache memoryCache, int dataBatchSize) {
         this.procName = procName;
         this.memoryCache = memoryCache;
@@ -86,7 +87,6 @@ public class MysqlSourceTask implements Runnable, SourceTaskInterface {
             statement = connection.createStatement();
             ResultSet resultSet = statement.executeQuery(sql);
             while (resultSet.next()) {
-                System.out.println("getMysqlAbstractColumn == = = == = =");
                 getMysqlAbstractColumn(resultSet);
                 System.out.println("dataList    =    " + this.dataList);
                 if (cache++ > dataBatchSize) {
@@ -120,7 +120,7 @@ public class MysqlSourceTask implements Runnable, SourceTaskInterface {
             if (rs != null) {
                 //遍历rs中的属性与值
                 for (int i = 1; i <= md.getColumnCount(); i++) {
-                    //属性名下划线改驼峰
+                    //属性名
                     String columnName = md.getColumnName(i);
                     //值
                     Object values = rs.getObject(md.getColumnName(i));
@@ -129,14 +129,10 @@ public class MysqlSourceTask implements Runnable, SourceTaskInterface {
                 }
                 this.dataList.add(abstractColumns);
             }
-
         } catch (Exception e) {
             Log.error(e.getMessage());
         }
-
     }
-
-    static AtomicInteger atomicInteger = new AtomicInteger();
 
     /**
      * putDataToCache 推送数据到缓存区中
@@ -158,7 +154,7 @@ public class MysqlSourceTask implements Runnable, SourceTaskInterface {
         batchDataEntity.setBatchNo(System.currentTimeMillis());
         // 推送数据到缓存区中
         memoryCache.putData(batchDataEntity);
-        System.out.println("sourceNum:" + atomicInteger.addAndGet(batchDataEntity.getDataList().size()));
+        System.out.println("sourceNum   =   " + atomicInteger.addAndGet(batchDataEntity.getDataList().size()));
         this.dataList = new ArrayList<>();
         this.cache = 0;
     }

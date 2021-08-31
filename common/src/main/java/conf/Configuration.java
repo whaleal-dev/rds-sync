@@ -103,5 +103,5 @@ public class Configuration {
     /**
      * 切分数
      */
-    private Integer adviceNumber = 1;
+    private Integer adviceNumber = 2;
 }

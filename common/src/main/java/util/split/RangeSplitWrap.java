@@ -1,4 +1,4 @@
-package sourcesplit;
+package util.split;
 
 import org.apache.commons.lang3.StringUtils;
 
