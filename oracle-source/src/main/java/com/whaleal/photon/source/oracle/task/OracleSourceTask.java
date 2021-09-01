@@ -65,7 +65,7 @@ public class OracleSourceTask implements Runnable, SourceTaskInterface {
         this.dataBatchSize = dataBatchSize;
         this.taskMetadata = taskMetadata;
         this.connection = MySqlConnection.getConnection(this.taskMetadata.getSourceDsName());
-        this.jdbcTemplate = OracleConnection.getJdbcTemplateBySource(DBUtil.getSourceByProcName(procName));
+        this.jdbcTemplate = OracleConnection.getJdbcTemplate(procName);
     }
 
 

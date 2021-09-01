@@ -2,6 +2,7 @@ package com.whaleal.photon.source.oracle.split;
 
 import common.dataclass.Range;
 import dbconnection.oracle.OracleConnection;
+
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.util.StringUtils;
 import util.Log;

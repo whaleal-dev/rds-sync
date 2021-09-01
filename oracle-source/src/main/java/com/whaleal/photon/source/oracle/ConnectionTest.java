@@ -3,7 +3,7 @@ package com.whaleal.photon.source.oracle;
 import common.photonV.entity.Datasource;
 import datasource.DBUtil;
 
-import dbconnection.pgserver.OracleConnection;
+import dbconnection.oracle.OracleConnection;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.sql.Connection;

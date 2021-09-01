@@ -1,4 +1,4 @@
-package dbconnection.pgserver;
+package dbconnection.oracle;
 
 import common.dataclass.Range;
 import common.photonV.entity.Datasource;
@@ -38,7 +38,7 @@ public final class OracleConnection {
             return oracleConnectionMap.get(dsName);
         }
         Connection connection = null;
-        synchronized (PgServerConnection.class) {
+        synchronized (OracleConnection.class) {
             if (!oracleConnectionMap.containsKey(dsName)) {
                 connection = createConnection(datasource);
                 oracleConnectionMap.put(dsName, connection);
