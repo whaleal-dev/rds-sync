@@ -1,6 +1,5 @@
 package common.column;
 
-import java.util.List;
 
 /**
  * @desc: 数组字段类
