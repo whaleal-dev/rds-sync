@@ -62,12 +62,18 @@ public class PgSource extends SourceMetadata {
 
     @Override
     public void getAllDbCollections(String sourceName) {
-        List<Map<String, Object>> dbTableMapList = jdbcTemplate.queryForList("select  * from information_schema.TABLES where table_type='BASE TABLE' and concat(table_catalog,'.',table_name)  ~ '.+student';");
+
+        List<Map<String, Object>> dbTableMapList = jdbcTemplate.queryForList("select  * from information_schema.TABLES where" +
+                " table_type='BASE TABLE' and concat(table_catalog,'.',table_name)  ~ ?  and table_schema='public';", dbTableWhite);
         for (Map<String, Object> dbTableNameMap : dbTableMapList) {
-            String dbSchemaName=dbTableNameMap.get("table_schema").toString();
-            String tableName=dbTableNameMap.get("table_name").toString();
-            String  dbTable=dbSchemaName+"."+tableName;
-            if (dbTable.matches(dbTableWhite)) {
+            String dbCatalogName = dbTableNameMap.get("table_catalog").toString();
+            String dbSchemaName = dbTableNameMap.get("table_schema").toString();
+            String tableName = dbTableNameMap.get("table_name").toString();
+            String dbTable = dbSchemaName + "." + tableName;
+            System.out.println("dbTable    " + dbTable);
+            System.out.println("dbCatalogName    " + dbCatalogName + "." + tableName);
+            System.out.println(this.dbTableWhite);
+            if ((dbCatalogName + "." + tableName).matches(this.dbTableWhite)) {
                 dbTables.put(dbTable, dbTable);
             }
         }

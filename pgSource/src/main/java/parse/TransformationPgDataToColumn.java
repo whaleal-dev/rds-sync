@@ -5,12 +5,17 @@ import com.google.gson.Gson;
 import common.column.*;
 
 import common.dbtype.EnumMongoDbDataType;
+import common.dbtype.EnumPgDataType;
 import org.bson.BsonRegularExpression;
 import org.bson.BsonTimestamp;
 import org.bson.types.Code;
 import org.bson.types.Decimal128;
 import org.bson.types.ObjectId;
+import org.postgresql.util.PGobject;
 
+import java.math.BigDecimal;
+import java.sql.Time;
+import java.sql.Timestamp;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.List;
@@ -37,38 +42,30 @@ public class TransformationPgDataToColumn {
             return new NullColumn(columnName, null);
         }
         String type = object.getClass().getSimpleName().toUpperCase();
-        EnumMongoDbDataType enumMongoDbDataType = EnumMongoDbDataType.valueOf(type);
-        switch (enumMongoDbDataType) {
-            case INTEGER:
-                return new IntColumn(columnName, (Integer) object);
-            case DOUBLE:
-                return new DoubleColumn(columnName, (Double) object);
+        EnumPgDataType dataType = EnumPgDataType.valueOf(type);
+        switch (dataType) {
+            case STRING:
+                return new StringColumn(columnName, object.toString());
+            case PGOBJECT:
+                return new PgObjectColumn(columnName, (PGobject) object);
             case LONG:
                 return new LongColumn(columnName, (Long) object);
-            case DECIMAL128:
-                return new DoubleColumn(columnName, ((Decimal128) object).doubleValue());
-            case DATE:
-                return new DateTimeColumn(columnName, (((Date) object).getTime()));
-            case REGULAR:
-                BsonRegularExpression bsonRegularExpression = (BsonRegularExpression) object;
-                String options = bsonRegularExpression.getOptions();
-                String pattern = bsonRegularExpression.getPattern();
-                String value = "options:" + options + ",pattern:" + pattern;
-                return new StringColumn(columnName, value);
-            case CODE:
-                Code code = (Code) object;
-                return new StringColumn(columnName, code.getCode());
-            case BSONTIMESTAMP:
-                return new TimestampColumn(columnName, ((BsonTimestamp) object).getValue());
+            case DOUBLE:
+                return new DoubleColumn(columnName, (Double) object);
+            case INTEGER:
+                return new IntColumn(columnName, (Integer) object);
+            case BIGDECIMAL:
+                return new BigDecimalColumn(columnName, (BigDecimal) object);
+            case FLOAT:
+                return new FloatColumn(columnName, (Float) object);
+            case TIME:
+                return new TimeColumn(columnName, ((Time) object).getTime());
+            case TIMESTAMP:
+                return new TimestampColumn(columnName, ((Timestamp) object).getTime());
             case BOOLEAN:
-                return new BoolColumn(columnName, ((Boolean) object).booleanValue());
-            case ARRAYLIST:
-                return new ArrayColumn(columnName, (List<Object>) object);
-            case DOCUMENT:
-                return new JsonColumn(columnName, gson.toJson(object));
-            case OBJECTID:
-                return new ObjectIdColumn(columnName, (ObjectId) object);
-            case STRING:
+                return new BoolColumn(columnName, ((Boolean) object));
+            case BYTEARRAY:
+                return new BytesColumn(columnName, ((Byte[]) object));
             default:
                 return new StringColumn(columnName, object.toString());
         }
@@ -76,9 +73,9 @@ public class TransformationPgDataToColumn {
 
     }
 
-    public static void main(String[] args) {
-
-        BsonTimestamp bsonTimestamp = new BsonTimestamp(System.currentTimeMillis());
-        System.out.println(bsonTimestamp.getValue());
-    }
+//    public static void main(String[] args) {
+//
+//        Time time = new Time();
+//
+//    }
 }

@@ -135,9 +135,9 @@ public class PgSourceTask implements Runnable, SourceTaskInterface {
                     String columnName = md.getColumnName(i);
                     //值
                     Object values = rs.getObject(md.getColumnName(i));
-//                    AbstractColumn abstractColumn = TransformationMysqlDataToColumn.parseValue(columnName, values);
-//                    abstractColumns.add(abstractColumn);
-                    System.out.println("columnName:" + columnName + "      values:" + values);
+                    AbstractColumn abstractColumn = TransformationPgDataToColumn.parseValue(columnName, values);
+                    abstractColumns.add(abstractColumn);
+                    System.out.println("columnName:" + columnName + "      values:" + values+"        type"+values.getClass());
                 }
                 this.dataList.add(abstractColumns);
             }

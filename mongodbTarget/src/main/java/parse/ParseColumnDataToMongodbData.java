@@ -25,6 +25,8 @@ public class ParseColumnDataToMongodbData {
                 return new Date((long) columnData.getData());
             case TIMESTAMPCOLUMN:
                 return new BsonTimestamp((long) (columnData.getData()));
+            case PGOBJECTCOLUMN:
+                return columnData.getData().toString();
             case JSONCOLUMN:
                 return Document.parse(columnData.getData().toString());
             case ARRAYCOLUMN:

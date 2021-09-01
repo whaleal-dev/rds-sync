@@ -33,8 +33,11 @@ public class PgSourceSplitRange {
 
 
     public List<Range> getRangeList(String dbTableName) {
+        String dbName = dbTableName.split("\\.")[0];
+        String tableName = dbTableName.split("\\.")[1];
         List<Map<String, Object>> tableMeteColumn = jdbcTemplate.queryForList(
-                "SELECT column_name,data_type FROM information_schema.columns t WHERE t.table_catalog='test' AND table_name ='student' order by ordinal_position ");
+                "SELECT column_name,data_type FROM information_schema.columns t WHERE t.table_catalog=? " +
+                        "AND table_name =? order by ordinal_position ", dbName, tableName);
         Set<String> intColumnSet = new HashSet<>();
         for (Map<String, Object> columnMap : tableMeteColumn) {
             if ("INTEGER".equalsIgnoreCase(columnMap.get("data_type").toString())) {
@@ -59,13 +62,21 @@ public class PgSourceSplitRange {
                 }
             }
 
-            rangeList = getRangeList(range, 3);
-            System.out.println(range);
-            Range rangeOfNull = new Range();
-            rangeOfNull.setColumnName(range.getColumnName());
-            rangeOfNull.setDbTableName(dbTableName);
-            rangeOfNull.setQuery("(" + range.getColumnName() + " is null)");
-            rangeList.add(rangeOfNull);
+            if (maxDiffTemp != 0) {
+                rangeList = getRangeList(range, 3);
+                System.out.println(range);
+                Range rangeOfNull = new Range();
+                rangeOfNull.setColumnName(range.getColumnName());
+                rangeOfNull.setDbTableName(dbTableName);
+                rangeOfNull.setQuery("(" + range.getColumnName() + " is null)");
+                rangeList.add(rangeOfNull);
+            }else {
+                Range rangeOfNull = new Range();
+                rangeOfNull.setDbTableName(dbTableName);
+                rangeOfNull.setQuery("(1=1)");
+                rangeList.add(rangeOfNull);
+            }
+
 
         } else {
             Range rangeOfNull = new Range();
@@ -73,8 +84,10 @@ public class PgSourceSplitRange {
             rangeOfNull.setQuery("(1=1)");
             rangeList.add(rangeOfNull);
         }
-
+        System.out.println("rangeLIST:          "+rangeList);
+        rangeList.forEach(range -> System.out.println(range.getQuery()));
         return rangeList;
+
     }
 
     public Map<String, Object> getMaxDifference(String intColumnName, String dbTableName) {
