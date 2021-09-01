@@ -19,12 +19,17 @@ public final class RangeSplitUtil {
         //处理第一个字符串（因为：在转换为数字，再还原的时候，如果首字符刚好是 basic,则不知道应该添加多少个 basic）
         result[0] = left;
         result[tempResult.length - 1] = right;
-
         for (int i = 1, len = tempResult.length - 1; i < len; i++) {
             result[i] = bigIntegerToString(tempResult[i], radix);
         }
-
         return result;
+    }
+
+    public static void main(String[] args) {
+        for(Long s:doLongSplit(-12345345,11232345,3)){
+            System.out.println(s);
+        }
+
     }
 
     public static long[] doLongSplit(long left, long right, int expectSliceNumber) {

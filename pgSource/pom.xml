@@ -9,19 +9,13 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.whaleal.photon</groupId>
-    <artifactId>oracle-source</artifactId>
-
-    <properties>
-        <maven.compiler.source>8</maven.compiler.source>
-        <maven.compiler.target>8</maven.compiler.target>
-    </properties>
-
+    <artifactId>pgSource</artifactId>
     <dependencies>
         <dependency>
             <groupId>com.jinmu.info</groupId>
             <artifactId>common</artifactId>
             <version>1.0-SNAPSHOT</version>
+            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>com.jinmu.info</groupId>
@@ -29,13 +23,14 @@
             <version>1.0-SNAPSHOT</version>
         </dependency>
         <dependency>
-            <groupId>com.oracle</groupId>
-            <artifactId>ojdbc6</artifactId>
-            <version>11.2.0.3</version>
-            <scope>system</scope>
-            <systemPath>${basedir}/src/main/lib/ojdbc6-11.2.0.3.jar</systemPath>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>1.18.20</version>
         </dependency>
-
     </dependencies>
+    <properties>
+        <maven.compiler.source>8</maven.compiler.source>
+        <maven.compiler.target>8</maven.compiler.target>
+    </properties>
 
 </project>

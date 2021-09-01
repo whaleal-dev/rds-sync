@@ -17,7 +17,8 @@
         <module>mysqlTarget</module>
         <module>core</module>
         <module>realTimeOfMongoDb</module>
-<!--        <module>oracle-source</module>-->
+        <module>pgSource</module>
+        <!--        <module>oracle-source</module>-->
     </modules>
     <properties>
         <maven.compiler.source>8</maven.compiler.source>

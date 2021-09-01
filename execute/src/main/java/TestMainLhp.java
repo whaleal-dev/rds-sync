@@ -6,9 +6,8 @@ import configuration.ConfigurationUtil;
 import datasource.DataSourceUtil;
 import dbconnection.mongodb.MongoDbConnection;
 import dbconnection.mysql.MySqlConnection;
-import execute.MongodbSource;
-import execute.MongodbTarget;
-import execute.MysqlTarget;
+import dbconnection.pgserver.PgServerConnection;
+import execute.*;
 import task.*;
 import thread.SourceTaskPoolManager;
 import thread.SysPoolManager;
@@ -24,9 +23,7 @@ import util.StringUtil;
  */
 public class TestMainLhp {
     public static void main(String[] args) throws InterruptedException {
-
-        testMongoDbToMongoDb();
-
+        testPgToMongoDb();
     }
 
     public static void testRealTimeOfMongodb() {
@@ -227,5 +224,88 @@ public class TestMainLhp {
 
         }
     }
+
+
+
+    public static void testPgToMongoDb() {
+        //获取配置
+        Configuration configuration = ConfigurationUtil.getConfiguration("proc5");
+
+
+
+        PgServerConnection.createConnection(configuration.getSourceDsName(), DataSourceUtil.getDataSourceByDsName(configuration.getSourceDsName()));
+
+        MongoDbConnection.createMonoDbClient(configuration.getTargetDsName(), DataSourceUtil.getDataSourceByDsName(configuration.getTargetDsName()));
+        //缓存
+        MemoryCache memoryCache = new MemoryCache(configuration.getTaskName(),
+                configuration.getProName(), configuration.getCacheNum(), configuration.getCacheSize(), true);
+        //配置缓存
+        configuration.setMemoryCache(memoryCache);
+
+        SourceTaskPoolManager sourceTaskPoolManager = new SourceTaskPoolManager(configuration.getProName(),
+                configuration.getSourceThreadNum(), configuration.getSourceThreadNum());
+
+        SysPoolManager sysPoolManager = new SysPoolManager(configuration.getProName(), 5, 5);
+
+
+        TargetTaskPoolManager targetTaskPoolManager = new TargetTaskPoolManager(configuration.getProName(),
+                5, 5);
+
+
+        MongodbTarget mongodbTarget = new MongodbTarget(configuration, memoryCache, configuration.getProName());
+        mongodbTarget.startToTarget();
+
+        PgSource pgSource = new PgSource(configuration, memoryCache);
+        pgSource.createTask();
+
+        while (true) {
+            try {
+                Thread.sleep(10000);
+                int sourceThread = SourceTaskPoolManager.setSourceActiveThreadNum(configuration.getProName(), 0);
+                boolean getAllDbTable = pgSource.isGetAllDbTable();
+                int sourceTaskQueueSize = pgSource.getTaskMetadataQueueSize();
+                int setSysActiveThreadNum = SysPoolManager.setSysActiveThreadNum(configuration.getProName(), 0);
+                int targetActiveThreadNum = TargetTaskPoolManager.setTargetActiveThreadNum(configuration.getProName(), 0);
+                int allDataCacheNum = memoryCache.getAllDataCacheNum();
+                Log.info(setSysActiveThreadNum + "");
+                Log.info("sum:" + (sourceThread + sourceTaskQueueSize + allDataCacheNum + setSysActiveThreadNum));
+                Log.info("sourceThread:" + sourceThread);
+                Log.info("sourceTaskQueueSize:" + sourceTaskQueueSize);
+                Log.info("setSysActiveThreadNum:" + setSysActiveThreadNum);
+                Log.info("targetActiveThreadNum:" + targetActiveThreadNum);
+                Log.info("allDataCacheNum:" + allDataCacheNum);
+                Log.info("getAllDbTable:" + getAllDbTable);
+                if ((sourceThread + sourceTaskQueueSize + allDataCacheNum + setSysActiveThreadNum + targetActiveThreadNum) == 0 && getAllDbTable) {
+                    Thread.sleep(10000);
+                    try {
+                        TargetTaskPoolManager.destroy(configuration.getProName());
+                    } catch (Exception e) {
+                        Log.info(e.getMessage());
+                    }
+                    try {
+                        SourceTaskPoolManager.destroy(configuration.getProName());
+                    } catch (Exception e) {
+                        Log.info(e.getMessage());
+                    }
+                    try {
+                        SysPoolManager.destroy(configuration.getProName());
+                    } catch (Exception e) {
+                        Log.info(e.getMessage());
+                    }
+                    MongodbTargetTask.setIsStopFlagOfTarget(configuration.getProName(), false);
+                    memoryCache.gcMemoryCache();
+                    Log.info("procName:" + configuration.getProName() + "关闭成功");
+                    Thread.sleep(10000);
+                    break;
+                } else if ((sourceThread + sourceTaskQueueSize + sourceTaskQueueSize + allDataCacheNum + setSysActiveThreadNum) == 0 && getAllDbTable) {
+                    MongodbTargetTask.setIsStopFlagOfTarget(configuration.getProName(), true);
+                }
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+        }
+    }
+
 
 }
