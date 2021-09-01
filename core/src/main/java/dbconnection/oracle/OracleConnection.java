@@ -1,7 +1,6 @@
 package dbconnection.oracle;
 
 import common.photonV.entity.Datasource;
-import datasource.DBUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.dbcp.BasicDataSource;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -11,7 +10,6 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Map;
-import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -24,6 +22,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public final class OracleConnection {
     private static Map<String, Connection> oracleConnectionMap = new ConcurrentHashMap<>();
     private static Map<String, JdbcTemplate> jdbcTemplateOracleMap = new ConcurrentHashMap<>();
+
     /**
      * 根据数据库的名字或者数据源来获取连接
      *
@@ -49,7 +48,7 @@ public final class OracleConnection {
         return jdbcTemplateOracleMap.get(dsName);
     }
 
-    public static JdbcTemplate getJdbcTemplateBySource(Datasource datasource){
+    public static JdbcTemplate getJdbcTemplateBySource(Datasource datasource) {
         BasicDataSource basicDataSource = new BasicDataSource();
         basicDataSource.setUrl(datasource.getUrl());
         basicDataSource.setUsername(datasource.getUsername());
@@ -68,6 +67,7 @@ public final class OracleConnection {
     public static Connection getConnection(String dsName) {
         return oracleConnectionMap.get(dsName);
     }
+
     /**
      * 根据datasource获取数据库的连接
      *
