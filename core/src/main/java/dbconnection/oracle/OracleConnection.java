@@ -1,6 +1,5 @@
 package dbconnection.oracle;
 
-import common.dataclass.Range;
 import common.photonV.entity.Datasource;
 import datasource.DataSourceUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -8,11 +7,9 @@ import org.apache.commons.dbcp.BasicDataSource;
 import org.springframework.jdbc.core.JdbcTemplate;
 import util.Log;
 
-import javax.sql.DataSource;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -41,7 +38,7 @@ public final class OracleConnection {
         synchronized (OracleConnection.class) {
             if (!oracleConnectionMap.containsKey(dsName)) {
                 connection = createConnection(datasource);
-                oracleConnectionMap.put(dsName, connection);
+
             }
             return connection;
         }
@@ -72,6 +69,7 @@ public final class OracleConnection {
     public static synchronized Connection createConnection(Datasource datasource) {
         Connection connection = null;
         try {
+            System.out.println(datasource);
             BasicDataSource basicDataSource = new BasicDataSource();
             basicDataSource.setDriverClassName("oracle.jdbc.driver.OracleDriver");
             basicDataSource.setUrl(datasource.getUrl());
@@ -79,7 +77,10 @@ public final class OracleConnection {
             basicDataSource.setPassword(datasource.getPassword());
             System.out.println("成功连接数据库");
             jdbcTemplateOracleMap.put(datasource.getName(), new JdbcTemplate(basicDataSource));
+
             connection = basicDataSource.getConnection();
+            oracleConnectionMap.put(datasource.getName(), connection);
+            System.out.println("成功连接数据库");
         } catch (Exception exception) {
             Log.error(exception.getMessage());
             exception.printStackTrace();
@@ -114,9 +115,7 @@ public final class OracleConnection {
         createConnection("pg", DataSourceUtil.getDataSourceByDsName("pg"));
 
 
-
     }
-
 
 
 }

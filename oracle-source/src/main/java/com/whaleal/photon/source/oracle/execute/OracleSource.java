@@ -44,8 +44,8 @@ public class OracleSource extends SourceMetadata {
         this.dbTableWhite = configuration.getDbTableWhite();
         this.memoryCache = memoryCache;
         procSourceTask.put(proName, taskMetadataQueue);
-        connection = OracleConnection.createConnection(DBUtil.getSourceByProcName(proName));
-        jdbcTemplate = OracleConnection.getJdbcTemplate(proName);
+        connection = OracleConnection.getConnection(sourceName);
+        jdbcTemplate = OracleConnection.getJdbcTemplate(sourceName);
     }
 
     @Override
@@ -62,7 +62,7 @@ public class OracleSource extends SourceMetadata {
 
     @Override
     public void getAllDbCollections(String sourceName) {
-        List<Map<String, Object>> dbTableMapList = jdbcTemplate.queryForList("select  * from information_schema.TABLES where table_type='BASE TABLE' and concat(table_catalog,'.',table_name)  ~ '.+student';");
+        List<Map<String, Object>> dbTableMapList = jdbcTemplate.queryForList("select * from USER_TABLES");
         for (Map<String, Object> dbTableNameMap : dbTableMapList) {
             String dbSchemaName = dbTableNameMap.get("TABLESPACE_NAME").toString();
             String tableName = dbTableNameMap.get("TABLE_NAME").toString();
@@ -87,7 +87,6 @@ public class OracleSource extends SourceMetadata {
 
     @Override
     public void createSourceEntity(String sourceName, String dbTableName) {
-
         OracleSourceSplitRange source = new OracleSourceSplitRange(sourceName);
         List<Range> rangeList = source.getRangeList(dbTableName);
         for (Range range : rangeList) {
