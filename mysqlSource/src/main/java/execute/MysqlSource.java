@@ -60,11 +60,9 @@ public class MysqlSource extends SourceMetadata {
 
     @Override
     public void startFromSource(String sourceName, boolean isParallel) {
-
         createSourceEntity(sourceName,"");
         dbTables=new ConcurrentHashMap<>();
         isGetAllDbTable = true;
-
     }
 
     @Override
@@ -77,14 +75,13 @@ public class MysqlSource extends SourceMetadata {
             Log.error(e.getMessage());
         }
         for (Range splitRange : list) {
-            Log.info("切分数     =   " + list.size());
             SysPoolManager.setSysActiveThreadNum(proName, 1);
-            SourceTaskInfo taskMetadata = new SourceTaskInfo(splitRange,
-                    splitRange.getDbTableName(), sourceName);
+            SourceTaskInfo taskMetadata = new SourceTaskInfo(splitRange, splitRange.getDbTableName(), sourceName);
             Log.error("taskMetadata" + taskMetadata);
             pushTaskMeta(proName, taskMetadata);
             SysPoolManager.setSysActiveThreadNum(proName, -1);
         }
+        Log.info("  切分数     =   " + list.size());
 
     }
 

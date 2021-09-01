@@ -8,13 +8,15 @@ import dbconnection.mysql.MySqlConnection;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.support.rowset.SqlRowSet;
+import org.springframework.jdbc.support.rowset.SqlRowSetMetaData;
 import util.Log;
 import util.split.RangeSplitWrap;
 
 import java.math.BigInteger;
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.*;
 
 
@@ -26,8 +28,20 @@ public class SingleTableSplitUtil {
         List<String> rangeList = null;
         //从配置中取分片字段 splitPk
         String splitPkName = null;
-        boolean hasSplitPk = StringUtils.isNotBlank(configuration.getSplitPk());
-        splitPkName = hasSplitPk ? configuration.getSplitPk() : SingleTableSplitUtil.getPK(table, configuration);
+        if (StringUtils.isNotBlank(configuration.getSplitPk())) {
+            splitPkName = configuration.getSplitPk();
+        } else {
+            splitPkName = getResultPK(configuration, table);
+        }
+        //没有可用主键
+        if (StringUtils.isEmpty(splitPkName)) {
+            Range range = new Range();
+            range.setDbTableName(table);
+            range.setQuery("SELECT * FROM " + table);
+            pluginParams.add(range);
+            return pluginParams;
+        }
+        Log.info("      " + table + "   表使用了    " + splitPkName + "     字段切分   ");
         String column = "*";
         String where = null;
         //配置中有无where
@@ -39,6 +53,7 @@ public class SingleTableSplitUtil {
             Log.error("根据切分主键切分表失败. PhotonT 仅支持切分主键为一个,并且类型为整数或者字符串类型. 请尝试使用其他的切分主键或者联系 DBA 进行处理.");
         }
         Range range = new Range();
+        range.setDbTableName(table);
         range.setQuery(buildQuerySql(column, table, where));
 
         // 切分后获取到的 start/end 有 Null 的情况
@@ -119,7 +134,22 @@ public class SingleTableSplitUtil {
     @SuppressWarnings("resource")
     private static Pair<Object, Object> getPkRange(Configuration configuration, String table, String where) {
         //字段构建的范围 sql pkRangeSQL
-        String pkRangeSQL = genPKRangeSQL(configuration, table, where);
+        String pkRangeSQL = genPkRangeSQL(configuration, table, where);
+        //取配置中的 fetchSize
+        int fetchSize = configuration.getFetchSize();
+        //获取连接
+        Connection conn = MySqlConnection.createConnection(configuration.getSourceDsName(),
+                DataSourceUtil.getDataSourceByDsName(configuration.getSourceDsName()));
+        //字段构建的范围 sql pkRangeSQL
+        Pair<Object, Object> minMaxPK = checkSplitPk(conn, pkRangeSQL, fetchSize, configuration);
+
+        return minMaxPK;
+    }
+
+    public static Pair<Object, Object> getPKRange(Configuration configuration, String split, String table, String where) {
+
+        //字段构建的范围 sql pkRangeSQL
+        String pkRangeSQL = genPKSql(split, table, where);
         //取配置中的 fetchSize
         int fetchSize = configuration.getFetchSize();
         //获取连接
@@ -211,6 +241,81 @@ public class SingleTableSplitUtil {
         return ret;
     }
 
+    /**
+     * 智能获取切分字段
+     *
+     * @param configuration
+     * @param table
+     * @return
+     */
+    private static String getResultPK(Configuration configuration, String table){
+        //取主键为切分字段
+        if (!StringUtils.isEmpty(getPK(table, configuration))){
+            return getPK(table, configuration);
+        }else{
+            //智能取切分字段
+            Connection connection = MySqlConnection.createConnection(configuration.getSourceDsName(),
+                    DataSourceUtil.getDataSourceByDsName(configuration.getSourceDsName()));
+            JdbcTemplate jdbcTemplate = MySqlConnection.getJdbcTemplate(configuration.getSourceDsName());
+            String sql = "select * from "+ table;
+            SqlRowSet sqlRowSet = jdbcTemplate.queryForRowSet(sql);
+            SqlRowSetMetaData sqlRsmd = sqlRowSet.getMetaData();
+            int columnCount = sqlRsmd.getColumnCount();
+            List<Map<String, String>> longTableFieldList = new ArrayList<>();
+            List<Map<String, String>> stringTableFieldList = new ArrayList<>();
+            String resultName = "";
+            //获取所有的 Long 和 String 字段名
+            for (int i = 1; i <= columnCount; i++) {
+                Map<String,String> longFieldMap = new HashMap<>();
+                Map<String,String> stringFieldMap = new HashMap<>();
+                Boolean isLongType = isLongType(Integer.parseInt(String.valueOf(sqlRsmd.getColumnType(i))));
+                Boolean isStringType = isStringType(Integer.parseInt(String.valueOf(sqlRsmd.getColumnType(i))));
+                if (isLongType) {
+                    longFieldMap.put("fieldName", sqlRsmd.getColumnName(i));
+                    longFieldMap.put("fieldType", String.valueOf(sqlRsmd.getColumnType(i)));
+                    longTableFieldList.add(longFieldMap);
+                }
+                if (isStringType) {
+                    stringFieldMap.put("fieldName", sqlRsmd.getColumnName(i));
+                    stringFieldMap.put("fieldType", String.valueOf(sqlRsmd.getColumnType(i)));
+                    stringTableFieldList.add(stringFieldMap);
+                }
+            }
+            //取 Long 类型字段名中最大数值最大者
+            if (!longTableFieldList.isEmpty()) {
+                Pair<Object, Object> pair = SingleTableSplitUtil.getPKRange(configuration, longTableFieldList.get(0).get("fieldName"), table, null);
+                Long max = Long.parseLong(pair.getRight().toString());
+                String maxName = longTableFieldList.get(0).get("fieldName");
+                for (Map<String, String> tableField : longTableFieldList) {
+                    String split = tableField.get("fieldName");
+                    Pair<Object, Object> minMaxPK = SingleTableSplitUtil.getPKRange(configuration, split, table, null);
+                    if (max <= Long.parseLong(minMaxPK.getRight().toString())) {
+                        maxName = tableField.get("fieldName");
+                        //最大数字的列
+                        resultName = maxName;
+                    }
+                }
+                return resultName;
+                //取 String 类型字段名中没有汉字字符的第一个字段名
+            } else if (!stringTableFieldList.isEmpty()) {
+                for (Map<String, String> tableField : stringTableFieldList) {
+                    String colName = tableField.get("fieldName");
+                    String judgeSql = "SELECT %s FROM %s WHERE length(%s) != char_length(%s)";
+                    String executeSql = String.format(judgeSql, colName, table, colName, colName);
+                    List<Map<String, Object>> dbTableList = jdbcTemplate.queryForList(executeSql);
+                    if (dbTableList.isEmpty()) {
+                        resultName = colName;
+                        //不含汉字的列名
+                        return resultName;
+                    }
+                }
+                return null;
+            }
+            return null;
+        }
+    }
+
+
     // warn: Types.NUMERIC is used for oracle! because oracle use NUMBER to
     // store INT, SMALLINT, INTEGER etc, and only oracle need to concern
     // Types.NUMERIC
@@ -227,10 +332,15 @@ public class SingleTableSplitUtil {
                 || type == Types.NVARCHAR;
     }
 
-    private static String genPKRangeSQL(Configuration configuration, String table, String where) {
+    private static String genPkRangeSQL(Configuration configuration, String table, String where) {
         String splitPkName = null;
-        boolean hasSplitPk = StringUtils.isNotBlank(configuration.getSplitPk());
-        splitPkName = hasSplitPk ? configuration.getSplitPk().trim() : SingleTableSplitUtil.getPK(table, configuration);
+//        boolean hasSplitPk = StringUtils.isNotBlank(configuration.getSplitPk());
+//        splitPkName = hasSplitPk ? configuration.getSplitPk().trim() : SingleTableSplitUtil.getPK(table, configuration);
+        if (StringUtils.isNotBlank(configuration.getSplitPk())) {
+            splitPkName = configuration.getSplitPk();
+        } else {
+            splitPkName = getResultPK(configuration, table);
+        }
         //去掉SPLIT_PK前面和后面的空格
         //去掉TABLE前面和后面的空格
         String table1 = table.trim();
@@ -262,8 +372,8 @@ public class SingleTableSplitUtil {
      * @return
      */
     public static String getPK(String table, Configuration configuration) {
-        Connection conn = MySqlConnection.createConnection(configuration.getSourceDsName(),
-                DataSourceUtil.getDataSourceByDsName(configuration.getSourceDsName()));
+        //TODO get
+        Connection conn = MySqlConnection.getConnection(configuration.getSourceDsName());
         String PKName = null;
         try {
             DatabaseMetaData dmd = conn.getMetaData();
@@ -272,10 +382,12 @@ public class SingleTableSplitUtil {
             rs.next();
             PKName = rs.getString("column_name");
             rs.close();
+            return PKName;
         } catch (SQLException throwables) {
             throwables.printStackTrace();
+            return null;
         }
-        return PKName;
+
     }
 
     /**

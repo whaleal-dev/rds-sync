@@ -47,13 +47,14 @@ public class TestMainJY {
 //        configuration.setDbTableWhite("(community.community_dict)||(community.sys_menu)");
 //        configuration.setDbTableWhite("(community.community_dict)||(community.sys_menu)||(community.community.banner)");
 //        configuration.setDbTableWhite("community.sys_user_token");
-//        configuration.setDbTableWhite("community.sys_captcha");
+        configuration.setDbTableWhite("community.sys_captcha");
 //        configuration.setAdviceNumber(4);
 //        configuration.setDbTableWhite("(community.community_dict)||(community.sys_captcha)");
 //        configuration.setDbTableWhite("community.+");
-        configuration.setDbTableWhite("community.community_banner");
-        configuration.setSplitPk("banner_url");
-        configuration.setAdviceNumber(2);
+//        configuration.setDbTableWhite("community.community_banner");
+//        configuration.setDbTableWhite("community.test");
+//        configuration.setSplitPk("banner_link");
+        configuration.setAdviceNumber(3);
 //        configuration.setDbTableWhite("community.sys_.*");
 //        configuration.setAdviceNumber(5);
 

@@ -5,10 +5,13 @@ import conf.Configuration;
 import configuration.ConfigurationUtil;
 import datasource.DataSourceUtil;
 import dbconnection.mysql.MySqlConnection;
+import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.jdbc.support.rowset.SqlRowSetMetaData;
+import org.springframework.util.ObjectUtils;
 import sourcesplit.MysqlSourceSplitRange;
+import sourcesplit.SingleTableSplitUtil;
 import util.Log;
 
 import java.sql.*;
@@ -33,41 +36,98 @@ public class Test {
 
 
         //取表字段类型
- /*       Connection connection = MySqlConnection.createConnection(configuration.getSourceDsName(),
-                DataSourceUtil.getDataSourceByDsName(configuration.getSourceDsName()));
-        JdbcTemplate jdbcTemplate = MySqlConnection.getJdbcTemplate(configuration.getSourceDsName());
-//        List<Map<String, Object>> tableMeteColumn = jdbcTemplate.queryForList(
-//                "SELECT column_name,data_type FROM information_schema.columns t WHERE t.table_catalog='test' AND table_name ='student' order by ordinal_position ");
-//        Set<String> intColumnSet = new HashSet<>();
-//        String dbTableName = "student";
-//        for (Map<String, Object> columnMap : tableMeteColumn) {
-//            if ("INTEGER".equalsIgnoreCase(columnMap.get("data_type").toString())) {
-//                intColumnSet.add(columnMap.get("column_name").toString());
+//        Connection connection = MySqlConnection.createConnection(configuration.getSourceDsName(),
+//                DataSourceUtil.getDataSourceByDsName(configuration.getSourceDsName()));
+//        JdbcTemplate jdbcTemplate = MySqlConnection.getJdbcTemplate(configuration.getSourceDsName());
+////        List<Map<String, Object>> tableMeteColumn = jdbcTemplate.queryForList(
+////                "SELECT column_name,data_type FROM information_schema.columns t WHERE t.table_catalog='test' AND table_name ='student' order by ordinal_position ");
+////        Set<String> intColumnSet = new HashSet<>();
+////        String dbTableName = "student";
+////        for (Map<String, Object> columnMap : tableMeteColumn) {
+////            if ("INTEGER".equalsIgnoreCase(columnMap.get("data_type").toString())) {
+////                intColumnSet.add(columnMap.get("column_name").toString());
+////            }
+////        }
+//        String tableName = "community_banner";
+//        String sql = "select * from "+ tableName;
+////        String sql = "SELECT banner_url FROM community.community_banner WHERE length(banner_url) != char_length(banner_url)";
+//        SqlRowSet sqlRowSet = jdbcTemplate.queryForRowSet(sql);
+//        SqlRowSetMetaData sqlRsmd = sqlRowSet.getMetaData();
+//        int columnCount = sqlRsmd.getColumnCount();
+//        List<Map<String, String>> longTableFieldList = new ArrayList<>();
+//        List<Map<String, String>> stringTableFieldList = new ArrayList<>();
+//        Map<String,String> longFieldMap = new HashMap<String,String>();
+//        Map<String,String> stringFieldMap = new HashMap<String,String>();
+//        String resultName = "";
+//        for (int i = 1; i <= columnCount; i++) {
+//            Boolean isLongType = isLongType(Integer.parseInt(String.valueOf(sqlRsmd.getColumnType(i))));
+//            Boolean isStringType = isStringType(Integer.parseInt(String.valueOf(sqlRsmd.getColumnType(i))));
+////            if (String.valueOf(sqlRsmd.getColumnType(i)).matches("(-5)||(4)||(-6)")) {
+//            if (isLongType) {
+//                longFieldMap.put("fieldName", sqlRsmd.getColumnName(i));
+//                longFieldMap.put("fieldType", String.valueOf(sqlRsmd.getColumnType(i)));
+//                longTableFieldList.add(longFieldMap);
+//            }
+//            if (isStringType) {
+//                stringFieldMap.put("fieldName", sqlRsmd.getColumnName(i));
+//                stringFieldMap.put("fieldType", String.valueOf(sqlRsmd.getColumnType(i)));
+//                stringTableFieldList.add(stringFieldMap);
+//            }
+////            System.out.println("fieldMap    =   " + fieldMap.get("name"));
+//        }
+////        System.out.println("    " + "tableFieldList" + longTableFieldList.get(0));
+//        if (!longFieldMap.isEmpty()) {
+//            Pair<Object, Object> pair = SingleTableSplitUtil.getPKRange(configuration, longTableFieldList.get(0).get("fieldName"), tableName, null);
+//            Long max = Long.parseLong(pair.getRight().toString());
+//            String maxName = longTableFieldList.get(0).get("fieldName");
+//            for (Map<String, String> tableField : longTableFieldList) {
+//                System.out.println("    " + tableName + "表中为 bigint 、 int、 tinyint 的字段名为 =   " + tableField.get("fieldName"));
+//                String split = tableField.get("fieldName");
+//                Pair<Object, Object> minMaxPK = SingleTableSplitUtil.getPKRange(configuration, split, tableName, null);
+//                System.out.println("    "+ tableField.get("fieldName") + "字段的范围为" + "minMaxPK    =   " + minMaxPK.toString());
+//                System.out.println("    minMaxPK.right  =   "+ minMaxPK.getRight());
+//                if ( max <= Long.parseLong(minMaxPK.getRight().toString())) {
+//                    max = Long.parseLong(minMaxPK.getRight().toString());
+//                    maxName = tableField.get("fieldName");
+//                }
+//            }
+//            //得到了最大 bigint 、 int、 tinyint
+//            resultName = maxName;
+//            System.out.println("maxName =   " + resultName);
+//        } else if (!stringFieldMap.isEmpty()) {
+//            for (Map<String, String> tableField : stringTableFieldList) {
+//                String colName = tableField.get("fieldName");
+//                String judgeSql = "SELECT %s FROM %s WHERE length(%s) != char_length(%s)";
+//                String executeSql = String.format(judgeSql, colName, tableName, colName, colName);
+//                List<Map<String, Object>> dbTableList = jdbcTemplate.queryForList(executeSql);
+////                System.out.println("结果为     =   " + dbTableList);
+//                if (dbTableList.isEmpty()) {
+//                    System.out.println("空了=============");
+//                    resultName = colName;
+//                }
+//            }
+//            //得到了不含汉字的列名
+//            System.out.println("不含汉字的列的列名为  =   " + resultName);
 //            }
 //        }
-        String tableName = "community_banner";
-        String sql = "select * from "+ tableName;
-        SqlRowSet sqlRowSet = jdbcTemplate.queryForRowSet(sql);
-        SqlRowSetMetaData sqlRsmd = sqlRowSet.getMetaData();
-        int columnCount = sqlRsmd.getColumnCount();
-        List<Map<String, String>> tableFieldList = new ArrayList<>();
-        for (int i = 1; i <= columnCount; i++) {
-            Map<String,String> fieldMap = new HashMap<String,String>();
-            fieldMap.put("name", sqlRsmd.getColumnName(i));
-            fieldMap.put("fieldType", String.valueOf(sqlRsmd.getColumnType(i)));
-            tableFieldList.add(fieldMap);
-        }
-        System.out.println(tableFieldList.toString());*/
+
+
+
+        // minMaxPK 最小到最大字段
+//        String split = getPK(tableName, connection);
+//        String split = "dict_node";
+//        Pair<Object, Object> minMaxPK = SingleTableSplitUtil.getPKRange(configuration, split, tableName, null);
+//        System.out.println("minMaxPK    =   " + minMaxPK.toString());
 
         //切表测试
 //        configuration.setDbTableWhite("(community.community_dict)||(community.sys_menu)");
 //        configuration.setDbTableWhite("(community.community_dict)||(community.sys_menu)||(community.community.banner)");
-//        configuration.setDbTableWhite("community.community_dict");
+        configuration.setDbTableWhite("community.test");
 //        configuration.setDbTableWhite("community.community_category");
-        configuration.setDbTableWhite("community.community_banner");
-        configuration.setSplitPk("banner_url");
+//        configuration.setDbTableWhite("community.community_banner");
+//        configuration.setSplitPk("dict_node");
 //        configuration.setDbTableWhite("community.sys_.*");
-        configuration.setAdviceNumber(2);
+        configuration.setAdviceNumber(3);
 //        configuration.setDbTableWhite("community.sys_captcha");
         List<Range> list = new ArrayList<>();
         try {
@@ -81,7 +141,19 @@ public class Test {
             System.out.println("切分的range    =   " + range);
         }
         System.out.println("切分份数    =   " + list.size());
+        System.out.println("使用的切分字段     :   " + configuration.getSplitPk());
 
+        //获取主键测试
+/*        Connection conn = MySqlConnection.createConnection(configuration.getSourceDsName(),
+                DataSourceUtil.getDataSourceByDsName(configuration.getSourceDsName()));
+        String pkName = getPK("community_banner", conn);
+        System.out.println("pkName =       " + pkName);
+
+        List<String> tables = MysqlSourceSplitRange.getDbTables(configuration);
+        System.out.println("tables =  " + tables.toString());
+        for (String table : tables){
+            System.out.println("table =    " + table);
+        }*/
 
         // jdbc 获取各种表信息
 //        Connection conn = MySqlConnection.createConnection(configuration.getSourceDsName(),
@@ -110,17 +182,7 @@ public class Test {
 
 
 
-        //获取主键测试
-//        Connection conn = MySqlConnection.createConnection(configuration.getSourceDsName(),
-//                DataSourceUtil.getDataSourceByDsName(configuration.getSourceDsName()));
-//        String pkName = getPK("community_banner", conn);
-//        System.out.println("pkName =       " + pkName);
 
-//        List<String> tables = MysqlSourceSplitRange.getDbTables(configuration);
-//        System.out.println("tables =  " + tables.toString());
-//        for (String table : tables){
-//            System.out.println("table =    " + table);
-//        }
 
 
 //        List<Range> listRange = ReaderSplitUtil.doSplit(configuration, configuration.getAdviceNumber(),
@@ -147,6 +209,19 @@ public class Test {
 //        getDataFromCollection(configuration);
 //        getAllDbTables(configuration);
 
+
+    private static boolean isLongType(int type) {
+        boolean isValidLongType = type == Types.BIGINT || type == Types.INTEGER
+                || type == Types.SMALLINT || type == Types.TINYINT;
+
+        return isValidLongType;
+    }
+
+    private static boolean isStringType(int type) {
+        return type == Types.CHAR || type == Types.NCHAR
+                || type == Types.VARCHAR || type == Types.LONGVARCHAR
+                || type == Types.NVARCHAR;
+    }
 
     public static String getPK(String tableName, Connection conn) {
         String PKName = null;
