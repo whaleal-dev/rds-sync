@@ -6,7 +6,7 @@ import common.taskbase.metadata.SourceMetadata;
 import conf.Configuration;
 import configuration.ConfigurationUtil;
 import datasource.DBUtil;
-import dbconnection.oracle.OracleConnection;
+import dbconnection.pgserver.OracleConnection;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.JdbcTemplate;
 import util.Log;
@@ -39,7 +39,7 @@ public class OracleSource extends SourceMetadata {
         this.memoryCache = memoryCache;
         procSourceTask.put(proName, taskMetadataQueue);
         connection = OracleConnection.createConnection(DBUtil.getSourceByProcName(proName));
-        jdbcTemplate = OracleConnection.getJdbcTemplateBySource(DBUtil.getSourceByProcName(proName));
+        jdbcTemplate = OracleConnection.getJdbcTemplate(proName);
     }
 
     @Override

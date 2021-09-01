@@ -2,7 +2,8 @@ package com.whaleal.photon.source.oracle;
 
 import common.photonV.entity.Datasource;
 import datasource.DBUtil;
-import dbconnection.oracle.OracleConnection;
+
+import dbconnection.pgserver.OracleConnection;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.sql.Connection;
@@ -14,7 +15,7 @@ public class ConnectionTest {
 
         Datasource proc4 = DBUtil.getSourceByProcName("proc4");
         Connection connection = OracleConnection.createConnection(proc4);
-        JdbcTemplate jdbcTemplate = OracleConnection.getJdbcTemplateBySource(proc4);
+        JdbcTemplate jdbcTemplate = OracleConnection.getJdbcTemplate("proc4");
         List<Map<String, Object>> dbTableList = jdbcTemplate.queryForList("select t.table_name,t.num_rows from USER_TABLES t;");
         for (Map dbTableMap : dbTableList) {
             String dbName = dbTableMap.get("TABLE_SCHEMA").toString();
