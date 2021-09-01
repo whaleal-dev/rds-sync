@@ -5,12 +5,14 @@ import conf.Configuration;
 import configuration.ConfigurationUtil;
 import datasource.DataSourceUtil;
 import dbconnection.mysql.MySqlConnection;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.support.rowset.SqlRowSet;
+import org.springframework.jdbc.support.rowset.SqlRowSetMetaData;
 import sourcesplit.MysqlSourceSplitRange;
 import util.Log;
 
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 /**
  * @author: jy
@@ -27,6 +29,59 @@ public class Test {
         System.out.println(configuration);
         System.out.println("=========================================================================================");
         System.out.println("=========================================================================================");
+
+
+
+        //取表字段类型
+ /*       Connection connection = MySqlConnection.createConnection(configuration.getSourceDsName(),
+                DataSourceUtil.getDataSourceByDsName(configuration.getSourceDsName()));
+        JdbcTemplate jdbcTemplate = MySqlConnection.getJdbcTemplate(configuration.getSourceDsName());
+//        List<Map<String, Object>> tableMeteColumn = jdbcTemplate.queryForList(
+//                "SELECT column_name,data_type FROM information_schema.columns t WHERE t.table_catalog='test' AND table_name ='student' order by ordinal_position ");
+//        Set<String> intColumnSet = new HashSet<>();
+//        String dbTableName = "student";
+//        for (Map<String, Object> columnMap : tableMeteColumn) {
+//            if ("INTEGER".equalsIgnoreCase(columnMap.get("data_type").toString())) {
+//                intColumnSet.add(columnMap.get("column_name").toString());
+//            }
+//        }
+        String tableName = "community_banner";
+        String sql = "select * from "+ tableName;
+        SqlRowSet sqlRowSet = jdbcTemplate.queryForRowSet(sql);
+        SqlRowSetMetaData sqlRsmd = sqlRowSet.getMetaData();
+        int columnCount = sqlRsmd.getColumnCount();
+        List<Map<String, String>> tableFieldList = new ArrayList<>();
+        for (int i = 1; i <= columnCount; i++) {
+            Map<String,String> fieldMap = new HashMap<String,String>();
+            fieldMap.put("name", sqlRsmd.getColumnName(i));
+            fieldMap.put("fieldType", String.valueOf(sqlRsmd.getColumnType(i)));
+            tableFieldList.add(fieldMap);
+        }
+        System.out.println(tableFieldList.toString());*/
+
+        //切表测试
+//        configuration.setDbTableWhite("(community.community_dict)||(community.sys_menu)");
+//        configuration.setDbTableWhite("(community.community_dict)||(community.sys_menu)||(community.community.banner)");
+//        configuration.setDbTableWhite("community.community_dict");
+//        configuration.setDbTableWhite("community.community_category");
+        configuration.setDbTableWhite("community.community_banner");
+        configuration.setSplitPk("banner_url");
+//        configuration.setDbTableWhite("community.sys_.*");
+        configuration.setAdviceNumber(2);
+//        configuration.setDbTableWhite("community.sys_captcha");
+        List<Range> list = new ArrayList<>();
+        try {
+            System.out.println("====" + configuration);
+            list = MysqlSourceSplitRange.doSplit(configuration);
+        } catch (Exception e) {
+            e.printStackTrace();
+            Log.error(e.getMessage());
+        }
+        for (Range range : list) {
+            System.out.println("切分的range    =   " + range);
+        }
+        System.out.println("切分份数    =   " + list.size());
+
 
         // jdbc 获取各种表信息
 //        Connection conn = MySqlConnection.createConnection(configuration.getSourceDsName(),
@@ -53,26 +108,7 @@ public class Test {
 
 
 
-    //切表测试
-//        configuration.setDbTableWhite("(community.community_dict)||(community.sys_menu)");
-//        configuration.setDbTableWhite("(community.community_dict)||(community.sys_menu)||(community.community.banner)");
-//        configuration.setDbTableWhite("community.community_dict");
-//        configuration.setDbTableWhite("community.community_category");
-//        configuration.setDbTableWhite("community.sys_.*");
-//        configuration.setAdviceNumber(2);
-//        configuration.setDbTableWhite("community.sys_captcha");
-//        List<Range> list = new ArrayList<>();
-//        try {
-//            System.out.println("====" + configuration);
-//            list = MysqlSourceSplitRange.doSplit(configuration);
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//            Log.error(e.getMessage());
-//        }
-//        for (Range range : list) {
-//            System.out.println("切分的range    =   " + range);
-//        }
-//        System.out.println("切分份数    =   " + list.size());
+
 
         //获取主键测试
 //        Connection conn = MySqlConnection.createConnection(configuration.getSourceDsName(),

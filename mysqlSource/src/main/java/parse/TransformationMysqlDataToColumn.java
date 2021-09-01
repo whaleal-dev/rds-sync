@@ -31,7 +31,7 @@ public class TransformationMysqlDataToColumn {
 
     public static AbstractColumn parseValue(String columnName, Object object) {
         if (object == null) {
-            return new StringColumn(columnName, "null");
+            return new NullColumn(columnName, null);
         }
         //获取 mysql 值的数据类型
         String type = object.getClass().getSimpleName().toUpperCase();

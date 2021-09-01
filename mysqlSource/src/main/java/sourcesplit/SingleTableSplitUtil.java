@@ -26,7 +26,7 @@ public class SingleTableSplitUtil {
         List<String> rangeList = null;
         //从配置中取分片字段 splitPk
         String splitPkName = null;
-        boolean hasSplitPk = StringUtils.isNotBlank(splitPkName);
+        boolean hasSplitPk = StringUtils.isNotBlank(configuration.getSplitPk());
         splitPkName = hasSplitPk ? configuration.getSplitPk() : SingleTableSplitUtil.getPK(table, configuration);
         String column = "*";
         String where = null;
@@ -229,7 +229,7 @@ public class SingleTableSplitUtil {
 
     private static String genPKRangeSQL(Configuration configuration, String table, String where) {
         String splitPkName = null;
-        boolean hasSplitPk = StringUtils.isNotBlank(splitPkName);
+        boolean hasSplitPk = StringUtils.isNotBlank(configuration.getSplitPk());
         splitPkName = hasSplitPk ? configuration.getSplitPk().trim() : SingleTableSplitUtil.getPK(table, configuration);
         //去掉SPLIT_PK前面和后面的空格
         //去掉TABLE前面和后面的空格

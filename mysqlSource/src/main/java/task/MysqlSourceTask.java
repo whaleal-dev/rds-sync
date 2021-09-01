@@ -7,6 +7,8 @@ import common.taskbase.SourceTaskInfo;
 import common.taskbase.SourceTaskInterface;
 import dbconnection.mysql.MySqlConnection;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.util.ObjectUtils;
+import org.springframework.util.StringUtils;
 import parse.TransformationMysqlDataToColumn;
 import thread.SourceTaskPoolManager;
 import util.Log;
