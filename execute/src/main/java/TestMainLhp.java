@@ -17,6 +17,9 @@ import trigger.TriggerUtil;
 import util.Log;
 import util.StringUtil;
 
+import java.util.List;
+import java.util.Map;
+
 /**
  * @description:
  * @author: lhp
@@ -25,6 +28,14 @@ import util.StringUtil;
 public class TestMainLhp {
     public static void main(String[] args) throws InterruptedException {
         testPgToMongoDb();
+
+
+        List<Map<String, Object>> mapList = PgServerConnection.getJdbcTemplate("pg").queryForList("select * from  public.nettb ");
+
+        for (Map<String, Object> map : mapList) {
+            System.out.println(map.get("intclmn").getClass());
+        }
+
     }
 
     public static void testRealTimeOfMongodb() {
@@ -227,11 +238,9 @@ public class TestMainLhp {
     }
 
 
-
     public static void testPgToMongoDb() {
         //获取配置
         Configuration configuration = ConfigurationUtil.getConfiguration("proc5");
-
 
 
         PgServerConnection.createConnection(configuration.getSourceDsName(), DataSourceUtil.getDataSourceByDsName(configuration.getSourceDsName()));

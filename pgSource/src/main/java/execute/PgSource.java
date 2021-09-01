@@ -63,19 +63,18 @@ public class PgSource extends SourceMetadata {
     @Override
     public void getAllDbCollections(String sourceName) {
 
-        List<Map<String, Object>> dbTableMapList = jdbcTemplate.queryForList("select  * from information_schema.TABLES where" +
-                " table_type='BASE TABLE' and concat(table_catalog,'.',table_name)  ~ ?  and table_schema='public';", dbTableWhite);
+        List<Map<String, Object>> dbTableMapList =
+                jdbcTemplate.
+                        queryForList("select  * from information_schema.TABLES where table_type='BASE TABLE' and " +
+                                "concat(table_schema,'.',table_name)  ~ ? ;", dbTableWhite);
         for (Map<String, Object> dbTableNameMap : dbTableMapList) {
-            String dbCatalogName = dbTableNameMap.get("table_catalog").toString();
             String dbSchemaName = dbTableNameMap.get("table_schema").toString();
             String tableName = dbTableNameMap.get("table_name").toString();
             String dbTable = dbSchemaName + "." + tableName;
-            System.out.println("dbTable    " + dbTable);
-            System.out.println("dbCatalogName    " + dbCatalogName + "." + tableName);
             System.out.println(this.dbTableWhite);
-            if ((dbCatalogName + "." + tableName).matches(this.dbTableWhite)) {
+//            if ((dbSchemaName + "." + tableName).matches(this.dbTableWhite)) {
                 dbTables.put(dbTable, dbTable);
-            }
+//            }
         }
         Log.info("sourceName:" + sourceName + ",全量同步的表列表:" + dbTables);
     }
@@ -111,9 +110,9 @@ public class PgSource extends SourceMetadata {
             public void run() {
                 while (true) {
                     try {
-                        if (SourceTaskPoolManager.setSourceActiveThreadNum(proName, 0) > 10) {
-                            TimeUnit.SECONDS.sleep(10);
-                        }
+//                        if (SourceTaskPoolManager.setSourceActiveThreadNum(proName, 0) > 10) {
+//                            TimeUnit.SECONDS.sleep(10);
+//                        }
                         SourceTaskInfo taskMetadata = taskMetadataQueue.poll();
                         if (taskMetadata != null) {
                             SourceTaskPoolManager.setSourceActiveThreadNum(proName, 1);

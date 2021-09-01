@@ -33,10 +33,11 @@ public class PgSourceSplitRange {
 
 
     public List<Range> getRangeList(String dbTableName) {
-        String dbName = dbTableName.split("\\.")[0];
-        String tableName = dbTableName.split("\\.")[1];
+        String[] split = dbTableName.split("\\.", 2);
+        String dbName = split[0];
+        String tableName = split[1];
         List<Map<String, Object>> tableMeteColumn = jdbcTemplate.queryForList(
-                "SELECT column_name,data_type FROM information_schema.columns t WHERE t.table_catalog=? " +
+                "SELECT column_name,data_type FROM information_schema.columns t WHERE t.table_schema=? " +
                         "AND table_name =? order by ordinal_position ", dbName, tableName);
         Set<String> intColumnSet = new HashSet<>();
         for (Map<String, Object> columnMap : tableMeteColumn) {
@@ -62,18 +63,20 @@ public class PgSourceSplitRange {
                 }
             }
 
-            if (maxDiffTemp != 0) {
+            if (maxDiffTemp == 0 || range.getColumnName() == null || range.getColumnName().equals("")) {
+                Range rangeOfNull = new Range();
+                rangeOfNull.setDbTableName(dbTableName);
+                rangeOfNull.setQuery("(1=1)");
+                rangeList.add(rangeOfNull);
+
+            } else {
+
                 rangeList = getRangeList(range, 3);
                 System.out.println(range);
                 Range rangeOfNull = new Range();
                 rangeOfNull.setColumnName(range.getColumnName());
                 rangeOfNull.setDbTableName(dbTableName);
                 rangeOfNull.setQuery("(" + range.getColumnName() + " is null)");
-                rangeList.add(rangeOfNull);
-            }else {
-                Range rangeOfNull = new Range();
-                rangeOfNull.setDbTableName(dbTableName);
-                rangeOfNull.setQuery("(1=1)");
                 rangeList.add(rangeOfNull);
             }
 
@@ -84,7 +87,7 @@ public class PgSourceSplitRange {
             rangeOfNull.setQuery("(1=1)");
             rangeList.add(rangeOfNull);
         }
-        System.out.println("rangeLIST:          "+rangeList);
+        System.out.println("rangeLIST:          " + rangeList);
         rangeList.forEach(range -> System.out.println(range.getQuery()));
         return rangeList;
 
@@ -118,9 +121,18 @@ public class PgSourceSplitRange {
         String columnName = range.getColumnName();
         int minTemp = min;
         List<Range> rangeList = new ArrayList<>();
+        if (max - min <= splitNum) {
+            Range rangeTemp = new Range();
+            rangeTemp.setQuery("(  " + columnName + ">=" + min + " and " + columnName + "<=" + max + ")");
+            rangeTemp.setMax(true);
+            rangeList.add(rangeTemp);
+            rangeList.add(rangeTemp);
+            return rangeList;
+        }
         if (rangeNum == 0 || (max - min == 0)) {
             return rangeList;
         }
+
         do {
             Range rangeTemp = new Range();
             String query = "(  " + columnName + ">=";

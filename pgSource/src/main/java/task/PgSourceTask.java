@@ -93,7 +93,9 @@ public class PgSourceTask implements Runnable, SourceTaskInterface {
         try {
             //读取collection中的数据
             statement = connection.createStatement();
-            resultSet = statement.executeQuery("select * from  " + dbTableName + " where " + query);
+            String sql="select * from  " + dbTableName + " where " + query;
+            System.out.println("sql====="+sql);
+            resultSet = statement.executeQuery(sql);
             while (resultSet.next()) {
                 getPgAbstractColumn(resultSet);
                 if (cache++ > dataBatchSize) {
@@ -137,11 +139,12 @@ public class PgSourceTask implements Runnable, SourceTaskInterface {
                     Object values = rs.getObject(md.getColumnName(i));
                     AbstractColumn abstractColumn = TransformationPgDataToColumn.parseValue(columnName, values);
                     abstractColumns.add(abstractColumn);
-                    System.out.println("columnName:" + columnName + "      values:" + values+"        type"+values.getClass());
+               //     System.out.println("columnName:" + columnName + "      values:" + values+"        type"+values.getClass());
                 }
                 this.dataList.add(abstractColumns);
             }
         } catch (Exception e) {
+            e.printStackTrace();
             Log.error(e.getMessage());
         }
     }
