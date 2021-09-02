@@ -36,8 +36,8 @@ public class TestMainJY {
 //        programInfo.setDbTableWhite("community.test1");
 //        programInfo.setDbTableWhite("community.sys_captcha");
 //        programInfo.setAdviceNumber(4);
-        programInfo.setDbTableWhite("(community.community_dict)||(community.sys_captcha)");
-//        programInfo.setDbTableWhite("community.+");
+//        programInfo.setDbTableWhite("(community.community_dict)||(community.sys_captcha)");
+        programInfo.setDbTableWhite("community.+");
 //        programInfo.setDbTableWhite("community.community_banner");
 //        programInfo.setDbTableWhite("community.test");
 //        programInfo.setSplitPk("banner_link");

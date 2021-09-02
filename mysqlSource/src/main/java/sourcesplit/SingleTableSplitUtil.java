@@ -28,6 +28,12 @@ public class SingleTableSplitUtil {
         List<String> rangeList = null;
         //从配置中取分片字段 splitPk
         String splitPkName = null;
+        String sql = "SELECT * FROM " + table;
+        JdbcTemplate jdbcTemplate = MySqlConnection.getJdbcTemplate(programInfo.getSourceDsName());
+        List<Map<String, Object>> dbTableList = jdbcTemplate.queryForList(sql);
+        if (dbTableList.isEmpty()) {
+            return pluginParams;
+        }
         if (StringUtils.isNotBlank(programInfo.getSplitPk())) {
             splitPkName = programInfo.getSplitPk();
         } else {
@@ -373,15 +379,17 @@ public class SingleTableSplitUtil {
                 String length = "SELECT %s FROM %s";
                 String maxlengthSql = String.format(length, maxKey, table);
                 List<Map<String, Object>> list = jdbcTemplate.queryForList(maxlengthSql);
-                Long max = Long.parseLong(list.get(0).get(maxKey).toString());
-                Map<Long, String> maxMap = new HashMap<>();
-                maxMap.put(max, colName);
-                maxMapList.add(maxMap);
-                maxList.add(max);
-                for (Long maxNum : maxList) {
-                    if (maxNum >= result) {
-                        //得到 length 最大的值
-                        result = maxNum;
+                if(!list.isEmpty()){
+                    Long max = Long.parseLong(list.get(0).get(maxKey).toString());
+                    Map<Long, String> maxMap = new HashMap<>();
+                    maxMap.put(max, colName);
+                    maxMapList.add(maxMap);
+                    maxList.add(max);
+                    for (Long maxNum : maxList) {
+                        if (maxNum >= result) {
+                            //得到 length 最大的值
+                            result = maxNum;
+                        }
                     }
                 }
             }
@@ -489,8 +497,7 @@ public class SingleTableSplitUtil {
             PKName = "有汉字列";
             return PKName;
         }
-        PKName = "有汉字列";
-        return PKName;
+        return null;
 
     }
 
