@@ -39,28 +39,11 @@ public class MongodbTargetTask extends AbstractTargetTask {
      * 待写入的数据
      */
     private List<WriteModel<Document>> writeModels = new ArrayList<>();
-    /**
-     * 该target是否停止
-     */
-    private volatile static Map<String, AtomicBoolean> isStop = new ConcurrentHashMap<>();
+
 
     public MongodbTargetTask(ProgramInfo programInfo, MemoryCache memoryCache) {
         super(programInfo, memoryCache);
         this.mongoClient = MongoDbConnection.getMongoClient(this.targetDsName);
-        if (!isStop.containsKey(proName)) {
-            synchronized (MongodbTargetTask.class) {
-                if (!isStop.containsKey(proName)) {
-                    isStop.put(proName, new AtomicBoolean());
-                }
-            }
-        }
-    }
-
-    /**
-     * 设置某pro的target是否停止
-     */
-    public static void setIsStopFlagOfTarget(String procName, boolean value) {
-        isStop.get(procName).set(value);
     }
 
     @Override
@@ -70,16 +53,14 @@ public class MongodbTargetTask extends AbstractTargetTask {
         } finally {
             TargetTaskPoolManager.setTargetActiveThreadNum(proName, -1);
         }
-
     }
-
 
     @Override
     public void applyData() {
         Log.info("启动target任务:" + this.targetDsName);
         while (true) {
             try {
-                if (isStop.get(proName).get()) {
+                if (AbstractTargetTask.getIsStopFlagOfTarget(proName)) {
                     break;
                 }
                 BatchDataEntity batchDataEntity = memoryCache.getData();
@@ -108,7 +89,6 @@ public class MongodbTargetTask extends AbstractTargetTask {
             writeModels.add(new InsertOneModel<>(document));
         }
     }
-
 
     @Override
     public void bulkExecute(String dbTable, long batchNo) {

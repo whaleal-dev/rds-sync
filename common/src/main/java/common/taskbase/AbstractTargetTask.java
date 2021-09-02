@@ -4,6 +4,10 @@ import cache.MemoryCache;
 import common.dataclass.BatchDataEntity;
 import common.photonV.entity.ProgramInfo;
 
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
+
 /**
  * @description:
  * @author: lhp
@@ -36,8 +40,30 @@ public abstract class AbstractTargetTask implements Runnable {
         this.taskName = programInfo.getTaskName();
         this.proName = programInfo.getProName();
         this.memoryCache = memoryCache;
+        if (!isStop.containsKey(proName)) {
+            synchronized (AbstractTargetTask.class) {
+                if (!isStop.containsKey(proName)) {
+                    isStop.put(proName, new AtomicBoolean());
+                }
+            }
+        }
     }
 
+    /**
+     * 设置某pro的target是否停止
+     */
+    public static void setIsStopFlagOfTarget(String procName, boolean value) {
+        isStop.get(procName).set(value);
+    }
+
+    public static boolean getIsStopFlagOfTarget(String proName) {
+        return isStop.get(proName).get();
+    }
+
+    /**
+     * 该target是否停止
+     */
+    private volatile static Map<String, AtomicBoolean> isStop = new ConcurrentHashMap<>();
 
     /**
      * applyData 应用数据

@@ -42,7 +42,7 @@ public class MysqlTargetTask extends AbstractTargetTask {
      */
     private static volatile Set<String> dbTableSet = new CopyOnWriteArraySet<>();
 
-    private volatile static Map<String, AtomicBoolean> isStop = new ConcurrentHashMap<>();
+
     /**
      * 数据源链接tcp
      */
@@ -52,20 +52,11 @@ public class MysqlTargetTask extends AbstractTargetTask {
      */
     private List<String> sqlList = new ArrayList<>();
 
-    public static void setIsStopFlagOfTarget(String procName, boolean value) {
-        isStop.get(procName).set(value);
-    }
 
     public MysqlTargetTask(ProgramInfo programInfo, MemoryCache memoryCache) {
         super(programInfo, memoryCache);
         this.connection = MySqlConnection.getConnection(this.targetDsName);
-        if (!isStop.containsKey(proName)) {
-            synchronized (MysqlTargetTask.class) {
-                if (!isStop.containsKey(proName)) {
-                    isStop.put(proName, new AtomicBoolean());
-                }
-            }
-        }
+
     }
 
     @Override
@@ -88,7 +79,7 @@ public class MysqlTargetTask extends AbstractTargetTask {
     public void applyData() {
         while (true) {
             try {
-                if (isStop.get(proName).get()) {
+                if (AbstractTargetTask.getIsStopFlagOfTarget(proName)) {
                     break;
                 }
                 BatchDataEntity batchDataEntity = memoryCache.getData();
