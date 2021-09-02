@@ -25,9 +25,6 @@ public class SysPoolManager extends ThreadPoolManager {
      */
     private static Map<String, AtomicInteger> sysActiveThreadNum = new ConcurrentHashMap<>();
 
-//    public static SysPoolManager getSysTaskPoolManager(String procName) {
-//        return sysThreadPoolManager.get(procName);
-//    }
 
     public SysPoolManager(String procName, int corePoolSize, int maximumPoolSize) {
         super(procName, corePoolSize, maximumPoolSize);

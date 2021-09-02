@@ -45,9 +45,6 @@ public class SourceTaskPoolManager extends ThreadPoolManager {
         sourceThreadPoolManager.put(procName, this);
     }
 
-//    public static SourceTaskPoolManager getSourceTaskPoolManager(String procName) {
-//        return sourceThreadPoolManager.get(procName);
-//    }
 
     /**
      * 删除对象信息
@@ -57,11 +54,6 @@ public class SourceTaskPoolManager extends ThreadPoolManager {
         sourceActiveThreadNum.remove(procName);
     }
 
-//    public static void addSourceTaskPoolManager(String procName, SourceTaskPoolManager sourceTaskPoolManager) {
-//        if (!sourceThreadPoolManager.containsKey(procName)) {
-//            sourceThreadPoolManager.put(procName, sourceTaskPoolManager);
-//        }
-//    }
 
     /**
      * submit 提交任务

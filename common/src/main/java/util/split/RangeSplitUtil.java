@@ -1,5 +1,6 @@
 package util.split;
 
+import common.dataclass.Range;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -26,10 +27,65 @@ public final class RangeSplitUtil {
     }
 
     public static void main(String[] args) {
-        for(Long s:doLongSplit(-12345345,11232345,3)){
-            System.out.println(s);
-        }
+        getRangeListByLongType(100, 200000, 5, "col").forEach(range -> System.out.println(range));
+        System.out.println("");
+        getRangeListByStringType("asdfghj", "zxcfghjhg", 3, "col").forEach(range -> System.out.println(range));
+    }
 
+    public static List<Range> getRangeListByLongType(long left, long right, int expectSliceNumber, String columnName) {
+        List<Range> rangeList = new ArrayList<>();
+        long[] longs = doLongSplit(left, right, expectSliceNumber);
+        int length = longs.length;
+        for (int index = 0; index < length; index++) {
+
+            Range range = new Range();
+            range.setColumnName(columnName);
+            String query = "(  " + columnName + ">=" + longs[index];
+
+            if ((index + 2) >= length) {
+                query += " and " + columnName + "<=" + right + ")";
+                range.setQuery(query);
+                rangeList.add(range);
+                break;
+            }
+
+            query += " and " + columnName + "<" + longs[index+1] + ")";
+            range.setQuery(query);
+            rangeList.add(range);
+        }
+        Range range = new Range();
+        range.setColumnName(columnName);
+        range.setQuery("( "+ columnName+" is null )");
+        rangeList.add(range);
+        return rangeList;
+    }
+
+    public static List<Range> getRangeListByStringType(String left, String right, int expectSliceNumber, String columnName) {
+        List<Range> rangeList = new ArrayList<>();
+        String[] strings = doAsciiStringSplit(left, right, expectSliceNumber);
+        int length = strings.length;
+        for (int index = 0; index < length; index++) {
+
+            Range range = new Range();
+            range.setColumnName(columnName);
+            String query = "(  " + columnName + ">='" + strings[index]+"'";
+
+            if ((index + 2)>=length) {
+                query += " and " + columnName + "<='" + right + "')";
+                range.setQuery(query);
+                rangeList.add(range);
+                break;
+            }
+
+            query += " and " + columnName + "<'" + strings[index] + "')";
+            range.setQuery(query);
+            rangeList.add(range);
+        }
+        Range range = new Range();
+        range.setColumnName(columnName);
+        range.setQuery("( "+ columnName+" is null )");
+        rangeList.add(range);
+        return rangeList;
     }
 
     public static long[] doLongSplit(long left, long right, int expectSliceNumber) {

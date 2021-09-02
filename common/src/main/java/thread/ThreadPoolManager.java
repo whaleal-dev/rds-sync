@@ -26,7 +26,7 @@ public class ThreadPoolManager {
     /**
      * 阻塞的线程数
      */
-    protected int blockSize = 100;
+    protected int blockSize = 1000;
     /**
      * 线程池
      */
