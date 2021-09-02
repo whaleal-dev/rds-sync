@@ -2,19 +2,13 @@ package parse;
 
 
 import com.google.gson.Gson;
-import com.mongodb.BasicDBObject;
-import com.mongodb.client.MongoClient;
 import common.column.*;
-import common.dbtype.EnumMongoDbDataType;
-import dbconnection.mongodb.MongoDbConnection;
+import common.dbtype.EnumMongoDbDataInJavaType;
 import org.bson.*;
-import org.bson.types.Code;
-import org.bson.types.Decimal128;
-import org.bson.types.ObjectId;
+import org.bson.types.*;
 
+import java.math.BigDecimal;
 import java.time.format.DateTimeFormatter;
-import java.time.temporal.TemporalAccessor;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -40,19 +34,22 @@ public class TransformationMongodbDataToColumn {
             return new NullColumn(columnName, null);
         }
         String type = object.getClass().getSimpleName().toUpperCase();
-        EnumMongoDbDataType enumMongoDbDataType = EnumMongoDbDataType.valueOf(type);
-        switch (enumMongoDbDataType) {
+        EnumMongoDbDataInJavaType enumMongoDbDataInJavaType = EnumMongoDbDataInJavaType.valueOf(type);
+        switch (enumMongoDbDataInJavaType) {
             case INTEGER:
                 return new IntColumn(columnName, (Integer) object);
             case DOUBLE:
                 return new DoubleColumn(columnName, (Double) object);
             case LONG:
                 return new LongColumn(columnName, (Long) object);
+            case BINARY:
+                System.out.println(object.getClass().getSimpleName());
+                return new BytesColumn(columnName, ((Binary) object).getData());
             case DECIMAL128:
-                return new DoubleColumn(columnName, ((Decimal128) object).doubleValue());
+                return new BigDecimalColumn(columnName, new BigDecimal(((Decimal128) object).doubleValue()));
             case DATE:
                 return new DateTimeColumn(columnName, (((Date) object).getTime()));
-            case REGULAR:
+            case BSONREGULAREXPRESSION:
                 BsonRegularExpression bsonRegularExpression = (BsonRegularExpression) object;
                 String options = bsonRegularExpression.getOptions();
                 String pattern = bsonRegularExpression.getPattern();
@@ -63,6 +60,9 @@ public class TransformationMongodbDataToColumn {
                 return new StringColumn(columnName, code.getCode());
             case BSONTIMESTAMP:
                 return new TimestampColumn(columnName, ((BsonTimestamp) object).getValue());
+            case SYMBOL:
+                Symbol symbol = (Symbol) object;
+                return new StringColumn(columnName, symbol.getSymbol());
             case BOOLEAN:
                 return new BoolColumn(columnName, ((Boolean) object).booleanValue());
             case ARRAYLIST:
@@ -72,6 +72,11 @@ public class TransformationMongodbDataToColumn {
             case OBJECTID:
                 return new ObjectIdColumn(columnName, (ObjectId) object);
             case STRING:
+            case BSONDBPOINTER:
+            case BSONUNDEFINED:
+            case CODEWITHSCOPE:
+            case MAXKEY:
+            case MINKEY:
             default:
                 return new StringColumn(columnName, object.toString());
         }

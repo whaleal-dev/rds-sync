@@ -5,6 +5,8 @@ import conf.Configuration;
 import configuration.ConfigurationUtil;
 import datasource.DataSourceUtil;
 import dbconnection.mysql.MySqlConnection;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
@@ -32,6 +34,110 @@ public class Test {
         System.out.println(configuration);
         System.out.println("=========================================================================================");
         System.out.println("=========================================================================================");
+
+        //取某列最大的 length
+        Connection connection = MySqlConnection.createConnection(configuration.getSourceDsName(),
+        DataSourceUtil.getDataSourceByDsName(configuration.getSourceDsName()));
+        JdbcTemplate jdbcTemplate = MySqlConnection.getJdbcTemplate(configuration.getSourceDsName());
+        String table = "community.community_banner";
+        String baseSql = "select * from "+ table;
+        SqlRowSet sqlRowSet = jdbcTemplate.queryForRowSet(baseSql);
+        SqlRowSetMetaData sqlRsmd = sqlRowSet.getMetaData();
+        List<Map<String, String>> tableFieldList = new ArrayList<>();
+        List<Long> maxList = new ArrayList<>();
+        int columnCount = sqlRsmd.getColumnCount();
+        for (int i = 1; i <= columnCount; i++) {
+            Map<String,String> fieldMap = new HashMap<>();
+            fieldMap.put("fieldName", sqlRsmd.getColumnName(i));
+            fieldMap.put("fieldType", String.valueOf(sqlRsmd.getColumnType(i)));
+            tableFieldList.add(fieldMap);
+        }
+        Long result = -1L;
+
+        String resultName = "";
+        List<Map<Long, String>> maxMapList = new ArrayList<>();
+        if (!tableFieldList.isEmpty()) {
+            for (Map<String, String> tableField : tableFieldList) {
+                String colName = tableField.get("fieldName");
+                String maxlengthkey = "MAX(LENGTH(%s))";
+                String maxKey = String.format(maxlengthkey, colName);
+                String length = "SELECT %s FROM %s";
+                String maxlengthSql = String.format(length, maxKey, table);
+                List<Map<String, Object>> list = jdbcTemplate.queryForList(maxlengthSql);
+                Long max = Long.parseLong(list.get(0).get(maxKey).toString());
+                Map<Long, String> maxMap = new HashMap<>();
+                maxMap.put(max, colName);
+                maxMapList.add(maxMap);
+                maxList.add(max);
+
+                for (Long maxNum : maxList) {
+                    if (maxNum >= result) {
+                        result = maxNum;
+                    }
+                }
+            }
+            System.out.println("maxMapList  =   "+ maxMapList);
+            for (Map<Long, String> rmap : maxMapList) {
+                System.out.println("rmap.get(result) = "    + rmap.get(result));
+                if (!StringUtils.isEmpty(rmap.get(result))){
+                resultName = rmap.get(result);
+                }
+            }
+            System.out.println("    最大result  =   " + result);
+            System.out.println("    resultName  =   " + resultName);
+            Long minresult = result;
+
+            String minlengthkey = "MIN(LENGTH(%s))";
+            String minkey = String.format(minlengthkey, resultName);
+            String length = "SELECT %s FROM %s";
+            String minlengthSql = String.format(length, minkey, table);
+            List<Map<String, Object>> list = jdbcTemplate.queryForList(minlengthSql);
+            List<Long> minlist = new ArrayList<>();
+            Long min = Long.parseLong(list.get(0).get(minkey).toString());
+            minlist.add(min);
+            for (Long minNum : minlist) {
+                if (minNum <= minresult) {
+                    minresult = minNum;
+                }
+            }
+            System.out.println("    最小result = " + minresult);
+            Pair<Long, Long> pair = new ImmutablePair<Long, Long>(minresult, result);
+            System.out.println("pair = " + pair);
+            int splitNumber = -1;
+            List<Range> lengthRange = new ArrayList<>();
+            Range range = new Range();
+            range.setDbTableName(table);
+            range.setQuery("SELECT * FROM "+ table + " WHERE LENGTH(" + resultName + ") is NULL");
+            lengthRange.add(range);
+
+            System.out.println("lengthRange  =   " + lengthRange.get(0).getQuery());
+        }
+//        System.out.println("tableFieldList  =   " + tableFieldList);
+//        List<Map<String, String>> longTableFieldList = new ArrayList<>();
+//        List<Map<String, String>> stringTableFieldList = new ArrayList<>();
+//        String sql = "SELECT MAX(LENGTH(banner_desc)) FROM community.community_banner";
+//        String sql11 = "SELECT LENGTH(banner_desc) FROM community.community_banner";
+//        String sql1 = "SELECT MAX(LENGTH(banner_url)) FROM community.community_banner";
+//        List<Map<String, Object>> list = jdbcTemplate.queryForList(sql);
+//        List<Map<String, Object>> list1 = jdbcTemplate.queryForList(sql1);
+//        List<Long> maxList = new ArrayList<>();
+//        //取到最大值
+//        Long max1 = Long.parseLong(list1.get(0).get("MAX(LENGTH(banner_url))").toString());
+//        Long max = Long.parseLong(list.get(0).get("MAX(LENGTH(banner_desc))").toString());
+//        System.out.println("    list    =" + list);
+//        System.out.println("    max1     =" + max1);
+//        System.out.println("    max     =" + max);
+//        maxList.add(max);
+//        maxList.add(max1);
+//        //初始化默认值
+//        Long result = -1L;
+//        for (Long maxNum : maxList) {
+//            if (maxNum >= result) {
+//                result = maxNum;
+//            }
+//        }
+//        System.out.println("result = " + result);
+
 
 
 
@@ -120,7 +226,7 @@ public class Test {
 //        System.out.println("minMaxPK    =   " + minMaxPK.toString());
 
         //切表测试
-//        configuration.setDbTableWhite("(community.community_dict)||(community.sys_menu)");
+/*//        configuration.setDbTableWhite("(community.community_dict)||(community.sys_menu)");
 //        configuration.setDbTableWhite("(community.community_dict)||(community.sys_menu)||(community.community.banner)");
         configuration.setDbTableWhite("community.test");
 //        configuration.setDbTableWhite("community.community_category");
@@ -141,7 +247,7 @@ public class Test {
             System.out.println("切分的range    =   " + range);
         }
         System.out.println("切分份数    =   " + list.size());
-        System.out.println("使用的切分字段     :   " + configuration.getSplitPk());
+        System.out.println("使用的切分字段     :   " + configuration.getSplitPk());*/
 
         //获取主键测试
 /*        Connection conn = MySqlConnection.createConnection(configuration.getSourceDsName(),

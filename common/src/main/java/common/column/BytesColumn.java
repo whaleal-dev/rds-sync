@@ -8,15 +8,15 @@ import java.util.List;
  * @time: 2021/9/1 2:37 下午
  */
 public class BytesColumn extends AbstractColumn {
-    private Byte[] data;
+    private byte[] data;
 
-    public BytesColumn(String columnName, Byte[] object) {
+    public BytesColumn(String columnName, byte[] object) {
         this.columnName = columnName;
         this.data = object;
     }
 
     @Override
-    public Byte[] getData() {
+    public byte[] getData() {
         return this.data;
     }
 

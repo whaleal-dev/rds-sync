@@ -9,8 +9,8 @@ import common.taskbase.AbstractTargetTask;
 import conf.Configuration;
 import dbconnection.mysql.MySqlConnection;
 import org.springframework.jdbc.core.JdbcTemplate;
-import parse.ParseColumnDataToMysql;
-import parse.ParseTypeFromColumn;
+import parse.ParseColumnDataToMysqlData;
+import parse.ParseTypeFromColumnType;
 import thread.TargetTaskPoolManager;
 import util.Log;
 
@@ -120,7 +120,7 @@ public class MysqlTargetTask extends AbstractTargetTask {
             String columns = "(";
             String values = "values(";
             for (AbstractColumn columnData : columnList) {
-                Object value = ParseColumnDataToMysql.parseColumnData(columnData);
+                Object value = ParseColumnDataToMysqlData.parseColumnData(columnData);
                 columns += "`" + columnData.getColumnName() + "`,";
                 values += value + " , ";
             }
@@ -225,7 +225,7 @@ public class MysqlTargetTask extends AbstractTargetTask {
         StringBuilder createSql = new StringBuilder("create table if not exists " + dbName + "." + tableName + " ( ");
         for (AbstractColumn columnValue : columnDataList) {
             if (columnValue.getData() != null) {
-                ColumnType columnType = ParseTypeFromColumn.parseType(columnValue);
+                ColumnType columnType = ParseTypeFromColumnType.parseType(columnValue);
                 columnType.setDescType(DbTypeFlag.MYSQL);
                 createSql.append(columnType.toString() + ",");
             }
@@ -256,7 +256,7 @@ public class MysqlTargetTask extends AbstractTargetTask {
                 } else {
                     //修改表结构增加字段
                     String addColumnSql = "alter table " + dbTable + " add column ";
-                    ColumnType columnType = ParseTypeFromColumn.parseType(columnValue);
+                    ColumnType columnType = ParseTypeFromColumnType.parseType(columnValue);
                     addColumnSql += columnType.toString();
                     synchronized (MysqlTargetTask.class) {
                         // dcl
@@ -287,12 +287,12 @@ public class MysqlTargetTask extends AbstractTargetTask {
      */
     public static void detectionLength(String dbTableName, String columnName, AbstractColumn columnValue, String dsName) {
         ColumnType columnType = columnTypeMap.get((dsName + ":" + dbTableName + ":" + columnName).toUpperCase());
-        boolean isAlter = ParseTypeFromColumn.isModifyTypeOrLength(columnValue, columnType);
+        boolean isAlter = ParseTypeFromColumnType.isModifyTypeOrLength(columnValue, columnType);
         if (isAlter) {
             synchronized (MysqlTargetTask.class) {
                 columnType = columnTypeMap.get((dsName + ":" + dbTableName + ":" + columnName).toUpperCase());
-                if (ParseTypeFromColumn.isModifyTypeOrLength(columnValue, columnType)) {
-                    ColumnType columnTypeTemp = ParseTypeFromColumn.parseType(columnValue);
+                if (ParseTypeFromColumnType.isModifyTypeOrLength(columnValue, columnType)) {
+                    ColumnType columnTypeTemp = ParseTypeFromColumnType.parseType(columnValue);
                     String alterSql = "alter table " + dbTableName + " modify column" + columnTypeTemp.toString() + " ";
                     MySqlConnection.getJdbcTemplate(dsName).execute(alterSql);
                     columnTypeMap.put((dsName + ":" + dbTableName + ":" + columnName).toUpperCase(), columnTypeTemp);

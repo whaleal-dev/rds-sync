@@ -5,9 +5,6 @@ import common.columnclass.ColumnType;
 import common.dbtype.EnumColumnDataType;
 import common.dbtype.EnumMySqlDataType;
 import common.dbtype.MySqlType;
-import org.bson.Document;
-
-import java.time.LocalDateTime;
 
 /**
  * 解析mongodb数据到mysql类型类
@@ -15,7 +12,7 @@ import java.time.LocalDateTime;
  * @author lhp
  * @time 2021-05-31 13:12:12
  */
-public class ParseTypeFromColumn {
+public class ParseTypeFromColumnType {
 
     public static ColumnType parseType(AbstractColumn columnData) {
         ColumnType columnType = new ColumnType();
@@ -113,7 +110,7 @@ public class ParseTypeFromColumn {
                 break;
             case DOUBLE:
             case FLOAT: {
-                columnTypeTemp = ParseTypeFromColumn.parseType(columnValue);
+                columnTypeTemp = ParseTypeFromColumnType.parseType(columnValue);
                 if (columnValue.getData().toString().contains(".")) {
                     int oldPrecision = columnType.getPrecision();
                     int oldIntLength = columnType.getLength() - columnType.getPrecision();
