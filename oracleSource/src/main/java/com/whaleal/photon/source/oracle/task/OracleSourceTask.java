@@ -116,6 +116,7 @@ public class OracleSourceTask extends AbstractSourceTask {
                 String columnName = md.getColumnName(i);
                 //值
                 Object values = ((ResultSet) rs).getObject(md.getColumnName(i));
+                System.out.println(columnName +"          "+values.getClass());
                 AbstractColumn abstractColumn = TransformationOracleDataToColumn.parseValue(columnName, values);
                 abstractColumns.add(abstractColumn);
             }
