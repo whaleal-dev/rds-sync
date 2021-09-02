@@ -19,7 +19,7 @@
         </dependency>
         <dependency>
             <groupId>com.whaleal.photon</groupId>
-            <artifactId>oracle-source</artifactId>
+            <artifactId>oracleSource</artifactId>
             <version>1.0-SNAPSHOT</version>
         </dependency>
         <dependency>
