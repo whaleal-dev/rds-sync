@@ -32,8 +32,7 @@ public class Test {
         System.out.println("=========================================================================================");
 
         //取某列最大的 length
-        Connection connection = MySqlConnection.createConnection(programInfo.getSourceDsName(),
-        DataSourceUtil.getDataSourceByDsName(programInfo.getSourceDsName()));
+        Connection conn = MySqlConnection.getConnection(programInfo.getSourceDsName());
         JdbcTemplate jdbcTemplate = MySqlConnection.getJdbcTemplate(programInfo.getSourceDsName());
         String table = "community.community_banner";
         String baseSql = "select * from "+ table;

@@ -138,8 +138,7 @@ public class SingleTableSplitUtil {
         //取配置中的 fetchSize
         int fetchSize = programInfo.getFetchSize();
         //获取连接
-        Connection conn = MySqlConnection.createConnection(programInfo.getSourceDsName(),
-                DataSourceUtil.getDataSourceByDsName(programInfo.getSourceDsName()));
+        Connection conn = MySqlConnection.getConnection(programInfo.getSourceDsName());
         //字段构建的范围 sql pkRangeSQL
         Pair<Object, Object> minMaxPK = checkSplitPk(conn, pkRangeSQL, fetchSize, programInfo);
 
@@ -153,8 +152,7 @@ public class SingleTableSplitUtil {
         //取配置中的 fetchSize
         int fetchSize = programInfo.getFetchSize();
         //获取连接
-        Connection conn = MySqlConnection.createConnection(programInfo.getSourceDsName(),
-                DataSourceUtil.getDataSourceByDsName(programInfo.getSourceDsName()));
+        Connection conn = MySqlConnection.getConnection(programInfo.getSourceDsName());
         //字段构建的范围 sql pkRangeSQL
         Pair<Object, Object> minMaxPK = checkSplitPk(conn, pkRangeSQL, fetchSize, programInfo);
 

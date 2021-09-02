@@ -15,7 +15,8 @@ public class ConnectionTest {
     public static void main(String[] args) {
 
         Datasource proc4 = DBUtil.getSourceByProcName("proc4");
-        Connection connection = OracleConnection.createConnection(proc4);
+        OracleConnection.createConnection("proc4",proc4);
+        Connection connection = OracleConnection.getConnection("proc4");
         JdbcTemplate jdbcTemplate = OracleConnection.getJdbcTemplate(proc4.getName());
         List<Map<String, Object>> dbTableList = jdbcTemplate.queryForList("select * from USER_TABLES");
         for (Map dbTableMap : dbTableList) {

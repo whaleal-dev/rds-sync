@@ -25,11 +25,11 @@ import java.util.concurrent.TimeUnit;
 /**
  * @author: lhp
  * @time: 2021/7/19 3:02 下午
- * @desc: 主类
+ * @desc: MongodbSource类 获取所有的表，切分任务
  */
 @NoArgsConstructor
 public class MongodbSource extends SourceMetadata {
-    MongoClient mongoClient = null;
+    private MongoClient mongoClient;
 
     public MongodbSource(ProgramInfo programInfo, MemoryCache memoryCache) {
         this.sourceName = programInfo.getSourceDsName();
@@ -43,16 +43,12 @@ public class MongodbSource extends SourceMetadata {
 
     @Override
     public void createTask() {
-
-        // 遍历执行源数据源抽取
         // 获取数据源的全部库表
         getAllDbCollections(sourceName);
         // 启动获取提交Task任务的线程
         submitSourceTask();
         // 开始遍历抽取该数据源的所有库表
         startFromSource(sourceName, false);
-
-
     }
 
     @Override
@@ -61,10 +57,10 @@ public class MongodbSource extends SourceMetadata {
         MongoCursor<String> mongoCursorOfDb = mongoIterableOfDb.iterator();
         // 遍历库列表
         while (mongoCursorOfDb.hasNext()) {
-            //System.out.println(dbTables);
             String dbName = mongoCursorOfDb.next();
-            if (dbName.equalsIgnoreCase("admin") || dbName.equalsIgnoreCase("local") || dbName.equalsIgnoreCase("config")) {
-                Log.info("admin,local,config库数据不进行同步");
+            if (dbName.equalsIgnoreCase("admin") || dbName.equalsIgnoreCase("local") ||
+                    dbName.equalsIgnoreCase("config")) {
+                Log.info(dbName + "库数据不进行同步");
                 continue;
             }
             MongoIterable<String> mongoIterableOfTable = MongoDbConnection.getMongoClient(sourceName).getDatabase(dbName).listCollectionNames();
@@ -73,6 +69,7 @@ public class MongodbSource extends SourceMetadata {
             while (mongoCursorOfTable.hasNext()) {
                 String tableName = mongoCursorOfTable.next();
                 String dbTable = dbName + "." + tableName;
+                // 顺序不可写法反
                 if (dbTable.matches(dbTableWhite)) {
                     dbTables.put(dbTable, dbTable);
                 }
@@ -89,30 +86,30 @@ public class MongodbSource extends SourceMetadata {
             createSourceEntity(sourceName, next.getValue());
             dbTables.remove(next.getKey());
         }
+        // 所有表均已推送到分析队列中
         isGetAllDbTable = true;
     }
 
     @Override
     public void createSourceEntity(String sourceName, String dbTableName) {
-        MongodbSourceSplitRange source = new MongodbSourceSplitRange(sourceName);
-        Map<Integer, Range> map = source.getIdTypes(dbTableName);
+        MongodbSourceSplitRange mongodbSourceSplitRange = new MongodbSourceSplitRange(sourceName);
+        Map<Integer, Range> map = mongodbSourceSplitRange.getIdTypes(dbTableName);
         Iterator<Map.Entry<Integer, Range>> rangeMap = map.entrySet().iterator();
         Runnable runnable = new Runnable() {
             @Override
             public void run() {
                 while (rangeMap.hasNext()) {
+                    // sys线程加一
                     SysPoolManager.setSysActiveThreadNum(proName, 1);
-                    //System.out.println("getSysThreadNum1:" + SysPoolManager.setSysActiveThreadNum(proName, 0));
                     Map.Entry<Integer, Range> next = rangeMap.next();
                     Range rangeOfTable = next.getValue();
                     while (rangeOfTable.getMinId() != null) {
-                        Range range = source.splitRange(dbTableName, rangeOfTable, next.getKey());
+                        Range range = mongodbSourceSplitRange.splitRange(dbTableName, rangeOfTable, next.getKey());
                         SourceTaskInfo taskMetadata = new SourceTaskInfo(range, dbTableName, sourceName);
-                        // Log.info("taskMetadata配置信息:" + taskMetadata.toString());
                         pushTaskMeta(proName, taskMetadata);
                     }
+                    // sys线程减一
                     SysPoolManager.setSysActiveThreadNum(proName, -1);
-                    //System.out.println("getSysThreadNum2:" + SysPoolManager.setSysActiveThreadNum(proName, 0));
                 }
             }
         };

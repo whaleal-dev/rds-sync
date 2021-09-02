@@ -51,7 +51,7 @@ public class MysqlSourceSplitRange {
 
     public static List<String> getDbTables(ProgramInfo programInfo) throws SQLException {
         //获取连接
-        Connection conn = MySqlConnection.createConnection(programInfo.getSourceDsName(), DataSourceUtil.getDataSourceByDsName(programInfo.getSourceDsName()));
+        Connection conn = MySqlConnection.getConnection(programInfo.getSourceDsName());
         DatabaseMetaData metaData = conn.getMetaData();
         String[] types = {"TABLE"};
         ResultSet rs = metaData.getTables(null, null, "%", types);
