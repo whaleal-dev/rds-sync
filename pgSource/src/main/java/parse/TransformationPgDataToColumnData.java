@@ -4,28 +4,20 @@ package parse;
 import com.google.gson.Gson;
 import common.column.*;
 
-import common.dbtype.EnumMongoDbDataType;
 import common.dbtype.EnumPgDataType;
-import org.bson.BsonRegularExpression;
-import org.bson.BsonTimestamp;
-import org.bson.types.Code;
-import org.bson.types.Decimal128;
-import org.bson.types.ObjectId;
 import org.postgresql.util.PGobject;
 
 import java.math.BigDecimal;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.time.format.DateTimeFormatter;
-import java.util.Date;
-import java.util.List;
 import java.util.Locale;
 
 
 /**
  * @author liheping
  */
-public class TransformationPgDataToColumn {
+public class TransformationPgDataToColumnData {
 
     private static final Gson gson = new Gson();
     /**
@@ -44,8 +36,6 @@ public class TransformationPgDataToColumn {
         String type = object.getClass().getSimpleName().toUpperCase();
         EnumPgDataType dataType = EnumPgDataType.valueOf(type);
         switch (dataType) {
-            case STRING:
-                return new StringColumn(columnName, object.toString());
             case PGOBJECT:
                 return new PgObjectColumn(columnName, (PGobject) object);
             case LONG:
@@ -65,7 +55,8 @@ public class TransformationPgDataToColumn {
             case BOOLEAN:
                 return new BoolColumn(columnName, ((Boolean) object));
             case BYTEARRAY:
-                return new BytesColumn(columnName, ((Byte[]) object));
+                return new BytesColumn(columnName, ((byte[]) object));
+            case STRING:
             default:
                 return new StringColumn(columnName, object.toString());
         }

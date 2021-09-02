@@ -14,12 +14,13 @@ import java.util.Date;
 /**
  * @author liheping
  */
-public class ParseColumnDataToMysql {
+public class ParseColumnDataToMysqlData {
     private static DateTimeFormatter timestampSimpleDateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSz");
 
     public static Object parseColumnData(AbstractColumn columnData) {
         String type = columnData.getClass().getSimpleName().toUpperCase();
         EnumColumnDataType enumColumnDataType = EnumColumnDataType.valueOf(type);
+        // blob没解析 bytes 时间类型的转换
         switch (enumColumnDataType) {
             case NULLCOLUMN:
                 return null;
@@ -30,20 +31,28 @@ public class ParseColumnDataToMysql {
                     return 0;
                 }
             case INTCOLUMN:
+            case SHORTCOLUMN:
             case LONGCOLUMN:
             case DOUBLECOLUMN:
             case FLOATCOLUMN:
+            case BIGDECIMALCOLUMN:
                 return columnData.getData();
-            case TIMESTAMPCOLUMN:
-//                return columnData.getData();
-                return null;
-            case DATETIMECOLUMN:
-                return "'" + new Timestamp((long) columnData.getData()) + "'";
-            case DATECOLUMN:
+
+
+//            case DATECOLUMN:
+//
+//            case TIMECOLUN:
+//            case TIMESTAMPCOLUMN:
+////                return columnData.getData();
+//                return null;
+//            case DATETIMECOLUMN:
+//                return "'" + new Timestamp((long) columnData.getData()) + "'";
+
             case STRINGCOLUMN:
             case OBJECTIDCOLUMN:
             case JSONCOLUMN:
             case ARRAYCOLUMN:
+            case PGOBJECTCOLUMN:
             default:
                 return "'" + columnData.getData().toString().replaceAll("'", "\\`") + "'";
         }

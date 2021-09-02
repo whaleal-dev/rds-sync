@@ -2,20 +2,14 @@ package task;
 
 
 import cache.MemoryCache;
-import com.mongodb.BasicDBObject;
-import com.mongodb.client.MongoClient;
-import com.mongodb.client.MongoCursor;
 import common.column.AbstractColumn;
 import common.dataclass.BatchDataEntity;
 import common.dataclass.Range;
 import common.taskbase.SourceTaskInfo;
 import common.taskbase.SourceTaskInterface;
-import dbconnection.mongodb.MongoDbConnection;
 import dbconnection.pgserver.PgServerConnection;
-import execute.PgSource;
-import org.bson.Document;
 import org.springframework.jdbc.core.JdbcTemplate;
-import parse.TransformationPgDataToColumn;
+import parse.TransformationPgDataToColumnData;
 import thread.SourceTaskPoolManager;
 import util.Log;
 
@@ -24,9 +18,7 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -137,7 +129,7 @@ public class PgSourceTask implements Runnable, SourceTaskInterface {
                     String columnName = md.getColumnName(i);
                     //值
                     Object values = rs.getObject(md.getColumnName(i));
-                    AbstractColumn abstractColumn = TransformationPgDataToColumn.parseValue(columnName, values);
+                    AbstractColumn abstractColumn = TransformationPgDataToColumnData.parseValue(columnName, values);
                     abstractColumns.add(abstractColumn);
                //     System.out.println("columnName:" + columnName + "      values:" + values+"        type"+values.getClass());
                 }

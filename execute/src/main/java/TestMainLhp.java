@@ -27,14 +27,10 @@ import java.util.Map;
  */
 public class TestMainLhp {
     public static void main(String[] args) throws InterruptedException {
-        testPgToMongoDb();
+        testMongoDbToMongoDb();
 
 
-        List<Map<String, Object>> mapList = PgServerConnection.getJdbcTemplate("pg").queryForList("select * from  public.nettb ");
 
-        for (Map<String, Object> map : mapList) {
-            System.out.println(map.get("intclmn").getClass());
-        }
 
     }
 
