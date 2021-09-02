@@ -41,7 +41,7 @@ public class SingleTableSplitUtil {
             pluginParams.add(range);
             return pluginParams;
         }
-        Log.info("      " + table + "   表使用了    " + splitPkName + "     字段切分   ");
+        Log.info("      " + table + "   表使用了    \"" + splitPkName + "\"     字段切分   ");
         String column = "*";
         String where = null;
         //配置中有无where
@@ -254,8 +254,7 @@ public class SingleTableSplitUtil {
             return getPK(table, configuration);
         }else{
             //智能取切分字段
-            Connection connection = MySqlConnection.createConnection(configuration.getSourceDsName(),
-                    DataSourceUtil.getDataSourceByDsName(configuration.getSourceDsName()));
+            Connection connection = MySqlConnection.getConnection(configuration.getSourceDsName());
             JdbcTemplate jdbcTemplate = MySqlConnection.getJdbcTemplate(configuration.getSourceDsName());
             String sql = "select * from "+ table;
             SqlRowSet sqlRowSet = jdbcTemplate.queryForRowSet(sql);

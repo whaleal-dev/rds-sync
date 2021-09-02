@@ -27,15 +27,6 @@ import util.StringUtil;
 public class TestMainJY {
     public static void main(String[] args) throws InterruptedException {
 
-//        Configuration configuration = ConfigurationUtil.getConfiguration("proc3");
-//        MongoClient mongoClient = MongoDbConnection.getMongoClient(configuration.getSourceDsName(), DataSourceUtil.getDataSourceByDsName(configuration.getProName(), configuration.getSourceDsName()));
-//        MongoCursor<String> photon = mongoClient.getDatabase("photon").listCollectionNames().iterator();
-//        while (photon.hasNext()){
-//            String s = photon.next().toString();
-//            System.out.println(s+"   "+mongoClient.getDatabase("photon").getCollection(s).countDocuments());
-//        }
-//        Thread.sleep(10000);
-//        testMongoDbToMongoDb();
         testMysqlToMongoDb();
     }
 
@@ -74,20 +65,13 @@ public class TestMainJY {
         //配置缓存
         configuration.setMemoryCache(memoryCache);
         //源线程池
-//        SourceTaskPoolManager sourceTaskPoolManager = new SourceTaskPoolManager(configuration.getProName(),
-//                3, 3);
         SourceTaskPoolManager sourceTaskPoolManager = new SourceTaskPoolManager(configuration.getProName(),
                 configuration.getSourceThreadNum(), configuration.getSourceThreadNum());
-//        SourceTaskPoolManager.addSourceTaskPoolManager(configuration.getProName(), sourceTaskPoolManager);
         //系统线程池
         SysPoolManager sysPoolManager = new SysPoolManager(configuration.getProName(), 5, 5);
-//        SysPoolManager sysPoolManager = new SysPoolManager(configuration.getProName(),
-//                configuration.getSourceThreadNum(), configuration.getSourceThreadNum());
-//        SysPoolManager.addSysTaskPoolManager(configuration.getProName(), sysPoolManager);
         //目标线程池
         TargetTaskPoolManager targetTaskPoolManager = new TargetTaskPoolManager(configuration.getProName(),
                 5, 5);
-//        TargetTaskPoolManager.addTargetTaskPoolManager(configuration.getProName(), targetTaskPoolManager);
 
         MongodbTarget mongodbTarget = new MongodbTarget(configuration, memoryCache, configuration.getProName());
         mongodbTarget.startToTarget();
