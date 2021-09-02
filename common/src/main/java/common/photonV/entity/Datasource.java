@@ -19,11 +19,9 @@ import java.util.Map;
 @AllArgsConstructor
 @NoArgsConstructor
 public class Datasource {
-
     /**
      * 主键
      */
-
     private String id;
 
     /**

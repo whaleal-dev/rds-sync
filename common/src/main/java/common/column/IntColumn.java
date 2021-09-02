@@ -23,7 +23,7 @@ public class IntColumn extends AbstractColumn {
     }
 
     @Override
-    public Object getData() {
+    public Integer getData() {
         return this.data;
     }
 }

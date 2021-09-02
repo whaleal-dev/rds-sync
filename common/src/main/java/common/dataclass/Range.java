@@ -44,8 +44,11 @@ public class Range {
      */
     private int _idType;
     /**
-     * 查询语句 一般为sql
+     * 查询语句 一般为sql后面的条件
      */
     private String query;
-
+    /**
+     * 查询语句 一般为一条完整的sql
+     */
+    private String sql;
 }

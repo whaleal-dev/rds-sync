@@ -68,20 +68,20 @@ public class GetDbTypeOfMongodb {
 
         Iterator<Map.Entry<String, Object>> iterator = first.entrySet().iterator();
 
-//        while (iterator.hasNext()) {
-//            Map.Entry<String, Object> next = iterator.next();
-//            // System.out.println(next.getKey());
-//            //System.out.println(next.getValue());
-//            try {
-//                // System.out.println(next.getValue().getClass());
-//                String type = next.getValue().getClass().getSimpleName().toUpperCase();
-//
-//                System.out.print(next.getValue().toString() + "" + type + "(\"" + type + "\"),");
-//            } catch (Exception e) {
-//
-//            }
-//
-//        }
+        while (iterator.hasNext()) {
+            Map.Entry<String, Object> next = iterator.next();
+            // System.out.println(next.getKey());
+            //System.out.println(next.getValue());
+            try {
+                // System.out.println(next.getValue().getClass());
+                String type = next.getValue().getClass().getSimpleName().toUpperCase();
+
+                System.out.print(type + "(\"" + type + "\"),");
+            } catch (Exception e) {
+
+            }
+
+        }
 
 
         List list = new ArrayList();

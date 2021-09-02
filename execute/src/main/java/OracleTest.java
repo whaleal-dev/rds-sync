@@ -1,21 +1,16 @@
 import cache.MemoryCache;
 import com.whaleal.photon.source.oracle.execute.OracleSource;
-import conf.Configuration;
+import conf.ProgramInfo;
 import configuration.ConfigurationUtil;
 import datasource.DataSourceUtil;
 import dbconnection.mongodb.MongoDbConnection;
 import dbconnection.oracle.OracleConnection;
-import dbconnection.pgserver.PgServerConnection;
 import execute.MongodbTarget;
-import execute.PgSource;
 import task.MongodbTargetTask;
 import thread.SourceTaskPoolManager;
 import thread.SysPoolManager;
 import thread.TargetTaskPoolManager;
 import util.Log;
-
-import java.util.List;
-import java.util.Map;
 
 public class OracleTest {
     public static void main(String[] args) throws InterruptedException {
@@ -32,42 +27,42 @@ public class OracleTest {
 
     public static void testOracleToMongoDb(){
         //获取配置
-        Configuration configuration = ConfigurationUtil.getConfiguration("proc4");
+        ProgramInfo programInfo = ConfigurationUtil.getConfiguration("proc4");
 
 
-        OracleConnection.createConnection(configuration.getSourceDsName(), DataSourceUtil.getDataSourceByDsName(configuration.getSourceDsName()));
+        OracleConnection.createConnection(programInfo.getSourceDsName(), DataSourceUtil.getDataSourceByDsName(programInfo.getSourceDsName()));
 
-        MongoDbConnection.createMonoDbClient(configuration.getTargetDsName(), DataSourceUtil.getDataSourceByDsName(configuration.getTargetDsName()));
+        MongoDbConnection.createMonoDbClient(programInfo.getTargetDsName(), DataSourceUtil.getDataSourceByDsName(programInfo.getTargetDsName()));
         //缓存
-        MemoryCache memoryCache = new MemoryCache(configuration.getTaskName(),
-                configuration.getProName(), configuration.getCacheNum(), configuration.getCacheSize(), true);
+        MemoryCache memoryCache = new MemoryCache(programInfo.getTaskName(),
+                programInfo.getProName(), programInfo.getCacheNum(), programInfo.getCacheSize(), true);
         //配置缓存
-        configuration.setMemoryCache(memoryCache);
+        programInfo.setMemoryCache(memoryCache);
 
-        SourceTaskPoolManager sourceTaskPoolManager = new SourceTaskPoolManager(configuration.getProName(),
-                configuration.getSourceThreadNum(), configuration.getSourceThreadNum());
+        SourceTaskPoolManager sourceTaskPoolManager = new SourceTaskPoolManager(programInfo.getProName(),
+                programInfo.getSourceThreadNum(), programInfo.getSourceThreadNum());
 
-        SysPoolManager sysPoolManager = new SysPoolManager(configuration.getProName(), 5, 5);
+        SysPoolManager sysPoolManager = new SysPoolManager(programInfo.getProName(), 5, 5);
 
 
-        TargetTaskPoolManager targetTaskPoolManager = new TargetTaskPoolManager(configuration.getProName(),
+        TargetTaskPoolManager targetTaskPoolManager = new TargetTaskPoolManager(programInfo.getProName(),
                 5, 5);
 
 
-        MongodbTarget mongodbTarget = new MongodbTarget(configuration, memoryCache, configuration.getProName());
+        MongodbTarget mongodbTarget = new MongodbTarget(programInfo, memoryCache, programInfo.getProName());
         mongodbTarget.startToTarget();
 
-        OracleSource oracleSource = new OracleSource(configuration, memoryCache);
+        OracleSource oracleSource = new OracleSource(programInfo, memoryCache);
         oracleSource.createTask();
 
         while (true) {
             try {
                 Thread.sleep(10000);
-                int sourceThread = SourceTaskPoolManager.setSourceActiveThreadNum(configuration.getProName(), 0);
+                int sourceThread = SourceTaskPoolManager.setSourceActiveThreadNum(programInfo.getProName(), 0);
                 boolean getAllDbTable = oracleSource.isGetAllDbTable();
                 int sourceTaskQueueSize = oracleSource.getTaskMetadataQueueSize();
-                int setSysActiveThreadNum = SysPoolManager.setSysActiveThreadNum(configuration.getProName(), 0);
-                int targetActiveThreadNum = TargetTaskPoolManager.setTargetActiveThreadNum(configuration.getProName(), 0);
+                int setSysActiveThreadNum = SysPoolManager.setSysActiveThreadNum(programInfo.getProName(), 0);
+                int targetActiveThreadNum = TargetTaskPoolManager.setTargetActiveThreadNum(programInfo.getProName(), 0);
                 int allDataCacheNum = memoryCache.getAllDataCacheNum();
                 Log.info(setSysActiveThreadNum + "");
                 Log.info("sum:" + (sourceThread + sourceTaskQueueSize + allDataCacheNum + setSysActiveThreadNum));
@@ -80,27 +75,27 @@ public class OracleTest {
                 if ((sourceThread + sourceTaskQueueSize + allDataCacheNum + setSysActiveThreadNum + targetActiveThreadNum) == 0 && getAllDbTable) {
                     Thread.sleep(10000);
                     try {
-                        TargetTaskPoolManager.destroy(configuration.getProName());
+                        TargetTaskPoolManager.destroy(programInfo.getProName());
                     } catch (Exception e) {
                         Log.info(e.getMessage());
                     }
                     try {
-                        SourceTaskPoolManager.destroy(configuration.getProName());
+                        SourceTaskPoolManager.destroy(programInfo.getProName());
                     } catch (Exception e) {
                         Log.info(e.getMessage());
                     }
                     try {
-                        SysPoolManager.destroy(configuration.getProName());
+                        SysPoolManager.destroy(programInfo.getProName());
                     } catch (Exception e) {
                         Log.info(e.getMessage());
                     }
-                    MongodbTargetTask.setIsStopFlagOfTarget(configuration.getProName(), false);
+                    MongodbTargetTask.setIsStopFlagOfTarget(programInfo.getProName(), false);
                     memoryCache.gcMemoryCache();
-                    Log.info("procName:" + configuration.getProName() + "关闭成功");
+                    Log.info("procName:" + programInfo.getProName() + "关闭成功");
                     Thread.sleep(10000);
                     break;
                 } else if ((sourceThread + sourceTaskQueueSize + sourceTaskQueueSize + allDataCacheNum + setSysActiveThreadNum) == 0 && getAllDbTable) {
-                    MongodbTargetTask.setIsStopFlagOfTarget(configuration.getProName(), true);
+                    MongodbTargetTask.setIsStopFlagOfTarget(programInfo.getProName(), true);
                 }
             } catch (InterruptedException e) {
                 e.printStackTrace();

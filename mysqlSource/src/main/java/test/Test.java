@@ -1,7 +1,7 @@
 package test;
 
 import common.dataclass.Range;
-import conf.Configuration;
+import conf.ProgramInfo;
 import configuration.ConfigurationUtil;
 import datasource.DataSourceUtil;
 import dbconnection.mysql.MySqlConnection;
@@ -11,10 +11,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.jdbc.support.rowset.SqlRowSetMetaData;
-import org.springframework.util.ObjectUtils;
-import sourcesplit.MysqlSourceSplitRange;
-import sourcesplit.SingleTableSplitUtil;
-import util.Log;
 
 import java.sql.*;
 import java.util.*;
@@ -27,18 +23,18 @@ public class Test {
 
 
     public static void main(String[] args) throws SQLException {
-        Configuration configuration = ConfigurationUtil.getConfiguration("proc2");
+        ProgramInfo programInfo = ConfigurationUtil.getConfiguration("proc2");
         System.out.println("=========================================================================================");
         System.out.println("=======================================读取到配置如下=======================================");
         System.out.println("=========================================================================================");
-        System.out.println(configuration);
+        System.out.println(programInfo);
         System.out.println("=========================================================================================");
         System.out.println("=========================================================================================");
 
         //取某列最大的 length
-        Connection connection = MySqlConnection.createConnection(configuration.getSourceDsName(),
-        DataSourceUtil.getDataSourceByDsName(configuration.getSourceDsName()));
-        JdbcTemplate jdbcTemplate = MySqlConnection.getJdbcTemplate(configuration.getSourceDsName());
+        Connection connection = MySqlConnection.createConnection(programInfo.getSourceDsName(),
+        DataSourceUtil.getDataSourceByDsName(programInfo.getSourceDsName()));
+        JdbcTemplate jdbcTemplate = MySqlConnection.getJdbcTemplate(programInfo.getSourceDsName());
         String table = "community.community_banner";
         String baseSql = "select * from "+ table;
         SqlRowSet sqlRowSet = jdbcTemplate.queryForRowSet(baseSql);
@@ -142,9 +138,9 @@ public class Test {
 
 
         //取表字段类型
-//        Connection connection = MySqlConnection.createConnection(configuration.getSourceDsName(),
-//                DataSourceUtil.getDataSourceByDsName(configuration.getSourceDsName()));
-//        JdbcTemplate jdbcTemplate = MySqlConnection.getJdbcTemplate(configuration.getSourceDsName());
+//        Connection connection = MySqlConnection.createConnection(programInfo.getSourceDsName(),
+//                DataSourceUtil.getDataSourceByDsName(programInfo.getSourceDsName()));
+//        JdbcTemplate jdbcTemplate = MySqlConnection.getJdbcTemplate(programInfo.getSourceDsName());
 ////        List<Map<String, Object>> tableMeteColumn = jdbcTemplate.queryForList(
 ////                "SELECT column_name,data_type FROM information_schema.columns t WHERE t.table_catalog='test' AND table_name ='student' order by ordinal_position ");
 ////        Set<String> intColumnSet = new HashSet<>();
@@ -183,13 +179,13 @@ public class Test {
 //        }
 ////        System.out.println("    " + "tableFieldList" + longTableFieldList.get(0));
 //        if (!longFieldMap.isEmpty()) {
-//            Pair<Object, Object> pair = SingleTableSplitUtil.getPKRange(configuration, longTableFieldList.get(0).get("fieldName"), tableName, null);
+//            Pair<Object, Object> pair = SingleTableSplitUtil.getPKRange(programInfo, longTableFieldList.get(0).get("fieldName"), tableName, null);
 //            Long max = Long.parseLong(pair.getRight().toString());
 //            String maxName = longTableFieldList.get(0).get("fieldName");
 //            for (Map<String, String> tableField : longTableFieldList) {
 //                System.out.println("    " + tableName + "表中为 bigint 、 int、 tinyint 的字段名为 =   " + tableField.get("fieldName"));
 //                String split = tableField.get("fieldName");
-//                Pair<Object, Object> minMaxPK = SingleTableSplitUtil.getPKRange(configuration, split, tableName, null);
+//                Pair<Object, Object> minMaxPK = SingleTableSplitUtil.getPKRange(programInfo, split, tableName, null);
 //                System.out.println("    "+ tableField.get("fieldName") + "字段的范围为" + "minMaxPK    =   " + minMaxPK.toString());
 //                System.out.println("    minMaxPK.right  =   "+ minMaxPK.getRight());
 //                if ( max <= Long.parseLong(minMaxPK.getRight().toString())) {
@@ -222,23 +218,23 @@ public class Test {
         // minMaxPK 最小到最大字段
 //        String split = getPK(tableName, connection);
 //        String split = "dict_node";
-//        Pair<Object, Object> minMaxPK = SingleTableSplitUtil.getPKRange(configuration, split, tableName, null);
+//        Pair<Object, Object> minMaxPK = SingleTableSplitUtil.getPKRange(programInfo, split, tableName, null);
 //        System.out.println("minMaxPK    =   " + minMaxPK.toString());
 
         //切表测试
-/*//        configuration.setDbTableWhite("(community.community_dict)||(community.sys_menu)");
-//        configuration.setDbTableWhite("(community.community_dict)||(community.sys_menu)||(community.community.banner)");
-        configuration.setDbTableWhite("community.test");
-//        configuration.setDbTableWhite("community.community_category");
-//        configuration.setDbTableWhite("community.community_banner");
-//        configuration.setSplitPk("dict_node");
-//        configuration.setDbTableWhite("community.sys_.*");
-        configuration.setAdviceNumber(3);
-//        configuration.setDbTableWhite("community.sys_captcha");
+/*//        programInfo.setDbTableWhite("(community.community_dict)||(community.sys_menu)");
+//        programInfo.setDbTableWhite("(community.community_dict)||(community.sys_menu)||(community.community.banner)");
+        programInfo.setDbTableWhite("community.test");
+//        programInfo.setDbTableWhite("community.community_category");
+//        programInfo.setDbTableWhite("community.community_banner");
+//        programInfo.setSplitPk("dict_node");
+//        programInfo.setDbTableWhite("community.sys_.*");
+        programInfo.setAdviceNumber(3);
+//        programInfo.setDbTableWhite("community.sys_captcha");
         List<Range> list = new ArrayList<>();
         try {
-            System.out.println("====" + configuration);
-            list = MysqlSourceSplitRange.doSplit(configuration);
+            System.out.println("====" + programInfo);
+            list = MysqlSourceSplitRange.doSplit(programInfo);
         } catch (Exception e) {
             e.printStackTrace();
             Log.error(e.getMessage());
@@ -247,23 +243,23 @@ public class Test {
             System.out.println("切分的range    =   " + range);
         }
         System.out.println("切分份数    =   " + list.size());
-        System.out.println("使用的切分字段     :   " + configuration.getSplitPk());*/
+        System.out.println("使用的切分字段     :   " + programInfo.getSplitPk());*/
 
         //获取主键测试
-/*        Connection conn = MySqlConnection.createConnection(configuration.getSourceDsName(),
-                DataSourceUtil.getDataSourceByDsName(configuration.getSourceDsName()));
+/*        Connection conn = MySqlConnection.createConnection(programInfo.getSourceDsName(),
+                DataSourceUtil.getDataSourceByDsName(programInfo.getSourceDsName()));
         String pkName = getPK("community_banner", conn);
         System.out.println("pkName =       " + pkName);
 
-        List<String> tables = MysqlSourceSplitRange.getDbTables(configuration);
+        List<String> tables = MysqlSourceSplitRange.getDbTables(programInfo);
         System.out.println("tables =  " + tables.toString());
         for (String table : tables){
             System.out.println("table =    " + table);
         }*/
 
         // jdbc 获取各种表信息
-//        Connection conn = MySqlConnection.createConnection(configuration.getSourceDsName(),
-//                DataSourceUtil.getDataSourceByDsName(configuration.getSourceDsName()));
+//        Connection conn = MySqlConnection.createConnection(programInfo.getSourceDsName(),
+//                DataSourceUtil.getDataSourceByDsName(programInfo.getSourceDsName()));
 //        System.out.println(getTables(conn));
 //        System.out.println("=============================");
 //        Statement st = conn.createStatement();
@@ -291,17 +287,17 @@ public class Test {
 
 
 
-//        List<Range> listRange = ReaderSplitUtil.doSplit(configuration, configuration.getAdviceNumber(),
-//                ReaderSplitUtil.getTableNumber(configuration));
+//        List<Range> listRange = ReaderSplitUtil.doSplit(programInfo, programInfo.getAdviceNumber(),
+//                ReaderSplitUtil.getTableNumber(programInfo));
 //        System.out.println("listRange =  " + listRange.toString());
 //        for (Range splitRange : listRange){
 //            System.out.println("splitRange =    " + splitRange);
 //        }
 
 
-//        test1(configuration);
-//        List<Configuration> listConf = ReaderSplitUtil.doSplit(configuration, configuration.getInt("adviceNumber", 2));
-//        Configuration splitConf = listConf.get(1);
+//        test1(programInfo);
+//        List<ProgramInfo> listConf = ReaderSplitUtil.doSplit(programInfo, programInfo.getInt("adviceNumber", 2));
+//        ProgramInfo splitConf = listConf.get(1);
 //        MysqlSourceTaskInfo taskMetadata = MysqlSourceTaskInfo.builder().rangeSql(splitConf.getString(Key.QUERY_SQL))
 //                .sourceUrl(splitConf.getString(Key.JDBC_URL)).databaseType(splitConf.getString(Key.DATABASE_TYPE))
 //                .sourceUsername(splitConf.getString(Key.USERNAME)).sourcePassword(splitConf.getString(Key.PASSWORD))
@@ -312,8 +308,8 @@ public class Test {
 //                .build();
 //
 //        System.out.println("taskMetadata =      " + taskMetadata);
-//        getDataFromCollection(configuration);
-//        getAllDbTables(configuration);
+//        getDataFromCollection(programInfo);
+//        getAllDbTables(programInfo);
 
 
     private static boolean isLongType(int type) {
@@ -343,7 +339,7 @@ public class Test {
         return PKName;
     }
 
-    public static void test1(Configuration conf) throws SQLException {
+    public static void test1(ProgramInfo conf) throws SQLException {
 //        List<JSONObject> connConfList = conf.getList(Key.CONNECTION, JSONObject.class);
 //        Connection conn = DBUtil.getConnection(conf);
 //        DatabaseMetaData metaData = conn.getMetaData();
@@ -386,7 +382,7 @@ public class Test {
 //        } catch (SQLException throwables) {
 //            throwables.printStackTrace();
 //        }
-    public static void getAllDbTables(Configuration conf) throws SQLException {
+    public static void getAllDbTables(ProgramInfo conf) throws SQLException {
 //        List<JSONObject> connConfList = conf.getList("connection", JSONObject.class);
 //        String jdbcUrl = connConfList.get(3).getString(Key.JDBC_URL);
 //        Connection conn = DBUtil.getConnection(conf);
@@ -413,11 +409,11 @@ public class Test {
 //        Log.info("sourceName:  " + conf.getString("database") + ",全量同步的表列表:  " + dbTables);
     }
 
-    public static void getDataFromCollection(Configuration conf) {
+    public static void getDataFromCollection(ProgramInfo conf) {
 //
 //        MysqlSourceTaskInfo taskMetadata = new MysqlSourceTaskInfo();
-//        List<Configuration> listConf = ReaderSplitUtil.doSplit(conf, conf.getInt("adviceNumber", 2));
-//        Configuration splitConf = listConf.get(1);
+//        List<ProgramInfo> listConf = ReaderSplitUtil.doSplit(conf, conf.getInt("adviceNumber", 2));
+//        ProgramInfo splitConf = listConf.get(1);
 //
 //        String rangeSql = splitConf.getString(Key.QUERY_SQL);
 //        String sourceUrl = splitConf.getString(Key.JDBC_URL);

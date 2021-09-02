@@ -6,7 +6,7 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 /**
- * @description:int字段类
+ * @description:short字段类
  * @author: lhp
  * @time: 2021/8/23 9:53 上午
  */

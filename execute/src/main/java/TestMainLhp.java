@@ -1,14 +1,13 @@
 import cache.MemoryCache;
 import common.OplogMetadata;
 import common.photonV.entity.TaskTrigger;
-import conf.Configuration;
+import conf.ProgramInfo;
 import configuration.ConfigurationUtil;
 import datasource.DataSourceUtil;
 import dbconnection.mongodb.MongoDbConnection;
 import dbconnection.mysql.MySqlConnection;
 import dbconnection.pgserver.PgServerConnection;
 import execute.*;
-import org.postgresql.util.PGobject;
 import task.*;
 import thread.SourceTaskPoolManager;
 import thread.SysPoolManager;
@@ -16,9 +15,6 @@ import thread.TargetTaskPoolManager;
 import trigger.TriggerUtil;
 import util.Log;
 import util.StringUtil;
-
-import java.util.List;
-import java.util.Map;
 
 /**
  * @description:
@@ -35,66 +31,66 @@ public class TestMainLhp {
     }
 
     public static void testRealTimeOfMongodb() {
-        Configuration configuration = ConfigurationUtil.getConfiguration("proc3");
-        configuration.setDbTableWhite("\\w.+");
-        MongoDbConnection.createMonoDbClient(configuration.getSourceDsName(), DataSourceUtil.getDataSourceByDsName(configuration.getSourceDsName()));
+        ProgramInfo programInfo = ConfigurationUtil.getConfiguration("proc3");
+        programInfo.setDbTableWhite("\\w.+");
+        MongoDbConnection.createMonoDbClient(programInfo.getSourceDsName(), DataSourceUtil.getDataSourceByDsName(programInfo.getSourceDsName()));
 
-        MongoDbConnection.createMonoDbClient(configuration.getTargetDsName(), DataSourceUtil.getDataSourceByDsName(configuration.getTargetDsName()));
+        MongoDbConnection.createMonoDbClient(programInfo.getTargetDsName(), DataSourceUtil.getDataSourceByDsName(programInfo.getTargetDsName()));
 
 
-        SourceTaskPoolManager sourceTaskPoolManager = new SourceTaskPoolManager(configuration.getProName(), configuration.getSourceThreadNum(), configuration.getSourceThreadNum());
+        SourceTaskPoolManager sourceTaskPoolManager = new SourceTaskPoolManager(programInfo.getProName(), programInfo.getSourceThreadNum(), programInfo.getSourceThreadNum());
 
 
         TargetTaskPoolManager targetTaskPoolManager = new
-                TargetTaskPoolManager(configuration.getProName(), 10,
+                TargetTaskPoolManager(programInfo.getProName(), 10,
                 10);
 
-        OplogMetadata oplogMetadata = new OplogMetadata(configuration);
+        OplogMetadata oplogMetadata = new OplogMetadata(programInfo);
 
-        TargetTaskPoolManager.submit(configuration.getProName(), new OplogWriteTask(oplogMetadata));
-        TargetTaskPoolManager.submit(configuration.getProName(), new OplogNsBucketTask(oplogMetadata, configuration.getCacheSize()));
-        TargetTaskPoolManager.submit(configuration.getProName(), new OplogNsTask(configuration.getDbTableWhite(), oplogMetadata));
-        TargetTaskPoolManager.submit(configuration.getProName(), new OplogReadTask(configuration, (int) (System.currentTimeMillis() / 1000)
+        TargetTaskPoolManager.submit(programInfo.getProName(), new OplogWriteTask(oplogMetadata));
+        TargetTaskPoolManager.submit(programInfo.getProName(), new OplogNsBucketTask(oplogMetadata, programInfo.getCacheSize()));
+        TargetTaskPoolManager.submit(programInfo.getProName(), new OplogNsTask(programInfo.getDbTableWhite(), oplogMetadata));
+        TargetTaskPoolManager.submit(programInfo.getProName(), new OplogReadTask(programInfo, (int) (System.currentTimeMillis() / 1000)
                 , 0, 0, oplogMetadata));
         for (int i = 0; i < 2; i++) {
-            TargetTaskPoolManager.submit(configuration.getProName(), new OplogWriteTask(oplogMetadata));
-            TargetTaskPoolManager.submit(configuration.getProName(), new OplogNsBucketTask(oplogMetadata, configuration.getCacheSize()));
+            TargetTaskPoolManager.submit(programInfo.getProName(), new OplogWriteTask(oplogMetadata));
+            TargetTaskPoolManager.submit(programInfo.getProName(), new OplogNsBucketTask(oplogMetadata, programInfo.getCacheSize()));
         }
 
     }
 
     public static void testMongoDbToMysql() {
 
-        Configuration configuration = ConfigurationUtil.getConfiguration("proc2");
+        ProgramInfo programInfo = ConfigurationUtil.getConfiguration("proc2");
 
-        MongoDbConnection.createMonoDbClient(configuration.getSourceDsName(), DataSourceUtil.getDataSourceByDsName(configuration.getSourceDsName()));
+        MongoDbConnection.createMonoDbClient(programInfo.getSourceDsName(), DataSourceUtil.getDataSourceByDsName(programInfo.getSourceDsName()));
 
-        MySqlConnection.createConnection(configuration.getTargetDsName(), DataSourceUtil.getDataSourceByDsName(configuration.getTargetDsName()));
+        MySqlConnection.createConnection(programInfo.getTargetDsName(), DataSourceUtil.getDataSourceByDsName(programInfo.getTargetDsName()));
 
-        MemoryCache memoryCache = new MemoryCache(configuration.getTaskName(), configuration.getProName(), configuration.getCacheNum(), configuration.getCacheSize(), true);
+        MemoryCache memoryCache = new MemoryCache(programInfo.getTaskName(), programInfo.getProName(), programInfo.getCacheNum(), programInfo.getCacheSize(), true);
 
 
-        configuration.setMemoryCache(memoryCache);
+        programInfo.setMemoryCache(memoryCache);
 
-        SourceTaskPoolManager sourceTaskPoolManager = new SourceTaskPoolManager(configuration.getProName(), configuration.getSourceThreadNum(), configuration.getSourceThreadNum());
+        SourceTaskPoolManager sourceTaskPoolManager = new SourceTaskPoolManager(programInfo.getProName(), programInfo.getSourceThreadNum(), programInfo.getSourceThreadNum());
 
-        SysPoolManager sysPoolManager = new SysPoolManager(configuration.getProName(), 2, 3);
+        SysPoolManager sysPoolManager = new SysPoolManager(programInfo.getProName(), 2, 3);
 
-        TargetTaskPoolManager targetTaskPoolManager = new TargetTaskPoolManager(configuration.getProName(), 10, 10);
+        TargetTaskPoolManager targetTaskPoolManager = new TargetTaskPoolManager(programInfo.getProName(), 10, 10);
 
-        MongodbSource mongodbSource = new MongodbSource(configuration, memoryCache);
+        MongodbSource mongodbSource = new MongodbSource(programInfo, memoryCache);
         mongodbSource.createTask();
 
-        MysqlTarget mysqlTarget = new MysqlTarget(configuration, memoryCache, configuration.getProName());
+        MysqlTarget mysqlTarget = new MysqlTarget(programInfo, memoryCache, programInfo.getProName());
         mysqlTarget.startToTarget();
         while (true) {
             try {
                 Thread.sleep(10000);
-                int sourceThread = SourceTaskPoolManager.setSourceActiveThreadNum(configuration.getProName(), 0);
+                int sourceThread = SourceTaskPoolManager.setSourceActiveThreadNum(programInfo.getProName(), 0);
                 boolean getAllDbTable = mongodbSource.isGetAllDbTable();
                 int sourceTaskQueueSize = mongodbSource.getTaskMetadataQueueSize();
-                int setSysActiveThreadNum = SysPoolManager.setSysActiveThreadNum(configuration.getProName(), 0);
-                int targetActiveThreadNum = TargetTaskPoolManager.setTargetActiveThreadNum(configuration.getProName(), 0);
+                int setSysActiveThreadNum = SysPoolManager.setSysActiveThreadNum(programInfo.getProName(), 0);
+                int targetActiveThreadNum = TargetTaskPoolManager.setTargetActiveThreadNum(programInfo.getProName(), 0);
                 int allDataCacheNum = memoryCache.getAllDataCacheNum();
                 Log.info(setSysActiveThreadNum + "");
                 Log.info("sum:" + (sourceThread + sourceTaskQueueSize + sourceTaskQueueSize + allDataCacheNum + setSysActiveThreadNum));
@@ -107,27 +103,27 @@ public class TestMainLhp {
                 if ((sourceThread + sourceTaskQueueSize + sourceTaskQueueSize + allDataCacheNum + setSysActiveThreadNum + targetActiveThreadNum) == 0 && getAllDbTable) {
                     Thread.sleep(10000);
                     try {
-                        TargetTaskPoolManager.destroy(configuration.getProName());
+                        TargetTaskPoolManager.destroy(programInfo.getProName());
                     } catch (Exception e) {
                         Log.info(e.getMessage());
                     }
                     try {
-                        SourceTaskPoolManager.destroy(configuration.getProName());
+                        SourceTaskPoolManager.destroy(programInfo.getProName());
                     } catch (Exception e) {
                         Log.info(e.getMessage());
                     }
                     try {
-                        SysPoolManager.destroy(configuration.getProName());
+                        SysPoolManager.destroy(programInfo.getProName());
                     } catch (Exception e) {
                         Log.info(e.getMessage());
                     }
-                    MysqlTargetTask.setIsStopFlagOfTarget(configuration.getProName(), false);
+                    MysqlTargetTask.setIsStopFlagOfTarget(programInfo.getProName(), false);
                     memoryCache.gcMemoryCache();
-                    Log.info("procName:" + configuration.getProName() + "关闭成功");
+                    Log.info("procName:" + programInfo.getProName() + "关闭成功");
                     Thread.sleep(10000);
                     break;
                 } else if ((sourceThread + sourceTaskQueueSize + sourceTaskQueueSize + allDataCacheNum + setSysActiveThreadNum) == 0 && getAllDbTable) {
-                    MysqlTargetTask.setIsStopFlagOfTarget(configuration.getProName(), true);
+                    MysqlTargetTask.setIsStopFlagOfTarget(programInfo.getProName(), true);
                 }
             } catch (InterruptedException e) {
                 e.printStackTrace();
@@ -148,43 +144,43 @@ public class TestMainLhp {
     public static void testMongoDbToMongoDb() {
 
 
-        Configuration configuration = ConfigurationUtil.getConfiguration("proc1");
-        TaskTrigger taskTrigger = generateTaskTriggerInfo(configuration.getTaskName(), configuration.getProName());
+        ProgramInfo programInfo = ConfigurationUtil.getConfiguration("proc1");
+        TaskTrigger taskTrigger = generateTaskTriggerInfo(programInfo.getTaskName(), programInfo.getProName());
         TriggerUtil.insertTriggerInfo(taskTrigger);
-        MongoDbConnection.createMonoDbClient(configuration.getSourceDsName(), DataSourceUtil.getDataSourceByDsName(configuration.getSourceDsName()));
+        MongoDbConnection.createMonoDbClient(programInfo.getSourceDsName(), DataSourceUtil.getDataSourceByDsName(programInfo.getSourceDsName()));
 
-        MongoDbConnection.createMonoDbClient(configuration.getTargetDsName(), DataSourceUtil.getDataSourceByDsName(configuration.getTargetDsName()));
+        MongoDbConnection.createMonoDbClient(programInfo.getTargetDsName(), DataSourceUtil.getDataSourceByDsName(programInfo.getTargetDsName()));
 
-        MemoryCache memoryCache = new MemoryCache(configuration.getTaskName(),
-                configuration.getProName(), configuration.getCacheNum(), configuration.getCacheSize(), true);
-
-
-        configuration.setMemoryCache(memoryCache);
-
-        SourceTaskPoolManager sourceTaskPoolManager = new SourceTaskPoolManager(configuration.getProName(), configuration.getSourceThreadNum(), configuration.getSourceThreadNum());
+        MemoryCache memoryCache = new MemoryCache(programInfo.getTaskName(),
+                programInfo.getProName(), programInfo.getCacheNum(), programInfo.getCacheSize(), true);
 
 
-        SysPoolManager sysPoolManager = new SysPoolManager(configuration.getProName(), 2, 3);
+        programInfo.setMemoryCache(memoryCache);
+
+        SourceTaskPoolManager sourceTaskPoolManager = new SourceTaskPoolManager(programInfo.getProName(), programInfo.getSourceThreadNum(), programInfo.getSourceThreadNum());
+
+
+        SysPoolManager sysPoolManager = new SysPoolManager(programInfo.getProName(), 2, 3);
 
 
         TargetTaskPoolManager targetTaskPoolManager = new
-                TargetTaskPoolManager(configuration.getProName(), 1,
+                TargetTaskPoolManager(programInfo.getProName(), 1,
                 1);
 
 
-        MongodbTarget mongodbTarget = new MongodbTarget(configuration, memoryCache, configuration.getProName());
+        MongodbTarget mongodbTarget = new MongodbTarget(programInfo, memoryCache, programInfo.getProName());
         mongodbTarget.startToTarget();
 
-        MongodbSource mongodbSource = new MongodbSource(configuration, memoryCache);
+        MongodbSource mongodbSource = new MongodbSource(programInfo, memoryCache);
         mongodbSource.createTask();
         while (true) {
             try {
                 Thread.sleep(10000);
-                int sourceThread = SourceTaskPoolManager.setSourceActiveThreadNum(configuration.getProName(), 0);
+                int sourceThread = SourceTaskPoolManager.setSourceActiveThreadNum(programInfo.getProName(), 0);
                 boolean getAllDbTable = mongodbSource.isGetAllDbTable();
                 int sourceTaskQueueSize = mongodbSource.getTaskMetadataQueueSize();
-                int setSysActiveThreadNum = SysPoolManager.setSysActiveThreadNum(configuration.getProName(), 0);
-                int targetActiveThreadNum = TargetTaskPoolManager.setTargetActiveThreadNum(configuration.getProName(), 0);
+                int setSysActiveThreadNum = SysPoolManager.setSysActiveThreadNum(programInfo.getProName(), 0);
+                int targetActiveThreadNum = TargetTaskPoolManager.setTargetActiveThreadNum(programInfo.getProName(), 0);
                 int allDataCacheNum = memoryCache.getAllDataCacheNum();
                 Log.info(setSysActiveThreadNum + "");
                 Log.info("sum:" + (sourceThread + sourceTaskQueueSize + sourceTaskQueueSize + allDataCacheNum + setSysActiveThreadNum));
@@ -198,33 +194,33 @@ public class TestMainLhp {
                     Thread.sleep(10000);
                     try {
 
-                        TargetTaskPoolManager.destroy(configuration.getProName());
+                        TargetTaskPoolManager.destroy(programInfo.getProName());
 
                     } catch (Exception e) {
                         Log.info(e.getMessage());
                     }
                     try {
-                        SourceTaskPoolManager.destroy(configuration.getProName());
+                        SourceTaskPoolManager.destroy(programInfo.getProName());
                     } catch (Exception e) {
                         Log.info(e.getMessage());
                     }
                     try {
-                        SysPoolManager.destroy(configuration.getProName());
+                        SysPoolManager.destroy(programInfo.getProName());
                     } catch (Exception e) {
                         Log.info(e.getMessage());
                     }
                     memoryCache.gcMemoryCache();
-                    MongodbTargetTask.setIsStopFlagOfTarget(configuration.getProName(), false);
-//                    MongoDbConnection.close(configuration.getTargetName());
-//                    MongoDbConnection.close(configuration.getSourceName());
+                    MongodbTargetTask.setIsStopFlagOfTarget(programInfo.getProName(), false);
+//                    MongoDbConnection.close(programInfo.getTargetName());
+//                    MongoDbConnection.close(programInfo.getSourceName());
                     //MySqlConnection.close("1");
-                    Log.info("procName:" + configuration.getProName() + "关闭成功");
+                    Log.info("procName:" + programInfo.getProName() + "关闭成功");
                     taskTrigger.setState("success");
                     TriggerUtil.updateTriggerInfo(taskTrigger);
                     Thread.sleep(10000);
                     break;
                 } else if ((sourceThread + sourceTaskQueueSize + sourceTaskQueueSize + allDataCacheNum + setSysActiveThreadNum) == 0 && getAllDbTable) {
-                    MongodbTargetTask.setIsStopFlagOfTarget(configuration.getProName(), true);
+                    MongodbTargetTask.setIsStopFlagOfTarget(programInfo.getProName(), true);
                 }
             } catch (InterruptedException e) {
                 e.printStackTrace();
@@ -236,42 +232,42 @@ public class TestMainLhp {
 
     public static void testPgToMongoDb() {
         //获取配置
-        Configuration configuration = ConfigurationUtil.getConfiguration("proc5");
+        ProgramInfo programInfo = ConfigurationUtil.getConfiguration("proc5");
 
 
-        PgServerConnection.createConnection(configuration.getSourceDsName(), DataSourceUtil.getDataSourceByDsName(configuration.getSourceDsName()));
+        PgServerConnection.createConnection(programInfo.getSourceDsName(), DataSourceUtil.getDataSourceByDsName(programInfo.getSourceDsName()));
 
-        MongoDbConnection.createMonoDbClient(configuration.getTargetDsName(), DataSourceUtil.getDataSourceByDsName(configuration.getTargetDsName()));
+        MongoDbConnection.createMonoDbClient(programInfo.getTargetDsName(), DataSourceUtil.getDataSourceByDsName(programInfo.getTargetDsName()));
         //缓存
-        MemoryCache memoryCache = new MemoryCache(configuration.getTaskName(),
-                configuration.getProName(), configuration.getCacheNum(), configuration.getCacheSize(), true);
+        MemoryCache memoryCache = new MemoryCache(programInfo.getTaskName(),
+                programInfo.getProName(), programInfo.getCacheNum(), programInfo.getCacheSize(), true);
         //配置缓存
-        configuration.setMemoryCache(memoryCache);
+        programInfo.setMemoryCache(memoryCache);
 
-        SourceTaskPoolManager sourceTaskPoolManager = new SourceTaskPoolManager(configuration.getProName(),
-                configuration.getSourceThreadNum(), configuration.getSourceThreadNum());
+        SourceTaskPoolManager sourceTaskPoolManager = new SourceTaskPoolManager(programInfo.getProName(),
+                programInfo.getSourceThreadNum(), programInfo.getSourceThreadNum());
 
-        SysPoolManager sysPoolManager = new SysPoolManager(configuration.getProName(), 5, 5);
+        SysPoolManager sysPoolManager = new SysPoolManager(programInfo.getProName(), 5, 5);
 
 
-        TargetTaskPoolManager targetTaskPoolManager = new TargetTaskPoolManager(configuration.getProName(),
+        TargetTaskPoolManager targetTaskPoolManager = new TargetTaskPoolManager(programInfo.getProName(),
                 5, 5);
 
 
-        MongodbTarget mongodbTarget = new MongodbTarget(configuration, memoryCache, configuration.getProName());
+        MongodbTarget mongodbTarget = new MongodbTarget(programInfo, memoryCache, programInfo.getProName());
         mongodbTarget.startToTarget();
 
-        PgSource pgSource = new PgSource(configuration, memoryCache);
+        PgSource pgSource = new PgSource(programInfo, memoryCache);
         pgSource.createTask();
 
         while (true) {
             try {
                 Thread.sleep(10000);
-                int sourceThread = SourceTaskPoolManager.setSourceActiveThreadNum(configuration.getProName(), 0);
+                int sourceThread = SourceTaskPoolManager.setSourceActiveThreadNum(programInfo.getProName(), 0);
                 boolean getAllDbTable = pgSource.isGetAllDbTable();
                 int sourceTaskQueueSize = pgSource.getTaskMetadataQueueSize();
-                int setSysActiveThreadNum = SysPoolManager.setSysActiveThreadNum(configuration.getProName(), 0);
-                int targetActiveThreadNum = TargetTaskPoolManager.setTargetActiveThreadNum(configuration.getProName(), 0);
+                int setSysActiveThreadNum = SysPoolManager.setSysActiveThreadNum(programInfo.getProName(), 0);
+                int targetActiveThreadNum = TargetTaskPoolManager.setTargetActiveThreadNum(programInfo.getProName(), 0);
                 int allDataCacheNum = memoryCache.getAllDataCacheNum();
                 Log.info(setSysActiveThreadNum + "");
                 Log.info("sum:" + (sourceThread + sourceTaskQueueSize + allDataCacheNum + setSysActiveThreadNum));
@@ -284,27 +280,27 @@ public class TestMainLhp {
                 if ((sourceThread + sourceTaskQueueSize + allDataCacheNum + setSysActiveThreadNum + targetActiveThreadNum) == 0 && getAllDbTable) {
                     Thread.sleep(10000);
                     try {
-                        TargetTaskPoolManager.destroy(configuration.getProName());
+                        TargetTaskPoolManager.destroy(programInfo.getProName());
                     } catch (Exception e) {
                         Log.info(e.getMessage());
                     }
                     try {
-                        SourceTaskPoolManager.destroy(configuration.getProName());
+                        SourceTaskPoolManager.destroy(programInfo.getProName());
                     } catch (Exception e) {
                         Log.info(e.getMessage());
                     }
                     try {
-                        SysPoolManager.destroy(configuration.getProName());
+                        SysPoolManager.destroy(programInfo.getProName());
                     } catch (Exception e) {
                         Log.info(e.getMessage());
                     }
-                    MongodbTargetTask.setIsStopFlagOfTarget(configuration.getProName(), false);
+                    MongodbTargetTask.setIsStopFlagOfTarget(programInfo.getProName(), false);
                     memoryCache.gcMemoryCache();
-                    Log.info("procName:" + configuration.getProName() + "关闭成功");
+                    Log.info("procName:" + programInfo.getProName() + "关闭成功");
                     Thread.sleep(10000);
                     break;
                 } else if ((sourceThread + sourceTaskQueueSize + sourceTaskQueueSize + allDataCacheNum + setSysActiveThreadNum) == 0 && getAllDbTable) {
-                    MongodbTargetTask.setIsStopFlagOfTarget(configuration.getProName(), true);
+                    MongodbTargetTask.setIsStopFlagOfTarget(programInfo.getProName(), true);
                 }
             } catch (InterruptedException e) {
                 e.printStackTrace();

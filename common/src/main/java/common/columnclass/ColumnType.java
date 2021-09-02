@@ -21,6 +21,14 @@ public class ColumnType implements Serializable {
      */
     private String columnName;
     /**
+     * 数据源名称
+     */
+    private String dsName;
+    /**
+     * 库表名称
+     */
+    private String dbTableName;
+    /**
      * 字段类型
      */
     private String columnType;

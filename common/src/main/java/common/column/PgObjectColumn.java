@@ -5,7 +5,7 @@ import org.postgresql.util.PGobject;
 import java.io.Serializable;
 
 /**
- * @description:
+ * @description: pg的数据类型
  * @author: lhp
  * @time: 2021/9/1 2:26 下午
  */

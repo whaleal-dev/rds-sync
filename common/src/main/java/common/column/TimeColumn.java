@@ -1,7 +1,7 @@
 package common.column;
 
 /**
- * @description:
+ * @description: 时分秒数据类型
  * @author: lhp
  * @time: 2021/9/1 2:35 下午
  */

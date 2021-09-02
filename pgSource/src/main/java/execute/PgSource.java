@@ -1,17 +1,12 @@
 package execute;
 
 import cache.MemoryCache;
-import com.mongodb.client.MongoClient;
-import com.mongodb.client.MongoCursor;
-import com.mongodb.client.MongoIterable;
 import common.dataclass.Range;
 import common.taskbase.SourceTaskInfo;
 import common.taskbase.metadata.SourceMetadata;
-import conf.Configuration;
-import dbconnection.mongodb.MongoDbConnection;
+import conf.ProgramInfo;
 import dbconnection.pgserver.PgServerConnection;
 import lombok.NoArgsConstructor;
-import org.postgresql.jdbc.PgConnection;
 import org.springframework.jdbc.core.JdbcTemplate;
 import sourcesplit.PgSourceSplitRange;
 import task.PgSourceTask;
@@ -36,11 +31,11 @@ public class PgSource extends SourceMetadata {
 
     private JdbcTemplate jdbcTemplate;
 
-    public PgSource(Configuration configuration, MemoryCache memoryCache) {
-        this.sourceName = configuration.getSourceDsName();
-        this.taskName = configuration.getTaskName();
-        this.proName = configuration.getProName();
-        this.dbTableWhite = configuration.getDbTableWhite();
+    public PgSource(ProgramInfo programInfo, MemoryCache memoryCache) {
+        this.sourceName = programInfo.getSourceDsName();
+        this.taskName = programInfo.getTaskName();
+        this.proName = programInfo.getProName();
+        this.dbTableWhite = programInfo.getDbTableWhite();
         this.memoryCache = memoryCache;
         jdbcTemplate = PgServerConnection.getJdbcTemplate(sourceName);
         procSourceTask.put(proName, taskMetadataQueue);

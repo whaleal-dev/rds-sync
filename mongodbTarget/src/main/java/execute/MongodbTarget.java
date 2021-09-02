@@ -1,7 +1,7 @@
 package execute;
 
 import cache.MemoryCache;
-import conf.Configuration;
+import conf.ProgramInfo;
 import lombok.AllArgsConstructor;
 import task.MongodbTargetTask;
 import thread.TargetTaskPoolManager;
@@ -14,15 +14,15 @@ import thread.TargetTaskPoolManager;
  */
 @AllArgsConstructor
 public class MongodbTarget {
-    private Configuration configuration;
+    private ProgramInfo programInfo;
     private MemoryCache memoryCache;
     private String procName;
 
     public void startToTarget() {
-        for (int i = 0; i < configuration.getTargetThreadNum(); i++) {
+        for (int i = 0; i < programInfo.getTargetThreadNum(); i++) {
             TargetTaskPoolManager.setTargetActiveThreadNum(procName, 1);
             //System.out.println("setTargetActiveThreadNum" + TargetTaskPoolManager.setTargetActiveThreadNum(procName, 0));
-            TargetTaskPoolManager.submit(procName, new MongodbTargetTask(configuration, memoryCache));
+            TargetTaskPoolManager.submit(procName, new MongodbTargetTask(programInfo, memoryCache));
         }
 
     }

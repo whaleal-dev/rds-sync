@@ -1,16 +1,12 @@
 package cache;
 
 import common.dataclass.BatchDataEntity;
-import conf.Configuration;
 import lombok.NoArgsConstructor;
 
-import java.util.Map;
 import java.util.Queue;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.LongAdder;
 
 /**
@@ -29,11 +25,15 @@ public class MemoryCache {
      */
     private String procName;
     /**
-     * 缓存区个数
+     * 批次号
+     */
+    private long batchNo;
+    /**
+     * 缓存区个数 默认20个
      */
     private int cacheNum = 20;
     /**
-     * 每个缓存区缓存批次数量
+     * 每个缓存区缓存批次数量 默认20个
      */
     public int cacheSize = 20;
     /**
@@ -164,6 +164,11 @@ public class MemoryCache {
         }
     }
 
+    /**
+     * getAllDataCacheNum
+     *
+     * @desc 获取所有的缓存数据个数
+     */
     public int getAllDataCacheNum() {
         int sum = 0;
         for (int i = 0; i < cacheNum; i++) {
@@ -172,6 +177,11 @@ public class MemoryCache {
         return sum;
     }
 
+    /**
+     * gcMemoryCache
+     *
+     * @desc 释放所有缓存数组
+     */
     public void gcMemoryCache() {
         for (int i = 0; i < cacheNum; i++) {
             cacheList[i] = null;

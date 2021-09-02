@@ -15,6 +15,7 @@ import lombok.ToString;
 @AllArgsConstructor
 @ToString
 public class BoolColumn extends AbstractColumn {
+
     private boolean data;
 
     public BoolColumn(String columnName, Boolean object) {

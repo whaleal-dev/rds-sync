@@ -1,22 +1,16 @@
 import cache.MemoryCache;
-import common.OplogMetadata;
-import common.photonV.entity.TaskTrigger;
-import conf.Configuration;
+import conf.ProgramInfo;
 import configuration.ConfigurationUtil;
 import datasource.DataSourceUtil;
 import dbconnection.mongodb.MongoDbConnection;
 import dbconnection.mysql.MySqlConnection;
-import execute.MongodbSource;
 import execute.MongodbTarget;
 import execute.MysqlSource;
-import execute.MysqlTarget;
 import task.*;
 import thread.SourceTaskPoolManager;
 import thread.SysPoolManager;
 import thread.TargetTaskPoolManager;
-import trigger.TriggerUtil;
 import util.Log;
-import util.StringUtil;
 
 
 /**
@@ -32,61 +26,61 @@ public class TestMainJY {
 
     public static void testMysqlToMongoDb() {
         //获取配置
-        Configuration configuration = ConfigurationUtil.getConfiguration("proc2");
-//        configuration.setDbTableWhite("community.sys_user.*");
-//        configuration.setDbTableWhite("community.sys_menu");
-//        configuration.setDbTableWhite("(community.community_dict)||(community.sys_menu)");
-//        configuration.setDbTableWhite("(community.community_dict)||(community.sys_menu)||(community.community.banner)");
-//        configuration.setDbTableWhite("community.sys_user_token");
-        configuration.setDbTableWhite("community.sys_captcha");
-//        configuration.setAdviceNumber(4);
-//        configuration.setDbTableWhite("(community.community_dict)||(community.sys_captcha)");
-//        configuration.setDbTableWhite("community.+");
-//        configuration.setDbTableWhite("community.community_banner");
-//        configuration.setDbTableWhite("community.test");
-//        configuration.setSplitPk("banner_link");
-        configuration.setAdviceNumber(3);
-//        configuration.setDbTableWhite("community.sys_.*");
-//        configuration.setAdviceNumber(5);
+        ProgramInfo programInfo = ConfigurationUtil.getConfiguration("proc2");
+//        programInfo.setDbTableWhite("community.sys_user.*");
+//        programInfo.setDbTableWhite("community.sys_menu");
+//        programInfo.setDbTableWhite("(community.community_dict)||(community.sys_menu)");
+//        programInfo.setDbTableWhite("(community.community_dict)||(community.sys_menu)||(community.community.banner)");
+//        programInfo.setDbTableWhite("community.sys_user_token");
+        programInfo.setDbTableWhite("community.sys_captcha");
+//        programInfo.setAdviceNumber(4);
+//        programInfo.setDbTableWhite("(community.community_dict)||(community.sys_captcha)");
+//        programInfo.setDbTableWhite("community.+");
+//        programInfo.setDbTableWhite("community.community_banner");
+//        programInfo.setDbTableWhite("community.test");
+//        programInfo.setSplitPk("banner_link");
+        programInfo.setAdviceNumber(3);
+//        programInfo.setDbTableWhite("community.sys_.*");
+//        programInfo.setAdviceNumber(5);
 
-//        configuration.setDbTableWhite("(community.community_dict)||(community.sys_menu)||(community.sys_user_token)");
-//        configuration.setAdviceNumber(5);
-//        configuration.setSplitPk("dict_id");
-//        configuration.setDbTableWhite("\\w.+");
+//        programInfo.setDbTableWhite("(community.community_dict)||(community.sys_menu)||(community.sys_user_token)");
+//        programInfo.setAdviceNumber(5);
+//        programInfo.setSplitPk("dict_id");
+//        programInfo.setDbTableWhite("\\w.+");
         //mysql 源连接
-        MySqlConnection.createConnection(configuration.getSourceDsName(),
-                DataSourceUtil.getDataSourceByDsName(configuration.getSourceDsName()));
+        MySqlConnection.createConnection(programInfo.getSourceDsName(),
+                DataSourceUtil.getDataSourceByDsName(programInfo.getSourceDsName()));
         //mongodb 目标连接
-        MongoDbConnection.createMonoDbClient(configuration.getTargetDsName(),
-                DataSourceUtil.getDataSourceByDsName(configuration.getTargetDsName()));
+        MongoDbConnection.createMonoDbClient(programInfo.getTargetDsName(),
+                DataSourceUtil.getDataSourceByDsName(programInfo.getTargetDsName()));
         //缓存
-        MemoryCache memoryCache = new MemoryCache(configuration.getTaskName(),
-                configuration.getProName(), configuration.getCacheNum(), configuration.getCacheSize(), true);
+        MemoryCache memoryCache = new MemoryCache(programInfo.getTaskName(),
+                programInfo.getProName(), programInfo.getCacheNum(), programInfo.getCacheSize(), true);
         //配置缓存
-        configuration.setMemoryCache(memoryCache);
+        programInfo.setMemoryCache(memoryCache);
         //源线程池
-        SourceTaskPoolManager sourceTaskPoolManager = new SourceTaskPoolManager(configuration.getProName(),
-                configuration.getSourceThreadNum(), configuration.getSourceThreadNum());
+        SourceTaskPoolManager sourceTaskPoolManager = new SourceTaskPoolManager(programInfo.getProName(),
+                programInfo.getSourceThreadNum(), programInfo.getSourceThreadNum());
         //系统线程池
-        SysPoolManager sysPoolManager = new SysPoolManager(configuration.getProName(), 5, 5);
+        SysPoolManager sysPoolManager = new SysPoolManager(programInfo.getProName(), 5, 5);
         //目标线程池
-        TargetTaskPoolManager targetTaskPoolManager = new TargetTaskPoolManager(configuration.getProName(),
+        TargetTaskPoolManager targetTaskPoolManager = new TargetTaskPoolManager(programInfo.getProName(),
                 5, 5);
 
-        MongodbTarget mongodbTarget = new MongodbTarget(configuration, memoryCache, configuration.getProName());
+        MongodbTarget mongodbTarget = new MongodbTarget(programInfo, memoryCache, programInfo.getProName());
         mongodbTarget.startToTarget();
 
-        MysqlSource mysqlSource = new MysqlSource(configuration, memoryCache);
+        MysqlSource mysqlSource = new MysqlSource(programInfo, memoryCache);
         mysqlSource.createTask();
 
         while (true) {
             try {
                 Thread.sleep(10000);
-                int sourceThread = SourceTaskPoolManager.setSourceActiveThreadNum(configuration.getProName(), 0);
+                int sourceThread = SourceTaskPoolManager.setSourceActiveThreadNum(programInfo.getProName(), 0);
                 boolean getAllDbTable = mysqlSource.isGetAllDbTable();
                 int sourceTaskQueueSize = mysqlSource.getTaskMetadataQueueSize();
-                int setSysActiveThreadNum = SysPoolManager.setSysActiveThreadNum(configuration.getProName(), 0);
-                int targetActiveThreadNum = TargetTaskPoolManager.setTargetActiveThreadNum(configuration.getProName(), 0);
+                int setSysActiveThreadNum = SysPoolManager.setSysActiveThreadNum(programInfo.getProName(), 0);
+                int targetActiveThreadNum = TargetTaskPoolManager.setTargetActiveThreadNum(programInfo.getProName(), 0);
                 int allDataCacheNum = memoryCache.getAllDataCacheNum();
                 Log.info(setSysActiveThreadNum + "");
                 Log.info("sum:" + (sourceThread + sourceTaskQueueSize + allDataCacheNum + setSysActiveThreadNum));
@@ -99,27 +93,27 @@ public class TestMainJY {
                 if ((sourceThread + sourceTaskQueueSize + allDataCacheNum + setSysActiveThreadNum + targetActiveThreadNum) == 0 && getAllDbTable) {
                     Thread.sleep(10000);
                     try {
-                        TargetTaskPoolManager.destroy(configuration.getProName());
+                        TargetTaskPoolManager.destroy(programInfo.getProName());
                     } catch (Exception e) {
                         Log.info(e.getMessage());
                     }
                     try {
-                        SourceTaskPoolManager.destroy(configuration.getProName());
+                        SourceTaskPoolManager.destroy(programInfo.getProName());
                     } catch (Exception e) {
                         Log.info(e.getMessage());
                     }
                     try {
-                        SysPoolManager.destroy(configuration.getProName());
+                        SysPoolManager.destroy(programInfo.getProName());
                     } catch (Exception e) {
                         Log.info(e.getMessage());
                     }
-                    MongodbTargetTask.setIsStopFlagOfTarget(configuration.getProName(), false);
+                    MongodbTargetTask.setIsStopFlagOfTarget(programInfo.getProName(), false);
                     memoryCache.gcMemoryCache();
-                    Log.info("procName:" + configuration.getProName() + "关闭成功");
+                    Log.info("procName:" + programInfo.getProName() + "关闭成功");
                     Thread.sleep(10000);
                     break;
                 } else if ((sourceThread + sourceTaskQueueSize + sourceTaskQueueSize + allDataCacheNum + setSysActiveThreadNum) == 0 && getAllDbTable) {
-                     MongodbTargetTask.setIsStopFlagOfTarget(configuration.getProName(), true);
+                     MongodbTargetTask.setIsStopFlagOfTarget(programInfo.getProName(), true);
                 }
             } catch (InterruptedException e) {
                 e.printStackTrace();

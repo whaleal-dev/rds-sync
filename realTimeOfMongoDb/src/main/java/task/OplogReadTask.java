@@ -6,7 +6,7 @@ import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import common.OplogMetadata;
-import conf.Configuration;
+import conf.ProgramInfo;
 import dbconnection.mongodb.MongoDbConnection;
 import org.bson.BsonTimestamp;
 import org.bson.Document;
@@ -19,7 +19,7 @@ import util.Log;
  * @desc: 读取oplog中的数据
  */
 public class OplogReadTask implements Runnable {
-    private Configuration configuration;
+    private ProgramInfo programInfo;
 
     private String procName;
     /**
@@ -55,11 +55,11 @@ public class OplogReadTask implements Runnable {
      */
     private OplogMetadata oplogMetadata;
 
-    public OplogReadTask(Configuration configuration, int startTimeOfReady, int inc, int endTimeOfReady, OplogMetadata oplogMetadata) {
-        this.configuration = configuration;
-        this.filterDdl = configuration.isFilterDdl();
-        this.dbTableWhite = configuration.getDbTableWhite();
-        this.sourceDsName = configuration.getSourceDsName();
+    public OplogReadTask(ProgramInfo programInfo, int startTimeOfReady, int inc, int endTimeOfReady, OplogMetadata oplogMetadata) {
+        this.programInfo = programInfo;
+        this.filterDdl = programInfo.isFilterDdl();
+        this.dbTableWhite = programInfo.getDbTableWhite();
+        this.sourceDsName = programInfo.getSourceDsName();
         this.endTimeOfReady = endTimeOfReady;
         this.startTimeOfReady = startTimeOfReady;
         this.inc = inc;
@@ -144,7 +144,7 @@ public class OplogReadTask implements Runnable {
         } catch (Exception e) {
             Log.error("sourceDsName:" + sourceDsName + ",读取oplog发现异常:" + e.getMessage());
         } finally {
-            SourceTaskPoolManager.submit(procName, new OplogReadTask(configuration, docTime.getTime(), docTime.getInc(), endTimeOfReady, oplogMetadata));
+            SourceTaskPoolManager.submit(procName, new OplogReadTask(programInfo, docTime.getTime(), docTime.getInc(), endTimeOfReady, oplogMetadata));
         }
     }
 }

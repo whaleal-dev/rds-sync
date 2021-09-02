@@ -2,7 +2,7 @@ package common.taskbase;
 
 import cache.MemoryCache;
 import common.dataclass.BatchDataEntity;
-import conf.Configuration;
+import conf.ProgramInfo;
 
 /**
  * @description:
@@ -31,10 +31,10 @@ public abstract class AbstractTargetTask implements Runnable {
      */
     protected MemoryCache memoryCache;
 
-    public AbstractTargetTask(Configuration configuration, MemoryCache memoryCache) {
-        this.targetDsName = configuration.getTargetDsName();
-        this.taskName = configuration.getTaskName();
-        this.proName = configuration.getProName();
+    public AbstractTargetTask(ProgramInfo programInfo, MemoryCache memoryCache) {
+        this.targetDsName = programInfo.getTargetDsName();
+        this.taskName = programInfo.getTaskName();
+        this.proName = programInfo.getProName();
         this.memoryCache = memoryCache;
     }
 

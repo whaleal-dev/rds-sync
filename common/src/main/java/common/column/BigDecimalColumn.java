@@ -21,9 +21,9 @@ public class BigDecimalColumn extends AbstractColumn {
 
     private BigDecimal data;
 
-    public BigDecimalColumn(String columnName, BigDecimal object) {
+    public BigDecimalColumn(String columnName, BigDecimal data) {
         this.columnName = columnName;
-        this.data = object;
+        this.data = data;
     }
 
     @Override

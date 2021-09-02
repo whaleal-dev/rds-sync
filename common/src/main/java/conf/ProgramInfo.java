@@ -14,7 +14,7 @@ import lombok.ToString;
 @ToString
 @Data
 @NoArgsConstructor
-public class Configuration {
+public class ProgramInfo {
     private MemoryCache memoryCache;
     /**
      * 任务名称

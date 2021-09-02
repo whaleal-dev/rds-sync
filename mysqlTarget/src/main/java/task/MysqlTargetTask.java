@@ -6,7 +6,7 @@ import common.columnclass.ColumnType;
 import common.dataclass.BatchDataEntity;
 import common.dbtype.DbTypeFlag;
 import common.taskbase.AbstractTargetTask;
-import conf.Configuration;
+import conf.ProgramInfo;
 import dbconnection.mysql.MySqlConnection;
 import org.springframework.jdbc.core.JdbcTemplate;
 import parse.ParseColumnDataToMysqlData;
@@ -54,8 +54,8 @@ public class MysqlTargetTask extends AbstractTargetTask {
         isStop.get(procName).set(value);
     }
 
-    public MysqlTargetTask(Configuration configuration, MemoryCache memoryCache) {
-        super(configuration, memoryCache);
+    public MysqlTargetTask(ProgramInfo programInfo, MemoryCache memoryCache) {
+        super(programInfo, memoryCache);
         this.connection = MySqlConnection.getConnection(this.targetDsName);
         this.jdbcTemplate = MySqlConnection.getJdbcTemplate(this.dbTableName);
         if (!isStop.containsKey(proName)) {

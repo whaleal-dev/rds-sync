@@ -1,7 +1,7 @@
 package sourcesplit;
 
 import common.dataclass.Range;
-import conf.Configuration;
+import conf.ProgramInfo;
 import datasource.DataSourceUtil;
 import dbconnection.mysql.MySqlConnection;
 
@@ -14,28 +14,28 @@ import java.util.List;
 
 public class MysqlSourceSplitRange {
 
-    public static List<Range> doSplit(Configuration configuration) throws SQLException {
+    public static List<Range> doSplit(ProgramInfo programInfo) throws SQLException {
 
         //初始化单表应该切分的份数
-        int adviceNumber = configuration.getAdviceNumber();
-        int tableNumber = MysqlSourceSplitRange.getTableNumber(configuration);
+        int adviceNumber = programInfo.getAdviceNumber();
+        int tableNumber = MysqlSourceSplitRange.getTableNumber(programInfo);
         int eachTableShouldSplittedNumber = -1;
         // adviceNumber这里是并发task数量
         // eachTableShouldSplittedNumber是单表应该切分的份数, 向上取整可能和adviceNumber没有比例关系了已经
         eachTableShouldSplittedNumber = calculateEachTableShouldSplittedNumber(
                 adviceNumber, tableNumber);
         List<Range> splittedRanges = new ArrayList<Range>();
-        List<String> tables = getDbTables(configuration);
+        List<String> tables = getDbTables(programInfo);
         //单表
         //TODO
         /*if (tables.size() == 1) {
-            Integer splitFactor = configuration.getSplitFactor();
+            Integer splitFactor = programInfo.getSplitFactor();
             eachTableShouldSplittedNumber = eachTableShouldSplittedNumber * splitFactor;
         }*/
         for (String table : tables) {
             String tempTable = table;
             List<Range> splittedSlices = SingleTableSplitUtil
-                    .splitSingleTable(configuration, tempTable, eachTableShouldSplittedNumber);
+                    .splitSingleTable(programInfo, tempTable, eachTableShouldSplittedNumber);
             splittedRanges.addAll(splittedSlices);
         }
 
@@ -49,9 +49,9 @@ public class MysqlSourceSplitRange {
     }
 
 
-    public static List<String> getDbTables(Configuration configuration) throws SQLException {
+    public static List<String> getDbTables(ProgramInfo programInfo) throws SQLException {
         //获取连接
-        Connection conn = MySqlConnection.createConnection(configuration.getSourceDsName(), DataSourceUtil.getDataSourceByDsName(configuration.getSourceDsName()));
+        Connection conn = MySqlConnection.createConnection(programInfo.getSourceDsName(), DataSourceUtil.getDataSourceByDsName(programInfo.getSourceDsName()));
         DatabaseMetaData metaData = conn.getMetaData();
         String[] types = {"TABLE"};
         ResultSet rs = metaData.getTables(null, null, "%", types);
@@ -66,7 +66,7 @@ public class MysqlSourceSplitRange {
             String dbName = rs.getString(1);
             //读取配置中的table
             String dbTable = dbName + "." + tableName;
-            if (dbTable.matches(configuration.getDbTableWhite())) {
+            if (dbTable.matches(programInfo.getDbTableWhite())) {
                 dbTables.add(dbTable);
             }
         }
@@ -74,8 +74,8 @@ public class MysqlSourceSplitRange {
         return dbTables;
     }
 
-    public static int getTableNumber(Configuration configuration) throws SQLException {
-        return MysqlSourceSplitRange.getDbTables(configuration).size();
+    public static int getTableNumber(ProgramInfo programInfo) throws SQLException {
+        return MysqlSourceSplitRange.getDbTables(programInfo).size();
     }
 
 }

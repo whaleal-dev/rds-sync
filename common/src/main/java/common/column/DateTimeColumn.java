@@ -6,7 +6,7 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 /**
- * @description:日期时间字段类 年月日时分秒
+ * @description:日期时间字段类 年月日时分秒 或毫秒
  * @author: lhp
  * @time: 2021/8/23 9:53 上午
  */

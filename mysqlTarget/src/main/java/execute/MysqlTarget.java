@@ -1,9 +1,8 @@
 package execute;
 
 import cache.MemoryCache;
-import common.taskbase.metadata.SourceMetadata;
 
-import conf.Configuration;
+import conf.ProgramInfo;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import task.MysqlTargetTask;
@@ -18,14 +17,14 @@ import thread.TargetTaskPoolManager;
 @AllArgsConstructor
 @NoArgsConstructor
 public class MysqlTarget {
-    private Configuration configuration;
+    private ProgramInfo programInfo;
     private MemoryCache memoryCache;
     private String procName;
 
     public void startToTarget() {
         for (int i = 0; i < 10; i++) {
             TargetTaskPoolManager.setTargetActiveThreadNum(procName, 1);
-            TargetTaskPoolManager.submit(procName, new MysqlTargetTask(configuration, memoryCache));
+            TargetTaskPoolManager.submit(procName, new MysqlTargetTask(programInfo, memoryCache));
         }
     }
 }

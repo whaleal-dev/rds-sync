@@ -4,7 +4,7 @@ import cache.MemoryCache;
 import common.dataclass.Range;
 import common.taskbase.SourceTaskInfo;
 import common.taskbase.metadata.SourceMetadata;
-import conf.Configuration;
+import conf.ProgramInfo;
 import datasource.DataSourceUtil;
 import dbconnection.mysql.MySqlConnection;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -29,12 +29,12 @@ public class MysqlSource extends SourceMetadata {
     Connection connection = null;
     JdbcTemplate jdbcTemplate = null;
 
-    public MysqlSource(Configuration configuration, MemoryCache memoryCache) {
-        this.configuration = configuration;
-        this.sourceName = configuration.getSourceDsName();
-        this.taskName = configuration.getTaskName();
-        this.proName = configuration.getProName();
-        this.dbTableWhite = configuration.getDbTableWhite();
+    public MysqlSource(ProgramInfo programInfo, MemoryCache memoryCache) {
+        this.programInfo = programInfo;
+        this.sourceName = programInfo.getSourceDsName();
+        this.taskName = programInfo.getTaskName();
+        this.proName = programInfo.getProName();
+        this.dbTableWhite = programInfo.getDbTableWhite();
         this.memoryCache = memoryCache;
         procSourceTask.put(proName, taskMetadataQueue);
         connection = MySqlConnection.createConnection(sourceName, DataSourceUtil.getDataSourceByDsName(sourceName));
@@ -69,7 +69,7 @@ public class MysqlSource extends SourceMetadata {
     public void createSourceEntity(String sourceName, String dbTableName) {
         List<Range> list = new ArrayList<>();
         try {
-            list = MysqlSourceSplitRange.doSplit(configuration);
+            list = MysqlSourceSplitRange.doSplit(programInfo);
         } catch (Exception e) {
             e.printStackTrace();
             Log.error(e.getMessage());

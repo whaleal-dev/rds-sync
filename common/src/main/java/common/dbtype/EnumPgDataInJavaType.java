@@ -6,7 +6,7 @@ package common.dbtype;
  * @author lhp
  * @time 2021-05-31 13:12:12
  */
-public enum EnumPgDataType {
+public enum EnumPgDataInJavaType {
     /**
      * pg在java中的类型类型
      */
@@ -26,7 +26,7 @@ public enum EnumPgDataType {
 
     private final String upperCase;
 
-    EnumPgDataType(String upperCase) {
+    EnumPgDataInJavaType(String upperCase) {
         this.upperCase = upperCase;
     }
 

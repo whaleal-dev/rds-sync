@@ -10,7 +10,6 @@ import common.column.AbstractColumn;
 import common.dataclass.BatchDataEntity;
 import common.dataclass.Range;
 import common.taskbase.SourceTaskInterface;
-import conf.Configuration;
 
 import execute.MongodbSource;
 import dbconnection.mongodb.MongoDbConnection;

@@ -23,7 +23,7 @@ public class JsonColumn extends AbstractColumn {
     }
 
     @Override
-    public Object getData() {
+    public String getData() {
         return this.data;
     }
 }

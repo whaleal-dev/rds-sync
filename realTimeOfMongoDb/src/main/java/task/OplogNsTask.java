@@ -1,7 +1,6 @@
 package task;
 
 import common.OplogMetadata;
-import conf.Configuration;
 import org.bson.Document;
 import util.Log;
 

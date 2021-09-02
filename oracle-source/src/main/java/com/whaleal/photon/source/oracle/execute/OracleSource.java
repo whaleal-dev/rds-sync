@@ -6,8 +6,7 @@ import com.whaleal.photon.source.oracle.task.OracleSourceTask;
 import common.dataclass.Range;
 import common.taskbase.SourceTaskInfo;
 import common.taskbase.metadata.SourceMetadata;
-import conf.Configuration;
-import datasource.DBUtil;
+import conf.ProgramInfo;
 import dbconnection.oracle.OracleConnection;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -37,11 +36,11 @@ public class OracleSource extends SourceMetadata {
     Connection connection = null;
     JdbcTemplate jdbcTemplate = null;
 
-    public OracleSource(Configuration configuration, MemoryCache memoryCache) {
-        this.sourceName = configuration.getSourceDsName();
-        this.taskName = configuration.getTaskName();
-        this.proName = configuration.getProName();
-        this.dbTableWhite = configuration.getDbTableWhite();
+    public OracleSource(ProgramInfo programInfo, MemoryCache memoryCache) {
+        this.sourceName = programInfo.getSourceDsName();
+        this.taskName = programInfo.getTaskName();
+        this.proName = programInfo.getProName();
+        this.dbTableWhite = programInfo.getDbTableWhite();
         this.memoryCache = memoryCache;
         procSourceTask.put(proName, taskMetadataQueue);
         connection = OracleConnection.getConnection(sourceName);

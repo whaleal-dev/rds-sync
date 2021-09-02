@@ -1,7 +1,7 @@
 package common;
 
 import common.dataclass.BatchDataEntity;
-import conf.Configuration;
+import conf.ProgramInfo;
 import lombok.*;
 import org.bson.Document;
 
@@ -53,15 +53,15 @@ public final class OplogMetadata {
      */
     public int maxTableBatchNum;
 
-    public OplogMetadata(Configuration configuration) {
-        this.sourceDsName = configuration.getSourceDsName();
-        this.targetDsName = configuration.getTargetDsName();
-        this.dbTableWhite = configuration.getDbTableWhite();
-        this.filterDdl = configuration.isFilterDdl();
-        this.maxDocumentQueueSize = configuration.getCacheSize() * configuration.getCacheNum() * configuration.getDataBatchSize();
-        this.maxTableQueueSize = configuration.getDataBatchSize();
-        this.maxTableBatchNum = configuration.getCacheNum();
-        this.procName = configuration.getProName();
+    public OplogMetadata(ProgramInfo programInfo) {
+        this.sourceDsName = programInfo.getSourceDsName();
+        this.targetDsName = programInfo.getTargetDsName();
+        this.dbTableWhite = programInfo.getDbTableWhite();
+        this.filterDdl = programInfo.isFilterDdl();
+        this.maxDocumentQueueSize = programInfo.getCacheSize() * programInfo.getCacheNum() * programInfo.getDataBatchSize();
+        this.maxTableQueueSize = programInfo.getDataBatchSize();
+        this.maxTableBatchNum = programInfo.getCacheNum();
+        this.procName = programInfo.getProName();
         this.documentQueue = new LinkedBlockingQueue<Document>(maxDocumentQueueSize);
     }
 

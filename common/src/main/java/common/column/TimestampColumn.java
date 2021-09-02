@@ -23,7 +23,7 @@ public class TimestampColumn extends AbstractColumn {
     }
 
     @Override
-    public Object getData() {
+    public Long getData() {
         return this.data;
     }
 

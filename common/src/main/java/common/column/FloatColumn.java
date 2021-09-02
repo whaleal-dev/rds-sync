@@ -23,7 +23,7 @@ public class FloatColumn extends AbstractColumn {
     }
 
     @Override
-    public Object getData() {
+    public Float getData() {
         return this.data;
     }
 }

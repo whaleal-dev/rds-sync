@@ -32,6 +32,7 @@ public enum EnumMongoDbDataInJavaType {
     BSONTIMESTAMP("BSONTIMESTAMP");
 
 
+
     private final String upperCase;
 
     EnumMongoDbDataInJavaType(String upperCase) {

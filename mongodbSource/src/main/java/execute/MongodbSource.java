@@ -10,7 +10,7 @@ import common.dataclass.Range;
 import lombok.NoArgsConstructor;
 import thread.SourceTaskPoolManager;
 import thread.SysPoolManager;
-import conf.Configuration;
+import conf.ProgramInfo;
 import dbconnection.mongodb.MongoDbConnection;
 import sourcesplit.MongodbSourceSplitRange;
 import task.MongodbSourceTask;
@@ -31,11 +31,11 @@ import java.util.concurrent.TimeUnit;
 public class MongodbSource extends SourceMetadata {
     MongoClient mongoClient = null;
 
-    public MongodbSource(Configuration configuration, MemoryCache memoryCache) {
-        this.sourceName = configuration.getSourceDsName();
-        this.taskName = configuration.getTaskName();
-        this.proName = configuration.getProName();
-        this.dbTableWhite = configuration.getDbTableWhite();
+    public MongodbSource(ProgramInfo programInfo, MemoryCache memoryCache) {
+        this.sourceName = programInfo.getSourceDsName();
+        this.taskName = programInfo.getTaskName();
+        this.proName = programInfo.getProName();
+        this.dbTableWhite = programInfo.getDbTableWhite();
         this.memoryCache = memoryCache;
         procSourceTask.put(proName, taskMetadataQueue);
         mongoClient = MongoDbConnection.getMongoClient(sourceName);

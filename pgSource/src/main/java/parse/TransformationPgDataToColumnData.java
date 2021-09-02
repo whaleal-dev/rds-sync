@@ -4,7 +4,7 @@ package parse;
 import com.google.gson.Gson;
 import common.column.*;
 
-import common.dbtype.EnumPgDataType;
+import common.dbtype.EnumPgDataInJavaType;
 import org.postgresql.util.PGobject;
 
 import java.math.BigDecimal;
@@ -34,7 +34,7 @@ public class TransformationPgDataToColumnData {
             return new NullColumn(columnName, null);
         }
         String type = object.getClass().getSimpleName().toUpperCase();
-        EnumPgDataType dataType = EnumPgDataType.valueOf(type);
+        EnumPgDataInJavaType dataType = EnumPgDataInJavaType.valueOf(type);
         switch (dataType) {
             case PGOBJECT:
                 return new PgObjectColumn(columnName, (PGobject) object);

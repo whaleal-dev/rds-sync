@@ -2,7 +2,7 @@ package sourcesplit;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import common.dataclass.Range;
-import conf.Configuration;
+import conf.ProgramInfo;
 import datasource.DataSourceUtil;
 import dbconnection.mysql.MySqlConnection;
 import org.apache.commons.lang3.StringUtils;
@@ -22,16 +22,16 @@ import java.util.concurrent.*;
 
 public class SingleTableSplitUtil {
 
-    public static List<Range> splitSingleTable(Configuration configuration, String table, int adviceNum) {
+    public static List<Range> splitSingleTable(ProgramInfo programInfo, String table, int adviceNum) {
 
         List<Range> pluginParams = new ArrayList<Range>();
         List<String> rangeList = null;
         //从配置中取分片字段 splitPk
         String splitPkName = null;
-        if (StringUtils.isNotBlank(configuration.getSplitPk())) {
-            splitPkName = configuration.getSplitPk();
+        if (StringUtils.isNotBlank(programInfo.getSplitPk())) {
+            splitPkName = programInfo.getSplitPk();
         } else {
-            splitPkName = getResultPK(configuration, table);
+            splitPkName = getResultPK(programInfo, table);
         }
         //没有可用主键
         if (StringUtils.isEmpty(splitPkName)) {
@@ -48,7 +48,7 @@ public class SingleTableSplitUtil {
         boolean hasWhere = StringUtils.isNotBlank(where);
         // Pair Java中的配对
         // minMaxPK 最小到最大字段
-        Pair<Object, Object> minMaxPK = getPkRange(configuration, table, where);
+        Pair<Object, Object> minMaxPK = getPkRange(programInfo, table, where);
         if (null == minMaxPK) {
             Log.error("根据切分主键切分表失败. PhotonT 仅支持切分主键为一个,并且类型为整数或者字符串类型. 请尝试使用其他的切分主键或者联系 DBA 进行处理.");
         }
@@ -62,9 +62,9 @@ public class SingleTableSplitUtil {
             return pluginParams;
         }
 
-        boolean isStringType = "pkTypeString".equals(configuration
+        boolean isStringType = "pkTypeString".equals(programInfo
                 .getPK_TYPE());
-        boolean isLongType = "pkTypeLong".equals(configuration
+        boolean isLongType = "pkTypeLong".equals(programInfo
                 .getPK_TYPE());
 
         if (isStringType) {
@@ -95,7 +95,7 @@ public class SingleTableSplitUtil {
                 pluginParams.add(range);
             }
         } else {
-            //pluginParams.add(configuration); // this is wrong for new & old split
+            //pluginParams.add(programInfo); // this is wrong for new & old split
             tempQuerySql = buildQuerySql(column, table, where)
                     + (hasWhere ? " and " : " where ")
                     + String.format(" %s IS NOT NULL", splitPkName);
@@ -132,31 +132,31 @@ public class SingleTableSplitUtil {
     }
 
     @SuppressWarnings("resource")
-    private static Pair<Object, Object> getPkRange(Configuration configuration, String table, String where) {
+    private static Pair<Object, Object> getPkRange(ProgramInfo programInfo, String table, String where) {
         //字段构建的范围 sql pkRangeSQL
-        String pkRangeSQL = genPkRangeSQL(configuration, table, where);
+        String pkRangeSQL = genPkRangeSQL(programInfo, table, where);
         //取配置中的 fetchSize
-        int fetchSize = configuration.getFetchSize();
+        int fetchSize = programInfo.getFetchSize();
         //获取连接
-        Connection conn = MySqlConnection.createConnection(configuration.getSourceDsName(),
-                DataSourceUtil.getDataSourceByDsName(configuration.getSourceDsName()));
+        Connection conn = MySqlConnection.createConnection(programInfo.getSourceDsName(),
+                DataSourceUtil.getDataSourceByDsName(programInfo.getSourceDsName()));
         //字段构建的范围 sql pkRangeSQL
-        Pair<Object, Object> minMaxPK = checkSplitPk(conn, pkRangeSQL, fetchSize, configuration);
+        Pair<Object, Object> minMaxPK = checkSplitPk(conn, pkRangeSQL, fetchSize, programInfo);
 
         return minMaxPK;
     }
 
-    public static Pair<Object, Object> getPKRange(Configuration configuration, String split, String table, String where) {
+    public static Pair<Object, Object> getPKRange(ProgramInfo programInfo, String split, String table, String where) {
 
         //字段构建的范围 sql pkRangeSQL
         String pkRangeSQL = genPKSql(split, table, where);
         //取配置中的 fetchSize
-        int fetchSize = configuration.getFetchSize();
+        int fetchSize = programInfo.getFetchSize();
         //获取连接
-        Connection conn = MySqlConnection.createConnection(configuration.getSourceDsName(),
-                DataSourceUtil.getDataSourceByDsName(configuration.getSourceDsName()));
+        Connection conn = MySqlConnection.createConnection(programInfo.getSourceDsName(),
+                DataSourceUtil.getDataSourceByDsName(programInfo.getSourceDsName()));
         //字段构建的范围 sql pkRangeSQL
-        Pair<Object, Object> minMaxPK = checkSplitPk(conn, pkRangeSQL, fetchSize, configuration);
+        Pair<Object, Object> minMaxPK = checkSplitPk(conn, pkRangeSQL, fetchSize, programInfo);
 
         return minMaxPK;
     }
@@ -166,7 +166,7 @@ public class SingleTableSplitUtil {
      * configuration为null, 是precheck的逻辑，不需要回写PK_TYPE到configuration中
      */
     private static Pair<Object, Object> checkSplitPk(Connection conn, String pkRangeSQL, int fetchSize,
-                                                     Configuration configuration) {
+                                                     ProgramInfo programInfo) {
         ResultSet rs = null;
         Pair<Object, Object> minMaxPK = null;
         try {
@@ -181,8 +181,8 @@ public class SingleTableSplitUtil {
             if (isPKTypeValid(rsMetaData)) {
                 // pk 是 string 类型
                 if (isStringType(rsMetaData.getColumnType(1))) {
-                    if (configuration != null) {
-                        configuration.setPK_TYPE("pkTypeString");
+                    if (programInfo != null) {
+                        programInfo.setPK_TYPE("pkTypeString");
                     }
                     //异步获取 resultSet 的 next()
                     while (SingleTableSplitUtil.asyncResultSetNext(rs)) {
@@ -192,8 +192,8 @@ public class SingleTableSplitUtil {
                     }
                     // pk 是 long 类型
                 } else if (isLongType(rsMetaData.getColumnType(1))) {
-                    if (configuration != null) {
-                        configuration.setPK_TYPE("pkTypeLong");
+                    if (programInfo != null) {
+                        programInfo.setPK_TYPE("pkTypeLong");
                     }
                     //异步获取 resultSet 的 next()
                     while (SingleTableSplitUtil.asyncResultSetNext(rs)) {
@@ -244,18 +244,18 @@ public class SingleTableSplitUtil {
     /**
      * 智能获取切分字段
      *
-     * @param configuration
+     * @param programInfo
      * @param table
      * @return
      */
-    private static String getResultPK(Configuration configuration, String table){
+    private static String getResultPK(ProgramInfo programInfo, String table){
         //取主键为切分字段
-        if (!StringUtils.isEmpty(getPK(table, configuration))){
-            return getPK(table, configuration);
+        if (!StringUtils.isEmpty(getPK(table, programInfo))){
+            return getPK(table, programInfo);
         }else{
             //智能取切分字段
-            Connection connection = MySqlConnection.getConnection(configuration.getSourceDsName());
-            JdbcTemplate jdbcTemplate = MySqlConnection.getJdbcTemplate(configuration.getSourceDsName());
+            Connection connection = MySqlConnection.getConnection(programInfo.getSourceDsName());
+            JdbcTemplate jdbcTemplate = MySqlConnection.getJdbcTemplate(programInfo.getSourceDsName());
             String sql = "select * from "+ table;
             SqlRowSet sqlRowSet = jdbcTemplate.queryForRowSet(sql);
             SqlRowSetMetaData sqlRsmd = sqlRowSet.getMetaData();
@@ -282,12 +282,12 @@ public class SingleTableSplitUtil {
             }
             //取 Long 类型字段名中最大数值最大者
             if (!longTableFieldList.isEmpty()) {
-                Pair<Object, Object> pair = SingleTableSplitUtil.getPKRange(configuration, longTableFieldList.get(0).get("fieldName"), table, null);
+                Pair<Object, Object> pair = SingleTableSplitUtil.getPKRange(programInfo, longTableFieldList.get(0).get("fieldName"), table, null);
                 Long max = Long.parseLong(pair.getRight().toString());
                 String maxName = longTableFieldList.get(0).get("fieldName");
                 for (Map<String, String> tableField : longTableFieldList) {
                     String split = tableField.get("fieldName");
-                    Pair<Object, Object> minMaxPK = SingleTableSplitUtil.getPKRange(configuration, split, table, null);
+                    Pair<Object, Object> minMaxPK = SingleTableSplitUtil.getPKRange(programInfo, split, table, null);
                     if (max <= Long.parseLong(minMaxPK.getRight().toString())) {
                         maxName = tableField.get("fieldName");
                         //最大数字的列
@@ -334,20 +334,20 @@ public class SingleTableSplitUtil {
                 || type == Types.NVARCHAR;
     }
 
-    private static String genPkRangeSQL(Configuration configuration, String table, String where) {
+    private static String genPkRangeSQL(ProgramInfo programInfo, String table, String where) {
         String splitPkName = null;
-//        boolean hasSplitPk = StringUtils.isNotBlank(configuration.getSplitPk());
-//        splitPkName = hasSplitPk ? configuration.getSplitPk().trim() : SingleTableSplitUtil.getPK(table, configuration);
-        if (StringUtils.isNotBlank(configuration.getSplitPk())) {
-            splitPkName = configuration.getSplitPk();
+//        boolean hasSplitPk = StringUtils.isNotBlank(programInfo.getSplitPk());
+//        splitPkName = hasSplitPk ? programInfo.getSplitPk().trim() : SingleTableSplitUtil.getPK(table, programInfo);
+        if (StringUtils.isNotBlank(programInfo.getSplitPk())) {
+            splitPkName = programInfo.getSplitPk();
         } else {
-            splitPkName = getResultPK(configuration, table);
+            splitPkName = getResultPK(programInfo, table);
         }
         //去掉SPLIT_PK前面和后面的空格
         //去掉TABLE前面和后面的空格
         String table1 = table.trim();
         //取配置中where 没有where就为null
-//        String where = configuration.getString(Key.WHERE, null);
+//        String where = programInfo.getString(Key.WHERE, null);
         return genPKSql(splitPkName, table1, where);
     }
 
@@ -370,12 +370,12 @@ public class SingleTableSplitUtil {
      * 获取表主键字段名
      *
      * @param table
-     * @param configuration
+     * @param programInfo
      * @return
      */
-    public static String getPK(String table, Configuration configuration) {
+    public static String getPK(String table, ProgramInfo programInfo) {
         //TODO get
-        Connection conn = MySqlConnection.getConnection(configuration.getSourceDsName());
+        Connection conn = MySqlConnection.getConnection(programInfo.getSourceDsName());
         String PKName = null;
         try {
             DatabaseMetaData dmd = conn.getMetaData();

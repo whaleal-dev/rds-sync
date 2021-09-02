@@ -9,8 +9,7 @@ import com.mongodb.client.model.WriteModel;
 import common.column.AbstractColumn;
 import common.dataclass.BatchDataEntity;
 import common.taskbase.AbstractTargetTask;
-import conf.Configuration;
-import lombok.NoArgsConstructor;
+import conf.ProgramInfo;
 import dbconnection.mongodb.MongoDbConnection;
 
 import org.bson.Document;
@@ -23,7 +22,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 
 
 /**
@@ -44,8 +42,8 @@ public class MongodbTargetTask extends AbstractTargetTask {
 
     private volatile static Map<String, AtomicBoolean> isStop = new ConcurrentHashMap<>();
 
-    public MongodbTargetTask(Configuration configuration, MemoryCache memoryCache) {
-        super(configuration, memoryCache);
+    public MongodbTargetTask(ProgramInfo programInfo, MemoryCache memoryCache) {
+        super(programInfo, memoryCache);
         this.mongoClient = MongoDbConnection.getMongoClient(this.targetDsName);
         if (!isStop.containsKey(proName)) {
             synchronized (MongodbTargetTask.class) {

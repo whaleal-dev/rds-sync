@@ -2,7 +2,7 @@ package common.taskbase.metadata;
 
 import cache.MemoryCache;
 import common.taskbase.SourceTaskInfo;
-import conf.Configuration;
+import conf.ProgramInfo;
 
 import java.sql.SQLException;
 import java.util.Map;
@@ -11,7 +11,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
- * @description: MongoT的启动类的参数
+ * @description: PhotonT的启动类的参数
  * @author: lhp
  * @time: 2021/7/31 1:34 下午
  */
@@ -19,7 +19,7 @@ public abstract class SourceMetadata {
     /**
      * 配置文件类
      */
-    protected Configuration configuration;
+    protected ProgramInfo programInfo;
     /**
      * 数据缓存类
      */
@@ -49,6 +49,11 @@ public abstract class SourceMetadata {
         return isGetAllDbTable;
     }
 
+    /**
+     * getTaskMetadataQueueSize 获取未执行TaskInfo的个数
+     *
+     * @desc 获取未执行TaskInfo的个数
+     */
     public int getTaskMetadataQueueSize() {
         return taskMetadataQueue.size();
     }
