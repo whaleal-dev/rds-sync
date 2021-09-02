@@ -7,10 +7,9 @@ import common.dataclass.BatchDataEntity;
 import common.dataclass.Range;
 import common.taskbase.AbstractSourceTask;
 import common.taskbase.SourceTaskInfo;
-import common.taskbase.SourceTaskInterface;
 import dbconnection.pgserver.PgServerConnection;
 import org.springframework.jdbc.core.JdbcTemplate;
-import parse.TransformationPgDataToColumnData;
+import parse.PgDataToColumnData;
 import thread.SourceTaskPoolManager;
 import util.Log;
 
@@ -116,7 +115,7 @@ public class PgSourceTask extends AbstractSourceTask {
                     String columnName = md.getColumnName(i);
                     //值
                     Object values = ((ResultSet) rs).getObject(md.getColumnName(i));
-                    AbstractColumn abstractColumn = TransformationPgDataToColumnData.parseValue(columnName, values);
+                    AbstractColumn abstractColumn = PgDataToColumnData.parseValue(columnName, values);
                     abstractColumns.add(abstractColumn);
                 }
                 this.dataList.add(abstractColumns);

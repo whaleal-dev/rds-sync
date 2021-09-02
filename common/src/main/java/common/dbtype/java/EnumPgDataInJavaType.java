@@ -1,4 +1,4 @@
-package common.dbtype;
+package common.dbtype.java;
 
 /**
  * MongoDB数据类型类
@@ -21,7 +21,7 @@ public enum EnumPgDataInJavaType {
     TIME("TIME"),
     TIMESTAMP("TIMESTAMP"),
     BOOLEAN("BOOLEAN"),
-    BYTEARRAY("BYTE[]");
+    BYTES("BYTE[]");
 
 
     private final String upperCase;

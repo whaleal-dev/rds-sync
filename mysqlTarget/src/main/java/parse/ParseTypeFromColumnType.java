@@ -2,8 +2,8 @@ package parse;
 
 import common.column.AbstractColumn;
 import common.columnclass.ColumnType;
-import common.dbtype.EnumColumnDataType;
-import common.dbtype.EnumMySqlDataType;
+import common.dbtype.java.EnumCommonColumnDataType;
+import common.dbtype.db.EnumMySqlDataType;
 import common.dbtype.MySqlType;
 
 /**
@@ -19,8 +19,8 @@ public class ParseTypeFromColumnType {
         columnType.setColumnName(columnData.getColumnName());
         int objectLength = columnData.toString().length();
         String type = columnData.getClass().getSimpleName().toUpperCase();
-        EnumColumnDataType enumColumnDataType = EnumColumnDataType.valueOf(type);
-        switch (enumColumnDataType) {
+        EnumCommonColumnDataType enumCommonColumnDataType = EnumCommonColumnDataType.valueOf(type);
+        switch (enumCommonColumnDataType) {
             case BOOLCOLUMN:
                 columnType.setColumnType(MySqlType.TINYINT);
                 columnType.setLength(4);

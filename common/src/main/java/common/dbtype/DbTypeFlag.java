@@ -9,4 +9,5 @@ public class DbTypeFlag {
     public static String MONGODB = "MONGODB";
     public static String HIVE = "HIVE";
     public static String HBASE = "HBASE";
+    public static String PG = "PG";
 }

@@ -2,25 +2,19 @@ package parse;
 
 
 import common.column.AbstractColumn;
-import common.dbtype.EnumColumnDataType;
-import org.bson.Document;
-
-import java.sql.Timestamp;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.Date;
+import common.dbtype.java.EnumCommonColumnDataType;
 
 
 /**
  * @author liheping
  */
-public class ParseColumnDataToMysqlData {
+public class ColumnDataToMysqlData {
 
     public static Object parseColumnData(AbstractColumn columnData) {
         String type = columnData.getClass().getSimpleName().toUpperCase();
-        EnumColumnDataType enumColumnDataType = EnumColumnDataType.valueOf(type);
+        EnumCommonColumnDataType enumCommonColumnDataType = EnumCommonColumnDataType.valueOf(type);
         // blob没解析 bytes 时间类型的转换
-        switch (enumColumnDataType) {
+        switch (enumCommonColumnDataType) {
             case NULLCOLUMN:
                 return null;
             case BOOLCOLUMN:

@@ -13,7 +13,7 @@ import common.photonV.entity.ProgramInfo;
 import dbconnection.mongodb.MongoDbConnection;
 
 import org.bson.Document;
-import parse.ParseColumnDataToMongodbData;
+import parse.ColumnDataToMongodbData;
 import thread.TargetTaskPoolManager;
 import util.Log;
 
@@ -103,7 +103,7 @@ public class MongodbTargetTask extends AbstractTargetTask {
         for (List<AbstractColumn> columnList : dataList) {
             Document document = new Document();
             for (AbstractColumn columnData : columnList) {
-                document.append(columnData.getColumnName(), ParseColumnDataToMongodbData.parseColumnData(columnData));
+                document.append(columnData.getColumnName(), ColumnDataToMongodbData.parseColumnData(columnData));
             }
             writeModels.add(new InsertOneModel<>(document));
         }
@@ -118,7 +118,7 @@ public class MongodbTargetTask extends AbstractTargetTask {
             }
             String dbName = dbTable.split("\\.", 2)[0];
             String tableName = dbTable.split("\\.", 2)[1];
-            BulkWriteResult bulkWriteResult = this.mongoClient.getDatabase(dbName).
+            this.mongoClient.getDatabase(dbName).
                     getCollection(tableName).bulkWrite(writeModels, new BulkWriteOptions().ordered(false));
         } catch (Exception e) {
             e.printStackTrace();

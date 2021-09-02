@@ -2,15 +2,11 @@ package parse;
 
 
 import com.google.gson.Gson;
-import com.google.gson.JsonElement;
 import common.column.*;
-import common.dbtype.EnumColumnDataType;
+import common.dbtype.java.EnumCommonColumnDataType;
 import org.bson.BsonTimestamp;
 import org.bson.Document;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -18,14 +14,14 @@ import java.util.List;
 /**
  * @author liheping
  */
-public class ParseColumnDataToMongodbData {
+public class ColumnDataToMongodbData {
     private static Gson gson = new Gson();
 
     public static Object parseColumnData(AbstractColumn columnData) {
         String type = columnData.getClass().getSimpleName().toUpperCase();
-        EnumColumnDataType enumColumnDataType = EnumColumnDataType.valueOf(type);
+        EnumCommonColumnDataType enumCommonColumnDataType = EnumCommonColumnDataType.valueOf(type);
         // 时间类型可能有问题
-        switch (enumColumnDataType) {
+        switch (enumCommonColumnDataType) {
             case DATETIMECOLUMN:
             case TIMECOLUN:
                 return new Date((long) columnData.getData());

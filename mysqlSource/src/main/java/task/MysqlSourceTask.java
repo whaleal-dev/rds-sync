@@ -5,10 +5,8 @@ import common.column.AbstractColumn;
 import common.dataclass.BatchDataEntity;
 import common.taskbase.AbstractSourceTask;
 import common.taskbase.SourceTaskInfo;
-import common.taskbase.SourceTaskInterface;
 import dbconnection.mysql.MySqlConnection;
-import org.springframework.jdbc.core.JdbcTemplate;
-import parse.TransformationMysqlDataToColumn;
+import parse.MysqlDataToColumnData;
 import thread.SourceTaskPoolManager;
 import util.Log;
 
@@ -100,7 +98,7 @@ public class MysqlSourceTask extends AbstractSourceTask {
                     String columnName = md.getColumnName(i);
                     //值
                     Object values = ((ResultSet) rs).getObject(md.getColumnName(i));
-                    AbstractColumn abstractColumn = TransformationMysqlDataToColumn.parseValue(columnName, values);
+                    AbstractColumn abstractColumn = MysqlDataToColumnData.parseValue(columnName, values);
                     abstractColumns.add(abstractColumn);
                 }
                 this.dataList.add(abstractColumns);

@@ -1,13 +1,12 @@
 package com.whaleal.photon.source.oracle.task;
 
 import cache.MemoryCache;
-import com.whaleal.photon.source.oracle.parse.TransformationOracleDataToColumn;
+import com.whaleal.photon.source.oracle.parse.OracleDataToColumnData;
 import common.column.AbstractColumn;
 import common.dataclass.BatchDataEntity;
 import common.dataclass.Range;
 import common.taskbase.AbstractSourceTask;
 import common.taskbase.SourceTaskInfo;
-import common.taskbase.SourceTaskInterface;
 import dbconnection.oracle.OracleConnection;
 import org.springframework.jdbc.core.JdbcTemplate;
 import thread.SourceTaskPoolManager;
@@ -117,7 +116,7 @@ public class OracleSourceTask extends AbstractSourceTask {
                 //值
                 Object values = ((ResultSet) rs).getObject(md.getColumnName(i));
                 System.out.println(columnName +"          "+values.getClass());
-                AbstractColumn abstractColumn = TransformationOracleDataToColumn.parseValue(columnName, values);
+                AbstractColumn abstractColumn = OracleDataToColumnData.parseValue(columnName, values);
                 abstractColumns.add(abstractColumn);
             }
             this.dataList.add(abstractColumns);

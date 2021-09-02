@@ -10,12 +10,11 @@ import common.taskbase.SourceTaskInfo;
 import common.column.AbstractColumn;
 import common.dataclass.BatchDataEntity;
 import common.dataclass.Range;
-import common.taskbase.SourceTaskInterface;
 
 import execute.MongodbSource;
 import dbconnection.mongodb.MongoDbConnection;
 import org.bson.Document;
-import parse.TransformationMongodbDataToColumn;
+import parse.MongodbDataToColumnData;
 import thread.SourceTaskPoolManager;
 import util.Log;
 
@@ -122,7 +121,7 @@ public class MongodbSourceTask extends AbstractSourceTask {
         Iterator<Map.Entry<String, Object>> iterator = ((Document) document).entrySet().iterator();
         while (iterator.hasNext()) {
             Map.Entry<String, Object> next = iterator.next();
-            AbstractColumn abstractColumn = TransformationMongodbDataToColumn.parseValue(next.getKey(), next.getValue());
+            AbstractColumn abstractColumn = MongodbDataToColumnData.parseValue(next.getKey(), next.getValue());
             abstractColumns.add(abstractColumn);
         }
         this.dataList.add(abstractColumns);

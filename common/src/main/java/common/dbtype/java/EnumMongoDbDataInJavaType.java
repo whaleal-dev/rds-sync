@@ -1,4 +1,4 @@
-package common.dbtype;
+package common.dbtype.java;
 
 /**
  * MongoDB数据类型类

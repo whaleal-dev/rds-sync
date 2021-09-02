@@ -8,8 +8,7 @@ import common.dbtype.DbTypeFlag;
 import common.taskbase.AbstractTargetTask;
 import common.photonV.entity.ProgramInfo;
 import dbconnection.mysql.MySqlConnection;
-import org.springframework.jdbc.core.JdbcTemplate;
-import parse.ParseColumnDataToMysqlData;
+import parse.ColumnDataToMysqlData;
 import parse.ParseTypeFromColumnType;
 import thread.TargetTaskPoolManager;
 import util.Log;
@@ -121,7 +120,7 @@ public class MysqlTargetTask extends AbstractTargetTask {
             String columns = "(";
             String values = "values(";
             for (AbstractColumn columnData : columnList) {
-                Object value = ParseColumnDataToMysqlData.parseColumnData(columnData);
+                Object value = ColumnDataToMysqlData.parseColumnData(columnData);
                 columns += "`" + columnData.getColumnName() + "`,";
                 values += value + " , ";
             }

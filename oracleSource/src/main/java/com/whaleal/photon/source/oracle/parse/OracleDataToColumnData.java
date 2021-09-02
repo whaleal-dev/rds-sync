@@ -1,13 +1,10 @@
 package com.whaleal.photon.source.oracle.parse;
 
-import com.google.gson.Gson;
 import common.column.*;
-import common.dbtype.EnumOracleDataType;
+import common.dbtype.java.EnumOracleDataInJavaType;
 
 import java.math.BigDecimal;
 import java.sql.Timestamp;
-import java.time.format.DateTimeFormatter;
-import java.util.Locale;
 
 /**
  * 转换oracle数据列
@@ -15,7 +12,7 @@ import java.util.Locale;
  * @author cs
  * @date 2021/08/31
  */
-public class TransformationOracleDataToColumn {
+public class OracleDataToColumnData {
 
     public static AbstractColumn parseValue(String columnName, Object object) {
         if (object == null) {
@@ -23,8 +20,8 @@ public class TransformationOracleDataToColumn {
         }
         //获取 mysql 值的数据类型
         String type = object.getClass().getSimpleName().toUpperCase();
-        EnumOracleDataType enumOracleDataType = EnumOracleDataType.valueOf(type);
-        switch (enumOracleDataType) {
+        EnumOracleDataInJavaType enumOracleDataInJavaType = EnumOracleDataInJavaType.valueOf(type);
+        switch (enumOracleDataInJavaType) {
             case FLOAT:
                 return new FloatColumn(columnName, (Float) object);
             case DOUBLE:

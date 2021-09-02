@@ -1,4 +1,4 @@
-package common.dbtype;
+package common.dbtype.db;
 
 /**
  * MySQL数据类型类

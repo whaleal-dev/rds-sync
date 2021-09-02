@@ -1,23 +1,17 @@
 package parse;
-
-
-import com.google.gson.Gson;
 import common.column.*;
-
-import common.dbtype.EnumPgDataInJavaType;
+import common.dbtype.java.EnumPgDataInJavaType;
 import org.postgresql.util.PGobject;
-
 import java.math.BigDecimal;
 import java.sql.Time;
 import java.sql.Timestamp;
-import java.time.format.DateTimeFormatter;
-import java.util.Locale;
+
 
 
 /**
  * @author liheping
  */
-public class TransformationPgDataToColumnData {
+public class PgDataToColumnData {
 
     public static AbstractColumn parseValue(String columnName, Object object) {
         if (object == null) {
@@ -44,7 +38,7 @@ public class TransformationPgDataToColumnData {
                 return new TimestampColumn(columnName, ((Timestamp) object).getTime());
             case BOOLEAN:
                 return new BoolColumn(columnName, ((Boolean) object));
-            case BYTEARRAY:
+            case BYTES:
                 return new BytesColumn(columnName, ((byte[]) object));
             case STRING:
             default:

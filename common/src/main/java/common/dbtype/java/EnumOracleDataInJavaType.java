@@ -1,4 +1,4 @@
-package common.dbtype;
+package common.dbtype.java;
 
 /**
  * Oracle数据类型类
@@ -6,8 +6,11 @@ package common.dbtype;
  * @author lhp
  * @time 2021-05-31 13:12:12
  */
-public enum EnumOracleDataType {
+public enum EnumOracleDataInJavaType {
 
+    /**
+     *
+     */
     BIGDECIMAL("BIGDECIMAL"),
     BFILE("BFILE"),
     DOUBLE("DOUBLE"),
@@ -19,7 +22,7 @@ public enum EnumOracleDataType {
 
     private final String upperCase;
 
-    EnumOracleDataType(String upperCase) {
+    EnumOracleDataInJavaType(String upperCase) {
         this.upperCase = upperCase;
     }
 

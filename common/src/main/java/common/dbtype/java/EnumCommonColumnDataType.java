@@ -1,4 +1,4 @@
-package common.dbtype;
+package common.dbtype.java;
 
 /**
  * MongoDB数据类型类
@@ -6,7 +6,7 @@ package common.dbtype;
  * @author lhp
  * @time 2021-05-31 13:12:12
  */
-public enum EnumColumnDataType {
+public enum EnumCommonColumnDataType {
     /**
      * int类型
      */
@@ -85,7 +85,7 @@ public enum EnumColumnDataType {
     BOOLCOLUMN("BOOLCOLUMN");
     private final String upperCase;
 
-    EnumColumnDataType(String upperCase) {
+    EnumCommonColumnDataType(String upperCase) {
         this.upperCase = upperCase;
     }
 

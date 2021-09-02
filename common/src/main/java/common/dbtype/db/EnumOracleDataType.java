@@ -1,4 +1,4 @@
-package common.dbtype;
+package common.dbtype.db;
 
 /**
  * Oracle数据类型类
@@ -6,7 +6,7 @@ package common.dbtype;
  * @author lhp
  * @time 2021-05-31 13:12:12
  */
-public enum EnumOracleDataInJavaType {
+public enum EnumOracleDataType {
 
     /**
      * oracle类型
@@ -37,7 +37,7 @@ public enum EnumOracleDataInJavaType {
 
     private final String upperCase;
 
-    EnumOracleDataInJavaType(String upperCase) {
+    EnumOracleDataType(String upperCase) {
         this.upperCase = upperCase;
     }
 

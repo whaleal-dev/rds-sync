@@ -3,7 +3,7 @@ package parse;
 
 import com.google.gson.Gson;
 import common.column.*;
-import common.dbtype.EnumMongoDbDataInJavaType;
+import common.dbtype.java.EnumMongoDbDataInJavaType;
 import org.bson.*;
 import org.bson.types.*;
 
@@ -17,17 +17,8 @@ import java.util.Locale;
 /**
  * @author liheping
  */
-public class TransformationMongodbDataToColumn {
+public class MongodbDataToColumnData {
     private static final Gson gson = new Gson();
-    /**
-     * us时间格式
-     */
-    private final static DateTimeFormatter formatterOfUs = DateTimeFormatter.ofPattern("EEE MMM dd HH:mm:ss zzz yyyy", Locale.US);
-    /**
-     * 中国时间格式
-     */
-    private final static DateTimeFormatter formatterOfZh = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSz", Locale.CHINA);
-
     public static AbstractColumn parseValue(String columnName, Object object) {
         if (object == null) {
             return new NullColumn(columnName, null);
@@ -42,7 +33,6 @@ public class TransformationMongodbDataToColumn {
             case LONG:
                 return new LongColumn(columnName, (Long) object);
             case BINARY:
-                System.out.println(object.getClass().getSimpleName());
                 return new BytesColumn(columnName, ((Binary) object).getData());
             case DECIMAL128:
                 return new BigDecimalColumn(columnName, new BigDecimal(((Decimal128) object).doubleValue()));
