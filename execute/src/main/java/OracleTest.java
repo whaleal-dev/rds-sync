@@ -1,7 +1,7 @@
 import cache.MemoryCache;
 import com.whaleal.photon.source.oracle.execute.OracleSource;
 import common.photonV.entity.ProgramInfo;
-import configuration.ConfigurationUtil;
+import programInfo.ProgramInfoUtil;
 import datasource.DataSourceUtil;
 import dbconnection.mongodb.MongoDbConnection;
 import dbconnection.oracle.OracleConnection;
@@ -27,7 +27,7 @@ public class OracleTest {
 
     public static void testOracleToMongoDb(){
         //获取配置
-        ProgramInfo programInfo = ConfigurationUtil.getConfiguration("proc4");
+        ProgramInfo programInfo = ProgramInfoUtil.getProgramInfo("proc4");
 
 
         OracleConnection.createConnection(programInfo.getSourceDsName(), DataSourceUtil.getDataSourceByDsName(programInfo.getSourceDsName()));

@@ -2,7 +2,7 @@ package datasource;
 
 import common.photonV.entity.Datasource;
 import common.photonV.entity.ProgramInfo;
-import configuration.ConfigurationUtil;
+import programInfo.ProgramInfoUtil;
 import org.apache.commons.dbcp.BasicDataSource;
 import org.springframework.jdbc.core.JdbcTemplate;
 
@@ -44,7 +44,7 @@ public class DBUtil {
      * @return {@link Datasource}
      */
     public static Datasource getSourceByProcName(String procName) {
-        ProgramInfo confByProcName = ConfigurationUtil.getConfiguration(procName);
+        ProgramInfo confByProcName = ProgramInfoUtil.getProgramInfo(procName);
         String sourName = confByProcName.getSourceDsName();
         JdbcTemplate jdbcTemplate = getJdbcTemplate();
         Map<String, Object> map = jdbcTemplate.queryForMap("select * from photon.datasource where name='" + sourName + "' ");

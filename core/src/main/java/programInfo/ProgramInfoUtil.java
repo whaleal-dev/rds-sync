@@ -1,4 +1,4 @@
-package configuration;
+package programInfo;
 
 import common.photonV.entity.ProgramInfo;
 import dbconnection.MetadataConnection;
@@ -10,8 +10,8 @@ import java.util.Map;
  * @author: lhp
  * @time: 2021/8/27 3:24 下午
  */
-public class ConfigurationUtil {
-    public static ProgramInfo getConfiguration(String procName) {
+public class ProgramInfoUtil {
+    public static ProgramInfo getProgramInfo(String procName) {
         ProgramInfo programInfo = new ProgramInfo();
         programInfo.setProName(procName);
         Map<String, Object> map = MetadataConnection.getJdbcTemplate().queryForMap("select * from photon.program where proc_name='" + procName + "' ");

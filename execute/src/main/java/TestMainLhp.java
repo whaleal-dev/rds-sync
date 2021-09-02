@@ -2,7 +2,7 @@ import cache.MemoryCache;
 import common.OplogMetadata;
 import common.photonV.entity.TaskTrigger;
 import common.photonV.entity.ProgramInfo;
-import configuration.ConfigurationUtil;
+import programInfo.ProgramInfoUtil;
 import datasource.DataSourceUtil;
 import dbconnection.mongodb.MongoDbConnection;
 import dbconnection.mysql.MySqlConnection;
@@ -31,7 +31,7 @@ public class TestMainLhp {
     }
 
     public static void testRealTimeOfMongodb() {
-        ProgramInfo programInfo = ConfigurationUtil.getConfiguration("proc3");
+        ProgramInfo programInfo = ProgramInfoUtil.getProgramInfo("proc3");
         programInfo.setDbTableWhite("\\w.+");
         MongoDbConnection.createMonoDbClient(programInfo.getSourceDsName(), DataSourceUtil.getDataSourceByDsName(programInfo.getSourceDsName()));
 
@@ -61,7 +61,7 @@ public class TestMainLhp {
 
     public static void testMongoDbToMysql() {
 
-        ProgramInfo programInfo = ConfigurationUtil.getConfiguration("proc2");
+        ProgramInfo programInfo = ProgramInfoUtil.getProgramInfo("proc2");
 
         MongoDbConnection.createMonoDbClient(programInfo.getSourceDsName(), DataSourceUtil.getDataSourceByDsName(programInfo.getSourceDsName()));
 
@@ -144,7 +144,7 @@ public class TestMainLhp {
     public static void testMongoDbToMongoDb() {
 
 
-        ProgramInfo programInfo = ConfigurationUtil.getConfiguration("proc1");
+        ProgramInfo programInfo = ProgramInfoUtil.getProgramInfo("proc1");
         TaskTrigger taskTrigger = generateTaskTriggerInfo(programInfo.getTaskName(), programInfo.getProName());
         TriggerUtil.insertTriggerInfo(taskTrigger);
         MongoDbConnection.createMonoDbClient(programInfo.getSourceDsName(), DataSourceUtil.getDataSourceByDsName(programInfo.getSourceDsName()));
@@ -232,7 +232,7 @@ public class TestMainLhp {
 
     public static void testPgToMongoDb() {
         //获取配置
-        ProgramInfo programInfo = ConfigurationUtil.getConfiguration("proc5");
+        ProgramInfo programInfo = ProgramInfoUtil.getProgramInfo("proc5");
 
 
         PgServerConnection.createConnection(programInfo.getSourceDsName(), DataSourceUtil.getDataSourceByDsName(programInfo.getSourceDsName()));

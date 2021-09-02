@@ -1,6 +1,6 @@
 import cache.MemoryCache;
 import common.photonV.entity.ProgramInfo;
-import configuration.ConfigurationUtil;
+import programInfo.ProgramInfoUtil;
 import datasource.DataSourceUtil;
 import dbconnection.mongodb.MongoDbConnection;
 import dbconnection.mysql.MySqlConnection;
@@ -26,7 +26,7 @@ public class TestMainJY {
 
     public static void testMysqlToMongoDb() {
         //获取配置
-        ProgramInfo programInfo = ConfigurationUtil.getConfiguration("proc2");
+        ProgramInfo programInfo = ProgramInfoUtil.getProgramInfo("proc2");
 //        programInfo.setDbTableWhite("community.sys_user.*");
 //        programInfo.setDbTableWhite("community.sys_menu");
 //        programInfo.setDbTableWhite("(community.community_dict)||(community.sys_menu)");

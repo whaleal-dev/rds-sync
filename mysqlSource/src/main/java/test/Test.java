@@ -2,7 +2,7 @@ package test;
 
 import common.dataclass.Range;
 import common.photonV.entity.ProgramInfo;
-import configuration.ConfigurationUtil;
+import programInfo.ProgramInfoUtil;
 import datasource.DataSourceUtil;
 import dbconnection.mysql.MySqlConnection;
 import org.apache.commons.lang3.StringUtils;
@@ -23,7 +23,7 @@ public class Test {
 
 
     public static void main(String[] args) throws SQLException {
-        ProgramInfo programInfo = ConfigurationUtil.getConfiguration("proc2");
+        ProgramInfo programInfo = ProgramInfoUtil.getProgramInfo("proc2");
         System.out.println("=========================================================================================");
         System.out.println("=======================================读取到配置如下=======================================");
         System.out.println("=========================================================================================");
