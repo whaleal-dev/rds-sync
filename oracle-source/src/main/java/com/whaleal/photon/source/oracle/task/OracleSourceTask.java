@@ -1,15 +1,12 @@
 package com.whaleal.photon.source.oracle.task;
 
 import cache.MemoryCache;
-import com.mongodb.client.MongoClient;
 import com.whaleal.photon.source.oracle.parse.TransformationOracleDataToColumn;
 import common.column.AbstractColumn;
 import common.dataclass.BatchDataEntity;
+import common.dataclass.Range;
 import common.taskbase.SourceTaskInfo;
 import common.taskbase.SourceTaskInterface;
-import datasource.DBUtil;
-import dbconnection.mongodb.MongoDbConnection;
-import dbconnection.mysql.MySqlConnection;
 import dbconnection.oracle.OracleConnection;
 import org.springframework.jdbc.core.JdbcTemplate;
 import thread.SourceTaskPoolManager;
@@ -64,21 +61,26 @@ public class OracleSourceTask implements Runnable, SourceTaskInterface {
         this.memoryCache = memoryCache;
         this.dataBatchSize = dataBatchSize;
         this.taskMetadata = taskMetadata;
-        this.connection = MySqlConnection.getConnection(this.taskMetadata.getSourceDsName());
+        this.connection = OracleConnection.getConnection(this.taskMetadata.getSourceDsName());
         this.jdbcTemplate = OracleConnection.getJdbcTemplate(procName);
     }
 
 
     @Override
     public void getDataFromCollection() {
-        String sql = this.taskMetadata.getRange().getQuery();
+        String dbTableName = this.taskMetadata.getDbTableName();
+        Range range = this.taskMetadata.getRange();
+        String query = range.getQuery();
         Statement statement = null;
+        ResultSet resultSet = null;
         try {
             statement = connection.createStatement();
-            ResultSet resultSet = statement.executeQuery(sql);
+            String sql="select * from  " + dbTableName + " where " + query;
+            resultSet = statement.executeQuery(sql);
+            System.out.println("sql====="+sql);
             while (resultSet.next()) {
-                Log.info("getMysqlAbstractColumn == = = == = =");
-                System.out.println("getMysqlAbstractColumn == = = == = =");
+                Log.info("getOracleAbstractColumn == = = == = =");
+                System.out.println("getOracleAbstractColumn == = = == = =");
                 getOracleAbstractColumn(resultSet);
                 Log.info("获取到的dataList    =    " + this.dataList);
                 System.out.println("dataList    =    " + this.dataList);

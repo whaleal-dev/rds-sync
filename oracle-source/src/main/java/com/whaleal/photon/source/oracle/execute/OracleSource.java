@@ -68,7 +68,7 @@ public class OracleSource extends SourceMetadata {
             String tableName = dbTableNameMap.get("TABLE_NAME").toString();
             String dbTable = dbSchemaName + "." + tableName;
             if (dbTable.matches(dbTableWhite)) {
-                dbTables.put(dbTable, dbTable);
+                dbTables.put(dbTable, tableName);
             }
         }
         Log.info("sourceName:" + sourceName + ",全量同步的表列表:" + dbTables);

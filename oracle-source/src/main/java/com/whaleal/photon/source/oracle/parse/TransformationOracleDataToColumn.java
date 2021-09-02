@@ -49,6 +49,7 @@ public class TransformationOracleDataToColumn {
             case BINARY_DOUBLE:
                 return new DoubleColumn(columnName, (Double) object);
             case DECIMAL:
+            case BIGDECIMAL:
                 return new BigDecimalColumn(columnName, (BigDecimal) object);
             case DATE:
                 return new DateColumn(columnName, (String) object);
@@ -60,6 +61,7 @@ public class TransformationOracleDataToColumn {
             case NCHAR:
             case VARCHAR:
             case VARCHAR2:
+            case STRING:
                 return new StringColumn(columnName, object.toString());
             default:
                 return new StringColumn(columnName, object.toString());

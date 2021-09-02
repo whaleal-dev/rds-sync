@@ -2,7 +2,6 @@ package com.whaleal.photon.source.oracle.split;
 
 import common.dataclass.Range;
 import dbconnection.oracle.OracleConnection;
-
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.util.StringUtils;
 import util.Log;
@@ -46,6 +45,7 @@ public class OracleSourceSplitRange {
 //        }
         List<Range> rangeList = new ArrayList<>();
 
+        //根据什么键进行切分需要进行一个判断，如果有的话就去找，如果没有的话就算了
         if (!StringUtils.isEmpty(tableMeteColumn)) {
             String pkColumn = tableMeteColumn.get("COLUMN_NAME").toString();
             Range range = new Range();
@@ -63,7 +63,7 @@ public class OracleSourceSplitRange {
             }
 
             rangeList = getRangeList(range, 3);
-            System.out.println(range);
+            System.out.println(rangeList);
             Range rangeOfNull = new Range();
             rangeOfNull.setColumnName(range.getColumnName());
             rangeOfNull.setDbTableName(dbTableName);
@@ -101,7 +101,7 @@ public class OracleSourceSplitRange {
     public static List<Range> getRangeList(Range range, int splitNum) {
         int min = (Integer) range.getMinId();
         int max = (Integer) range.getMaxId();
-        long rangeNum = (long) ((max - min) / splitNum);
+        long rangeNum = (max - min + 1) / splitNum;
         String columnName = range.getColumnName();
         int minTemp = min;
         List<Range> rangeList = new ArrayList<>();

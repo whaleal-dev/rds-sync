@@ -12,6 +12,7 @@ public enum EnumOracleDataType {
      * oracle类型
      */
     BFILE("BFILE"),
+    BIGDECIMAL("BIGDECIMAL"),
     BINARY_DOUBLE("BINARY_DOUBLE"),
     BINARY_FLOAT("BINARY_FLOAT"),
     BLOB("BLOB"),
@@ -29,12 +30,12 @@ public enum EnumOracleDataType {
     LONG("LONG"),
     NCHAR("NCHAR"),
     SMALLINT("SMALLINT"),
+    STRING("STRING"),
     TIMESTAMP("TIMESTAMP"),
     VARCHAR("VARCHAR"),
     VARCHAR2("VARCHAR2"),
     NUMBERIC("NUMBERIC"),
     NUMBER("NUMBER");
-
     private final String upperCase;
 
     EnumOracleDataType(String upperCase) {
