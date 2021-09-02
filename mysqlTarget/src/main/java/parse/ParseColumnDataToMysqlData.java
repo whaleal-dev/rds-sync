@@ -15,7 +15,6 @@ import java.util.Date;
  * @author liheping
  */
 public class ParseColumnDataToMysqlData {
-    private static DateTimeFormatter timestampSimpleDateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSz");
 
     public static Object parseColumnData(AbstractColumn columnData) {
         String type = columnData.getClass().getSimpleName().toUpperCase();
@@ -37,8 +36,6 @@ public class ParseColumnDataToMysqlData {
             case FLOATCOLUMN:
             case BIGDECIMALCOLUMN:
                 return columnData.getData();
-
-
 //            case DATECOLUMN:
 //
 //            case TIMECOLUN:
@@ -47,7 +44,6 @@ public class ParseColumnDataToMysqlData {
 //                return null;
 //            case DATETIMECOLUMN:
 //                return "'" + new Timestamp((long) columnData.getData()) + "'";
-
             case STRINGCOLUMN:
             case OBJECTIDCOLUMN:
             case JSONCOLUMN:

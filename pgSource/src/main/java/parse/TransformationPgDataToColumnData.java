@@ -19,16 +19,6 @@ import java.util.Locale;
  */
 public class TransformationPgDataToColumnData {
 
-    private static final Gson gson = new Gson();
-    /**
-     * us时间格式
-     */
-    private final static DateTimeFormatter formatterOfUs = DateTimeFormatter.ofPattern("EEE MMM dd HH:mm:ss zzz yyyy", Locale.US);
-    /**
-     * 中国时间格式
-     */
-    private final static DateTimeFormatter formatterOfZh = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSz", Locale.CHINA);
-
     public static AbstractColumn parseValue(String columnName, Object object) {
         if (object == null) {
             return new NullColumn(columnName, null);
@@ -60,13 +50,6 @@ public class TransformationPgDataToColumnData {
             default:
                 return new StringColumn(columnName, object.toString());
         }
-
-
     }
 
-//    public static void main(String[] args) {
-//
-//        Time time = new Time();
-//
-//    }
 }

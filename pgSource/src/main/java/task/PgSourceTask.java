@@ -5,6 +5,7 @@ import cache.MemoryCache;
 import common.column.AbstractColumn;
 import common.dataclass.BatchDataEntity;
 import common.dataclass.Range;
+import common.taskbase.AbstractSourceTask;
 import common.taskbase.SourceTaskInfo;
 import common.taskbase.SourceTaskInterface;
 import dbconnection.pgserver.PgServerConnection;
@@ -26,36 +27,19 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @time: 2021/7/21 2:38 下午
  * @desc: 读取表某区间数据
  */
-public class PgSourceTask implements Runnable, SourceTaskInterface {
+public class PgSourceTask extends AbstractSourceTask {
 
-    private MemoryCache memoryCache;
-
-    private String procName;
     /**
-     * 任务配置信息
+     * jdbc
      */
-    private SourceTaskInfo taskMetadata;
     private JdbcTemplate jdbcTemplate;
+    /**
+     * connection
+     */
     private Connection connection;
-    /**
-     * 缓存大小
-     */
-    private long cache = 0L;
-    /**
-     * 每个批次数据的大小
-     */
-    public int dataBatchSize = 128;
-    /**
-     * 缓存数据集合
-     */
-    private List<List<AbstractColumn>> dataList = new ArrayList<>();
-
 
     public PgSourceTask(SourceTaskInfo taskMetadata, String procName, MemoryCache memoryCache, int dataBatchSize) {
-        this.procName = procName;
-        this.memoryCache = memoryCache;
-        this.dataBatchSize = dataBatchSize;
-        this.taskMetadata = taskMetadata;
+        super(taskMetadata, procName, memoryCache, dataBatchSize);
         this.jdbcTemplate = PgServerConnection.getJdbcTemplate(this.taskMetadata.getSourceDsName());
         this.connection = PgServerConnection.getConnection(this.taskMetadata.getSourceDsName());
     }
@@ -63,11 +47,13 @@ public class PgSourceTask implements Runnable, SourceTaskInterface {
 
     @Override
     public void run() {
-
         Log.info("启动source任务:" + this.taskMetadata.toString());
-        // 读取数据
-        getDataFromCollection();
-        SourceTaskPoolManager.setSourceActiveThreadNum(procName, -1);
+        try {
+            // 读取数据
+            getDataFromCollection();
+        } finally {
+            SourceTaskPoolManager.setSourceActiveThreadNum(procName, -1);
+        }
     }
 
     /**
@@ -85,11 +71,11 @@ public class PgSourceTask implements Runnable, SourceTaskInterface {
         try {
             //读取collection中的数据
             statement = connection.createStatement();
-            String sql="select * from  " + dbTableName + " where " + query;
-            System.out.println("sql====="+sql);
+            String sql = "select * from  " + dbTableName + " where " + query;
+            System.out.println("sql=====" + sql);
             resultSet = statement.executeQuery(sql);
             while (resultSet.next()) {
-                getPgAbstractColumn(resultSet);
+                dataTransformation(resultSet);
                 if (cache++ > dataBatchSize) {
                     putDataToCache();
                 }
@@ -116,10 +102,11 @@ public class PgSourceTask implements Runnable, SourceTaskInterface {
         }
     }
 
-    private void getPgAbstractColumn(ResultSet rs) {
+    @Override
+    public void dataTransformation(Object rs) {
         try {
             //获取有关ResultSet对象中列的类型和属性的信息的对象
-            ResultSetMetaData md = rs.getMetaData();
+            ResultSetMetaData md = ((ResultSet) rs).getMetaData();
             List<AbstractColumn> abstractColumns = new ArrayList<>();
             //获取数据库内容不为空
             if (rs != null) {
@@ -128,10 +115,9 @@ public class PgSourceTask implements Runnable, SourceTaskInterface {
                     //属性名
                     String columnName = md.getColumnName(i);
                     //值
-                    Object values = rs.getObject(md.getColumnName(i));
+                    Object values = ((ResultSet) rs).getObject(md.getColumnName(i));
                     AbstractColumn abstractColumn = TransformationPgDataToColumnData.parseValue(columnName, values);
                     abstractColumns.add(abstractColumn);
-               //     System.out.println("columnName:" + columnName + "      values:" + values+"        type"+values.getClass());
                 }
                 this.dataList.add(abstractColumns);
             }
@@ -140,6 +126,7 @@ public class PgSourceTask implements Runnable, SourceTaskInterface {
             Log.error(e.getMessage());
         }
     }
+
 
     static AtomicInteger atomicInteger = new AtomicInteger();
 
@@ -161,10 +148,5 @@ public class PgSourceTask implements Runnable, SourceTaskInterface {
         System.out.println("sourceNum:" + atomicInteger.addAndGet(batchDataEntity.getDataList().size()));
         this.dataList = new ArrayList<>();
         this.cache = 0;
-    }
-
-    @Override
-    public void dataTransformation(Object object) {
-
     }
 }

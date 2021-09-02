@@ -27,7 +27,7 @@ public final class RangeSplitUtil {
     }
 
     public static void main(String[] args) {
-        getRangeListByLongType(100, 200000, 5, "col").forEach(range -> System.out.println(range));
+        getRangeListByLongType(1, 2, 5, "col").forEach(range -> System.out.println(range));
         System.out.println("");
         getRangeListByStringType("asdfghj", "zxcfghjhg", 3, "col").forEach(range -> System.out.println(range));
     }

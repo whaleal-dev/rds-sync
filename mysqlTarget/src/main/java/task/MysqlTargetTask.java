@@ -32,15 +32,18 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class MysqlTargetTask extends AbstractTargetTask {
 
+    /**
+     * 字段Map
+     * k=dsName+dbTableName+columnName
+     */
     private static volatile Map<String, ColumnType> columnTypeMap = new ConcurrentHashMap<>();
-
+    /**
+     * 库表名单
+     * dsName+dbTableName
+     */
     private static volatile Set<String> dbTableSet = new CopyOnWriteArraySet<>();
 
     private volatile static Map<String, AtomicBoolean> isStop = new ConcurrentHashMap<>();
-    /**
-     * jdbcTemplate
-     */
-    private JdbcTemplate jdbcTemplate;
     /**
      * 数据源链接tcp
      */
@@ -57,7 +60,6 @@ public class MysqlTargetTask extends AbstractTargetTask {
     public MysqlTargetTask(ProgramInfo programInfo, MemoryCache memoryCache) {
         super(programInfo, memoryCache);
         this.connection = MySqlConnection.getConnection(this.targetDsName);
-        this.jdbcTemplate = MySqlConnection.getJdbcTemplate(this.dbTableName);
         if (!isStop.containsKey(proName)) {
             synchronized (MysqlTargetTask.class) {
                 if (!isStop.containsKey(proName)) {
@@ -69,7 +71,12 @@ public class MysqlTargetTask extends AbstractTargetTask {
 
     @Override
     public void run() {
-        applyData();
+        Log.info("启动target任务:" + this.targetDsName);
+        try {
+            applyData();
+        } finally {
+            TargetTaskPoolManager.setTargetActiveThreadNum(proName, -1);
+        }
     }
 
 
@@ -80,13 +87,9 @@ public class MysqlTargetTask extends AbstractTargetTask {
      */
     @Override
     public void applyData() {
-        Log.info("启动target任务:" + this.targetDsName);
         while (true) {
             try {
                 if (isStop.get(proName).get()) {
-                    // System.out.println("targetTask-1");
-                    TargetTaskPoolManager.setTargetActiveThreadNum(proName, -1);
-                    //  System.out.println("setTargetActiveThreadNum" + TargetTaskPoolManager.setTargetActiveThreadNum(proName, 0));
                     break;
                 }
                 BatchDataEntity batchDataEntity = memoryCache.getData();
@@ -97,8 +100,6 @@ public class MysqlTargetTask extends AbstractTargetTask {
                     if (!dbTableSet.contains(batchDataEntity.getDbTableName().toUpperCase())) {
                         createTableByCommonDataEntity(batchDataEntity.getDbTableName(), batchDataEntity.getDataList().get(0), targetDsName);
                     }
-                    //  System.out.println("target:" + atomicInteger.addAndGet(batchDataEntity.getDataList().size()));
-                    // 判断操作行为。如果为INSERTMANY类型，直接应用数据。
                     parseColumnDataToTargetData(batchDataEntity);
                     bulkExecute(dbTableName, -1);
                 }

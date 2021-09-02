@@ -2,8 +2,7 @@ package execute;
 
 import cache.MemoryCache;
 import common.photonV.entity.ProgramInfo;
-import common.taskbase.AbstractTargetInfo;
-import lombok.AllArgsConstructor;
+import common.taskbase.AbstractTarget;
 import task.MongodbTargetTask;
 import thread.TargetTaskPoolManager;
 
@@ -14,7 +13,7 @@ import thread.TargetTaskPoolManager;
  * @desc: 主类
  */
 
-public class MongodbTarget extends AbstractTargetInfo {
+public class MongodbTarget extends AbstractTarget {
     public MongodbTarget(ProgramInfo programInfo, MemoryCache memoryCache, String procName) {
         super(programInfo, memoryCache, procName);
     }
