@@ -26,12 +26,12 @@ import java.util.concurrent.TimeUnit;
  */
 public class MysqlSource extends SourceMetadata {
 
-    Connection connection = null;
-    JdbcTemplate jdbcTemplate = null;
+    private Connection connection;
+    private JdbcTemplate jdbcTemplate;
 
     public MysqlSource(ProgramInfo programInfo, MemoryCache memoryCache) {
         super(programInfo, memoryCache);
-        this.programInfo=programInfo;
+        this.programInfo = programInfo;
         procSourceTask.put(proName, taskMetadataQueue);
         connection = MySqlConnection.getConnection(programInfo.getSourceDsName());
         jdbcTemplate = MySqlConnection.getJdbcTemplate(sourceName);
@@ -39,14 +39,8 @@ public class MysqlSource extends SourceMetadata {
 
     @Override
     public void createTask() {
-        // 遍历执行源数据源抽取
         // 获取数据源的全部库表
-        try {
-            getAllDbCollections(sourceName);
-        } catch (SQLException e) {
-            e.printStackTrace();
-            Log.error(e.getMessage());
-        }
+        getAllDbCollections(sourceName);
         // 启动获取提交Task任务的线程
         submitSourceTask();
         // 开始遍历抽取该数据源的所有库表
@@ -56,8 +50,8 @@ public class MysqlSource extends SourceMetadata {
 
     @Override
     public void startFromSource(String sourceName, boolean isParallel) {
-        createSourceEntity(sourceName,"");
-        dbTables=new ConcurrentHashMap<>();
+        createSourceEntity(sourceName, "");
+        dbTables = new ConcurrentHashMap<>();
         isGetAllDbTable = true;
     }
 
@@ -82,12 +76,13 @@ public class MysqlSource extends SourceMetadata {
     }
 
     @Override
-    public void getAllDbCollections(String sourceName) throws SQLException {
+    public void getAllDbCollections(String sourceName) {
         List<Map<String, Object>> dbTableList = jdbcTemplate.queryForList("select * from information_schema.TABLES");
         for (Map dbTableMap : dbTableList) {
             String dbName = dbTableMap.get("TABLE_SCHEMA").toString();
             //忽略 mysql 系统表
-            if (dbName.equalsIgnoreCase("mysql") || dbName.equalsIgnoreCase("information_schema") ||
+            if (dbName.equalsIgnoreCase("mysql") ||
+                    dbName.equalsIgnoreCase("information_schema") ||
                     dbName.equalsIgnoreCase("sys")) {
                 continue;
             }
@@ -112,7 +107,8 @@ public class MysqlSource extends SourceMetadata {
                             SourceTaskPoolManager.setSourceActiveThreadNum(proName, 1);
                             SourceTaskPoolManager.submit(proName, new MysqlSourceTask(taskMetadata, proName, memoryCache, 128));
                         } else {
-                            if (taskMetadataQueue.size() == 0 && isGetAllDbTable && dbTables.size() == 0 && SysPoolManager.setSysActiveThreadNum(proName, 0) == 0) {
+                            boolean isOver = taskMetadataQueue.size() == 0 && SourceTaskPoolManager.setSourceActiveThreadNum(proName, 0) == 0 && isGetAllDbTable && dbTables.size() == 0 && SysPoolManager.setSysActiveThreadNum(proName, 0) == 0;
+                            if (isOver) {
                                 break;
                             }
                             TimeUnit.SECONDS.sleep(2);
