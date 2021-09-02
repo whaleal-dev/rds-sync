@@ -3,6 +3,7 @@ package task;
 import cache.MemoryCache;
 import common.column.AbstractColumn;
 import common.dataclass.BatchDataEntity;
+import common.taskbase.AbstractSourceTask;
 import common.taskbase.SourceTaskInfo;
 import common.taskbase.SourceTaskInterface;
 import dbconnection.mysql.MySqlConnection;
@@ -20,88 +21,62 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @author: jy
  * @Date: 2021/08/25
  */
-public class MysqlSourceTask implements Runnable, SourceTaskInterface {
-
-    private MemoryCache memoryCache;
-
-    /**
-     * 程序名
-     */
-    private String procName;
-
-    /**
-     * 任务配置信息
-     */
-    private SourceTaskInfo taskMetadata;
-
+public class MysqlSourceTask extends AbstractSourceTask {
     /**
      * connection
      */
     private Connection connection;
-    /**
-     * connection
-     */
-    private JdbcTemplate jdbcTemplate;
-
-    /**
-     * 缓存大小
-     */
-    private long cache = 0L;
-
-    /**
-     * 每个批次数据的大小
-     */
-    public int dataBatchSize = 128;
-
-    /**
-     * 缓存数据集合
-     */
-    private List<List<AbstractColumn>> dataList = new ArrayList<>();
-
-    public static AtomicInteger sourceThreadNum = new AtomicInteger(0);
 
     static AtomicInteger atomicInteger = new AtomicInteger();
 
     public MysqlSourceTask(SourceTaskInfo taskMetadata, String procName, MemoryCache memoryCache, int dataBatchSize) {
-        this.procName = procName;
-        this.memoryCache = memoryCache;
-        this.dataBatchSize = dataBatchSize;
-        this.taskMetadata = taskMetadata;
+        super(taskMetadata, procName, memoryCache, dataBatchSize);
         this.connection = MySqlConnection.getConnection(this.taskMetadata.getSourceDsName());
-        jdbcTemplate = MySqlConnection.getJdbcTemplate(this.taskMetadata.getSourceDsName());
     }
 
     @Override
     public void run() {
         Log.info("启动source任务:" + this.taskMetadata.toString());
-        // 读取数据
-        getDataFromCollection();
-        SourceTaskPoolManager.setSourceActiveThreadNum(procName, -1);
+        try {
+            getDataFromCollection();
+        } finally {
+            SourceTaskPoolManager.setSourceActiveThreadNum(procName, -1);
+        }
     }
 
     @Override
     public void getDataFromCollection() {
         String sql = this.taskMetadata.getRange().getQuery();
         Statement statement = null;
+        ResultSet resultSet = null;
         try {
             statement = connection.createStatement();
-            ResultSet resultSet = statement.executeQuery(sql);
+            resultSet = statement.executeQuery(sql);
             while (resultSet.next()) {
-                getMysqlAbstractColumn(resultSet);
+                dataTransformation(resultSet);
                 System.out.println("dataList    =    " + this.dataList);
                 if (cache++ > dataBatchSize) {
                     putDataToCache();
                 }
-
             }
-            // 推送最后一批数据
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        } finally {
+            try {
+                if (resultSet != null) {
+                    resultSet.close();
+                }
+                if (statement != null) {
+                    statement.close();
+                }
+            } catch (Exception e) {
+                Log.error(e.getMessage());
+            }
             if (cache > 0) {
                 putDataToCache();
                 this.dataList = null;
             }
             Log.info("source任务查询完毕:" + this.taskMetadata.toString());
-        } catch (SQLException throwables) {
-            throwables.printStackTrace();
         }
     }
 
@@ -111,10 +86,11 @@ public class MysqlSourceTask implements Runnable, SourceTaskInterface {
      * @param rs
      * @return
      */
-    private void getMysqlAbstractColumn(ResultSet rs) {
+    @Override
+    public void dataTransformation(Object rs) {
         try {
             //获取有关ResultSet对象中列的类型和属性的信息的对象
-            ResultSetMetaData md = rs.getMetaData();
+            ResultSetMetaData md = ((ResultSet) rs).getMetaData();
             List<AbstractColumn> abstractColumns = new ArrayList<>();
             //获取数据库内容不为空
             if (rs != null) {
@@ -123,7 +99,7 @@ public class MysqlSourceTask implements Runnable, SourceTaskInterface {
                     //属性名
                     String columnName = md.getColumnName(i);
                     //值
-                    Object values = rs.getObject(md.getColumnName(i));
+                    Object values = ((ResultSet) rs).getObject(md.getColumnName(i));
                     AbstractColumn abstractColumn = TransformationMysqlDataToColumn.parseValue(columnName, values);
                     abstractColumns.add(abstractColumn);
                 }
@@ -158,10 +134,4 @@ public class MysqlSourceTask implements Runnable, SourceTaskInterface {
         this.dataList = new ArrayList<>();
         this.cache = 0;
     }
-
-    @Override
-    public void dataTransformation(Object object) {
-
-    }
-
 }
