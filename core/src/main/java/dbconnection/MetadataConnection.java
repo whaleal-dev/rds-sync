@@ -16,7 +16,7 @@ public class MetadataConnection {
     private static JdbcTemplate jdbcTemplate;
 
     /*
-     * 初始化元数据链接
+     * 初始化元数据链接  此信息应从配置文件中读取
      */
     static {
         BasicDataSource basicDataSource = new BasicDataSource();
@@ -37,10 +37,6 @@ public class MetadataConnection {
 
     public static JdbcTemplate getJdbcTemplate() {
         return jdbcTemplate;
-    }
-
-    public static void main(String[] args) {
-        System.out.println(getJdbcTemplate().queryForList("show tables;"));
     }
 
 }

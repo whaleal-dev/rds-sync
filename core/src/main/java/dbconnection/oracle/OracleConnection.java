@@ -2,6 +2,7 @@ package dbconnection.oracle;
 
 import common.photonV.entity.Datasource;
 import datasource.DataSourceUtil;
+import dbconnection.mysql.MySqlConnection;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.dbcp.BasicDataSource;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -28,19 +29,14 @@ public final class OracleConnection {
      *
      * @param dsName     ds的名字
      * @param datasource 数据源
-     * @return {@link Connection}
      */
-    public static Connection createConnection(String dsName, Datasource datasource) {
-        if (oracleConnectionMap.containsKey(dsName)) {
-            return oracleConnectionMap.get(dsName);
-        }
-        Connection connection = null;
-        synchronized (OracleConnection.class) {
-            if (!oracleConnectionMap.containsKey(dsName)) {
-                connection = createConnection(datasource);
-
+    public static void createConnection(String dsName, Datasource datasource) {
+        if (!jdbcTemplateOracleMap.containsKey(dsName)) {
+            synchronized (OracleConnection.class) {
+                if (!jdbcTemplateOracleMap.containsKey(dsName)) {
+                    getBasicDataSource(dsName, datasource);
+                }
             }
-            return connection;
         }
     }
 
@@ -50,7 +46,7 @@ public final class OracleConnection {
 
 
     /**
-     * getJdbcTemplate 获取mysql的Jdbc
+     * getJdbcTemplate 获取oracle的Jdbc
      *
      * @param dsName
      * @return JdbcTemplate
@@ -64,28 +60,21 @@ public final class OracleConnection {
      * 根据datasource获取数据库的连接
      *
      * @param datasource 数据源
-     * @return {@link Connection}
      */
-    public static synchronized Connection createConnection(Datasource datasource) {
-        Connection connection = null;
+    public static void getBasicDataSource(String dsName, Datasource datasource) {
         try {
-            System.out.println(datasource);
             BasicDataSource basicDataSource = new BasicDataSource();
             basicDataSource.setDriverClassName("oracle.jdbc.driver.OracleDriver");
             basicDataSource.setUrl(datasource.getUrl());
             basicDataSource.setUsername(datasource.getUsername());
             basicDataSource.setPassword(datasource.getPassword());
-            System.out.println("成功连接数据库");
-            jdbcTemplateOracleMap.put(datasource.getName(), new JdbcTemplate(basicDataSource));
-
-            connection = basicDataSource.getConnection();
-            oracleConnectionMap.put(datasource.getName(), connection);
+            jdbcTemplateOracleMap.put(dsName, new JdbcTemplate(basicDataSource));
+            oracleConnectionMap.put(dsName, basicDataSource.getConnection());
             System.out.println("成功连接数据库");
         } catch (Exception exception) {
             Log.error(exception.getMessage());
             exception.printStackTrace();
         }
-        return connection;
     }
 
     /**
@@ -95,19 +84,17 @@ public final class OracleConnection {
      * @desc 关闭jdbc链接
      */
     public static void close(String dsName) {
-        if (oracleConnectionMap.containsKey(dsName)) {
-            try {
-                oracleConnectionMap.get(dsName).close();
-                // jdbcTemplateOracleMap.get(dsName).DataSourceUtil().getConnection().close();
-                System.out.println(dsName + "数据源关闭");
-            } catch (SQLException exception) {
-                Log.error(exception.getMessage());
-                exception.printStackTrace();
-            } finally {
-                oracleConnectionMap.remove(dsName);
-                jdbcTemplateOracleMap.remove(dsName);
-            }
+        try {
+            oracleConnectionMap.get(dsName).close();
+            System.out.println(dsName + "数据源关闭");
+        } catch (Exception exception) {
+            Log.error(exception.getMessage());
+            exception.printStackTrace();
+        } finally {
+            oracleConnectionMap.remove(dsName);
+            jdbcTemplateOracleMap.remove(dsName);
         }
+
     }
 
     public static void main(String[] args) {

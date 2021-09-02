@@ -2,6 +2,7 @@ package programInfo;
 
 import common.photonV.entity.ProgramInfo;
 import dbconnection.MetadataConnection;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.util.Map;
 
@@ -11,11 +12,12 @@ import java.util.Map;
  * @time: 2021/8/27 3:24 下午
  */
 public class ProgramInfoUtil {
+    private static JdbcTemplate jdbcTemplate = MetadataConnection.getJdbcTemplate();
+
     public static ProgramInfo getProgramInfo(String procName) {
+        Map<String, Object> map = jdbcTemplate.queryForMap("select * from photon.program where proc_name='" + procName + "' ");
         ProgramInfo programInfo = new ProgramInfo();
         programInfo.setProName(procName);
-        Map<String, Object> map = MetadataConnection.getJdbcTemplate().queryForMap("select * from photon.program where proc_name='" + procName + "' ");
-
         Object taskName = map.get("task_name");
         if (taskName != null) {
             programInfo.setTaskName(taskName.toString());
@@ -40,7 +42,7 @@ public class ProgramInfoUtil {
         if (filterDdl != null) {
             System.out.println(filterDdl);
             programInfo.setFilterDdl(false);
-            if ((Boolean) filterDdl ) {
+            if ((Boolean) filterDdl) {
                 programInfo.setFilterDdl(true);
             }
         }
@@ -91,7 +93,7 @@ public class ProgramInfoUtil {
         Object syncParallel = map.get("sync_parallel");
         if (syncParallel != null) {
             programInfo.setSyncParallel(false);
-            if ((Boolean) syncParallel ) {
+            if ((Boolean) syncParallel) {
                 programInfo.setSyncParallel(true);
             }
         }

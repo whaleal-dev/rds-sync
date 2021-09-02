@@ -30,15 +30,16 @@ public class MySqlConnection {
         if (jdbcTemplateMysqlMap.containsKey(dsName)) {
             return;
         }
-        BasicDataSource basicDataSource = new BasicDataSource();
-        basicDataSource.setUrl(datasource.getUrl());
-        basicDataSource.setUsername(datasource.getUsername());
-        basicDataSource.setPassword(datasource.getPassword());
-        JdbcTemplate jdbcTemplate = new JdbcTemplate(basicDataSource);
-        jdbcTemplateMysqlMap.put(dsName, jdbcTemplate);
         try {
+            BasicDataSource basicDataSource = new BasicDataSource();
+            basicDataSource.setUrl(datasource.getUrl());
+            basicDataSource.setUsername(datasource.getUsername());
+            basicDataSource.setPassword(datasource.getPassword());
+            JdbcTemplate jdbcTemplate = new JdbcTemplate(basicDataSource);
+            jdbcTemplateMysqlMap.put(dsName, jdbcTemplate);
             connectionMysqlMap.put(dsName, basicDataSource.getConnection());
         } catch (SQLException exception) {
+            Log.error(exception.getMessage());
             exception.printStackTrace();
         }
     }
@@ -50,20 +51,14 @@ public class MySqlConnection {
      * @return JdbcTemplate
      * @desc 获取mysql的Jdbc
      */
-    public static Connection createConnection(String dsName, Datasource datasource) {
+    public static void createConnection(String dsName, Datasource datasource) {
         if (!jdbcTemplateMysqlMap.containsKey(dsName)) {
-            getBasicDataSource(dsName, datasource);
-        }
-        synchronized (MySqlConnection.class) {
-            if (!connectionMysqlMap.containsKey(dsName)) {
-                try {
-                    connectionMysqlMap.put(dsName, jdbcTemplateMysqlMap.get(dsName).getDataSource().getConnection());
-                } catch (SQLException exception) {
-                    exception.printStackTrace();
+            synchronized (MySqlConnection.class) {
+                if (!jdbcTemplateMysqlMap.containsKey(dsName)) {
+                    getBasicDataSource(dsName, datasource);
                 }
             }
         }
-        return connectionMysqlMap.get(dsName);
     }
 
     /**
@@ -95,19 +90,15 @@ public class MySqlConnection {
      * @desc 关闭jdbc链接
      */
     public static void close(String dsName) {
-        if (jdbcTemplateMysqlMap.containsKey(dsName)) {
-            try {
-                connectionMysqlMap.get(dsName).close();
-                System.out.println(dsName + "数据源关闭");
-            } catch (SQLException exception) {
-                Log.error(exception.getMessage());
-                exception.printStackTrace();
-            } finally {
-                connectionMysqlMap.remove(dsName);
-                jdbcTemplateMysqlMap.remove(dsName);
-            }
+        try {
+            connectionMysqlMap.get(dsName).close();
+            System.out.println(dsName + "数据源关闭");
+        } catch (SQLException exception) {
+            Log.error(exception.getMessage());
+            exception.printStackTrace();
+        } finally {
+            connectionMysqlMap.remove(dsName);
+            jdbcTemplateMysqlMap.remove(dsName);
         }
     }
-
-
 }

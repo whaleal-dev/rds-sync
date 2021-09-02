@@ -3,6 +3,7 @@ package dbconnection.pgserver;
 import common.dataclass.Range;
 import common.photonV.entity.Datasource;
 import datasource.DataSourceUtil;
+import dbconnection.mysql.MySqlConnection;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.dbcp.BasicDataSource;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -33,17 +34,13 @@ public final class PgServerConnection {
      * @param datasource 数据源
      * @return {@link Connection}
      */
-    public static Connection createConnection(String dsName, Datasource datasource) {
-        if (pgConnectionMap.containsKey(dsName)) {
-            return pgConnectionMap.get(dsName);
-        }
-        Connection connection = null;
-        synchronized (PgServerConnection.class) {
-            if (!pgConnectionMap.containsKey(dsName)) {
-                connection = createConnection(datasource);
-                pgConnectionMap.put(dsName, connection);
+    public static void createConnection(String dsName, Datasource datasource) {
+        if (!jdbcTemplatePgMap.containsKey(dsName)) {
+            synchronized (PgServerConnection.class) {
+                if (!jdbcTemplatePgMap.containsKey(dsName)) {
+                    getBasicDataSource(dsName, datasource);
+                }
             }
-            return connection;
         }
     }
 
@@ -51,14 +48,6 @@ public final class PgServerConnection {
         return jdbcTemplatePgMap.get(dsName);
     }
 
-    public static JdbcTemplate getJdbcTemplateBySource(Datasource datasource) {
-        BasicDataSource basicDataSource = new BasicDataSource();
-        basicDataSource.setUrl(datasource.getUrl());
-        basicDataSource.setUsername(datasource.getUsername());
-        basicDataSource.setPassword(datasource.getPassword());
-        JdbcTemplate jdbcTemplate = new JdbcTemplate(basicDataSource);
-        return jdbcTemplate;
-    }
 
     /**
      * getJdbcTemplate 获取mysql的Jdbc
@@ -77,8 +66,7 @@ public final class PgServerConnection {
      * @param datasource 数据源
      * @return {@link Connection}
      */
-    public static synchronized Connection createConnection(Datasource datasource) {
-        Connection connection = null;
+    public static void getBasicDataSource(String dsName, Datasource datasource) {
         try {
             BasicDataSource basicDataSource = new BasicDataSource();
             basicDataSource.setDriverClassName("org.postgresql.Driver");
@@ -86,14 +74,12 @@ public final class PgServerConnection {
             basicDataSource.setUsername(datasource.getUsername());
             basicDataSource.setPassword(datasource.getPassword());
             System.out.println("成功连接数据库");
-            jdbcTemplatePgMap.put(datasource.getName(), new JdbcTemplate(basicDataSource));
-            connection = basicDataSource.getConnection();
+            jdbcTemplatePgMap.put(dsName, new JdbcTemplate(basicDataSource));
+            pgConnectionMap.put(dsName, basicDataSource.getConnection());
         } catch (Exception exception) {
             Log.error(exception.getMessage());
             exception.printStackTrace();
         }
-
-        return connection;
     }
 
     /**
@@ -103,18 +89,15 @@ public final class PgServerConnection {
      * @desc 关闭jdbc链接
      */
     public static void close(String dsName) {
-        if (pgConnectionMap.containsKey(dsName)) {
-            try {
-                pgConnectionMap.get(dsName).close();
-                // jdbcTemplateOracleMap.get(dsName).DataSourceUtil().getConnection().close();
-                System.out.println(dsName + "数据源关闭");
-            } catch (SQLException exception) {
-                Log.error(exception.getMessage());
-                exception.printStackTrace();
-            } finally {
-                pgConnectionMap.remove(dsName);
-                jdbcTemplatePgMap.remove(dsName);
-            }
+        try {
+            pgConnectionMap.get(dsName).close();
+            System.out.println(dsName + "数据源关闭");
+        } catch (Exception exception) {
+            Log.error(exception.getMessage());
+            exception.printStackTrace();
+        } finally {
+            pgConnectionMap.remove(dsName);
+            jdbcTemplatePgMap.remove(dsName);
         }
     }
 
@@ -123,9 +106,7 @@ public final class PgServerConnection {
         createConnection("pg", DataSourceUtil.getDataSourceByDsName("pg"));
 
 
-
     }
-
 
 
 }

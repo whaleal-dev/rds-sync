@@ -5,6 +5,7 @@ import com.mongodb.client.MongoClients;
 import common.photonV.entity.Datasource;
 import dbconnection.mysql.MySqlConnection;
 import org.bson.Document;
+import util.Log;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -53,8 +54,11 @@ public class MongoDbConnection {
      * @desc 关闭mongodb客户端
      */
     public static void close(String dsName) {
-        if (mongoClientMap.containsKey(dsName)) {
+        try {
             mongoClientMap.get(dsName).close();
+        } catch (Exception e) {
+            Log.error(e.getMessage());
+        } finally {
             mongoClientMap.remove(dsName);
         }
     }

@@ -3,6 +3,7 @@ package datasource;
 import common.photonV.entity.Datasource;
 import dbconnection.MetadataConnection;
 import dbconnection.mysql.MySqlConnection;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.util.Date;
 import java.util.Map;
@@ -13,12 +14,11 @@ import java.util.Map;
  * @time: 2021/8/27 3:19 下午
  */
 public class DataSourceUtil {
-
+    private static JdbcTemplate jdbcTemplate = MetadataConnection.getJdbcTemplate();
     public static Datasource getDataSourceByDsName(String dsName) {
-        Map<String, Object> map = MetadataConnection.getJdbcTemplate().queryForMap("select * from photon.datasource where name='" + dsName + "' ");
+        Map<String, Object> map = jdbcTemplate.queryForMap("select * from photon.datasource where name='" + dsName + "' ");
         Datasource dataSource = new Datasource();
         dataSource.setName(dsName);
-
         Object type = map.get("type");
         if (type != null) {
             dataSource.setType(type.toString());
