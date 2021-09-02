@@ -25,8 +25,15 @@ public class ParseTypeFromColumnType {
                 columnType.setColumnType(MySqlType.TINYINT);
                 columnType.setLength(4);
                 break;
+            case SHORTCOLUMN:
+                columnType.setColumnType(MySqlType.TINYINT);
+                columnType.setLength(objectLength);
+                break;
             case INTCOLUMN:
                 columnType.setColumnType(MySqlType.INT);
+                break;
+            case BIGDECIMALCOLUMN:
+                columnType.setColumnType(MySqlType.DECIMAL);
                 break;
             case LONGCOLUMN:
                 columnType.setColumnType(MySqlType.BIGINT);
@@ -54,15 +61,23 @@ public class ParseTypeFromColumnType {
             case DATECOLUMN:
                 columnType.setColumnType(MySqlType.DATE);
                 break;
+            case TIMECOLUN:
+                columnType.setColumnType(MySqlType.TIME);
+                break;
             case DATETIMECOLUMN:
                 columnType.setColumnType(MySqlType.DATETIME);
                 break;
             case TIMESTAMPCOLUMN:
                 columnType.setColumnType(MySqlType.TIMESTAMP);
                 break;
+            case BYTESCOLUMN:
+                // 需要优化
+                columnType.setColumnType(MySqlType.BLOB);
+                break;
             case JSONCOLUMN:
             case STRINGCOLUMN:
             case ARRAYCOLUMN:
+            case PGOBJECTCOLUMN:
             default:
                 columnType.setColumnType(MySqlType.VARCHAR);
                 dealStringType(objectLength, columnType);
@@ -109,6 +124,7 @@ public class ParseTypeFromColumnType {
                 }
                 break;
             case DOUBLE:
+            case DECIMAL:
             case FLOAT: {
                 columnTypeTemp = ParseTypeFromColumnType.parseType(columnValue);
                 if (columnValue.getData().toString().contains(".")) {
@@ -141,7 +157,4 @@ public class ParseTypeFromColumnType {
         return isAlter;
     }
 
-    public static void main(String[] args) {
-        System.out.println("1.0".split("\\.")[1].length());
-    }
 }

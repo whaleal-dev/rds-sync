@@ -5,6 +5,7 @@ import cache.MemoryCache;
 import com.mongodb.BasicDBObject;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCursor;
+import common.taskbase.AbstractSourceTask;
 import common.taskbase.SourceTaskInfo;
 import common.column.AbstractColumn;
 import common.dataclass.BatchDataEntity;
@@ -26,27 +27,13 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @time: 2021/7/21 2:38 下午
  * @desc: 读取表某区间数据
  */
-public class MongodbSourceTask implements Runnable, SourceTaskInterface {
+public class MongodbSourceTask extends AbstractSourceTask {
 
-    private MemoryCache memoryCache;
-
-    private String procName;
-    /**
-     * 任务配置信息
-     */
-    private SourceTaskInfo taskMetadata;
     /**
      * mongoClient
      */
     private MongoClient mongoClient;
-    /**
-     * 缓存大小
-     */
-    private long cache = 0L;
-    /**
-     * 每个批次数据的大小
-     */
-    public int dataBatchSize = 128;
+
     /**
      * 缓存数据集合
      */
@@ -54,10 +41,7 @@ public class MongodbSourceTask implements Runnable, SourceTaskInterface {
 
 
     public MongodbSourceTask(SourceTaskInfo taskMetadata, String procName, MemoryCache memoryCache, int dataBatchSize) {
-        this.procName = procName;
-        this.memoryCache = memoryCache;
-        this.dataBatchSize = dataBatchSize;
-        this.taskMetadata = taskMetadata;
+        super(taskMetadata, procName, memoryCache, dataBatchSize);
         this.mongoClient = MongoDbConnection.getMongoClient(this.taskMetadata.getSourceDsName());
     }
 

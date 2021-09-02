@@ -10,6 +10,7 @@ import dbconnection.pgserver.PgServerConnection;
 import org.bson.Document;
 import org.springframework.jdbc.core.JdbcTemplate;
 import util.Log;
+import util.split.RangeSplitUtil;
 
 import java.util.*;
 
@@ -31,14 +32,12 @@ public class PgSourceSplitRange {
         this.jdbcTemplate = PgServerConnection.getJdbcTemplate(sourceDsName);
     }
 
-
     public List<Range> getRangeList(String dbTableName) {
         String[] split = dbTableName.split("\\.", 2);
         String dbName = split[0];
         String tableName = split[1];
-        List<Map<String, Object>> tableMeteColumn = jdbcTemplate.queryForList(
-                "SELECT column_name,data_type FROM information_schema.columns t WHERE t.table_schema=? " +
-                        "AND table_name =? order by ordinal_position ", dbName, tableName);
+        String sql = "SELECT column_name,data_type FROM information_schema.columns t WHERE t.table_schema=? AND table_name =? order by ordinal_position ";
+        List<Map<String, Object>> tableMeteColumn = jdbcTemplate.queryForList(sql, dbName, tableName);
         Set<String> intColumnSet = new HashSet<>();
         for (Map<String, Object> columnMap : tableMeteColumn) {
             if ("INTEGER".equalsIgnoreCase(columnMap.get("data_type").toString())) {
@@ -53,8 +52,8 @@ public class PgSourceSplitRange {
             for (String intColumnName : intColumnSet) {
                 Map<String, Object> infoMap = getMaxDifference(intColumnName, dbTableName);
                 Long difference = (Long) infoMap.get("difference");
-                int min = (Integer) infoMap.get("min");
-                int max = (Integer) infoMap.get("max");
+                Long min = (Long) infoMap.get("min");
+                Long max = (Long) infoMap.get("max");
                 if (difference > maxDiffTemp) {
                     range.setColumnName(intColumnName);
                     range.setMaxId(max);
@@ -62,48 +61,40 @@ public class PgSourceSplitRange {
                     maxDiffTemp = difference;
                 }
             }
-
-            if (maxDiffTemp == 0 || range.getColumnName() == null || range.getColumnName().equals("")) {
-                Range rangeOfNull = new Range();
-                rangeOfNull.setDbTableName(dbTableName);
-                rangeOfNull.setQuery("(1=1)");
-                rangeList.add(rangeOfNull);
-
-            } else {
-
-                rangeList = getRangeList(range, 3);
-                System.out.println(range);
+            if (maxDiffTemp == 0 && (range.getColumnName() == null || range.getColumnName().equals(""))) {
                 Range rangeOfNull = new Range();
                 rangeOfNull.setColumnName(range.getColumnName());
                 rangeOfNull.setDbTableName(dbTableName);
-                rangeOfNull.setQuery("(" + range.getColumnName() + " is null)");
+                rangeOfNull.setQuery("( 1=1 )");
                 rangeList.add(rangeOfNull);
+            } else {
+                rangeList = RangeSplitUtil.getRangeListByLongType((Long) range.getMinId(), (Long) range.getMaxId(), 5, range.getColumnName());
             }
-
-
         } else {
             Range rangeOfNull = new Range();
             rangeOfNull.setDbTableName(dbTableName);
             rangeOfNull.setQuery("(1=1)");
             rangeList.add(rangeOfNull);
         }
-        System.out.println("rangeLIST:          " + rangeList);
         rangeList.forEach(range -> System.out.println(range.getQuery()));
         return rangeList;
-
     }
 
     public Map<String, Object> getMaxDifference(String intColumnName, String dbTableName) {
-        long difference = 0;
-        int min = 0;
-        int max = 0;
+        long difference = 0L;
+        Long min = 0L;
+        Long max = 0L;
+        String sql = "select min(" + intColumnName + ")  min, max(" + intColumnName + ")  max from " + dbTableName + "";
         try {
-            min = jdbcTemplate.queryForObject("select min(" + intColumnName + ") from " + dbTableName + "", Integer.class);
-            max = jdbcTemplate.queryForObject("select max(" + intColumnName + ") from " + dbTableName + "", Integer.class);
+            List<Map<String, Object>> mapList = jdbcTemplate.queryForList(sql);
+            if (mapList.size() != 0) {
+                min = (Long) mapList.get(0).get("min");
+                max = (Long) mapList.get(0).get("max");
+            }
         } catch (Exception e) {
             Log.error(e.getMessage());
-            min = 0;
-            max = 0;
+            min = 0L;
+            max = 0L;
         }
         difference = (max - min);
         Map<String, Object> infoMap = new HashMap<>();
@@ -113,45 +104,4 @@ public class PgSourceSplitRange {
         return infoMap;
     }
 
-
-    public static List<Range> getRangeList(Range range, int splitNum) {
-        int min = (Integer) range.getMinId();
-        int max = (Integer) range.getMaxId();
-        long rangeNum = (long) ((max - min) / splitNum);
-        String columnName = range.getColumnName();
-        int minTemp = min;
-        List<Range> rangeList = new ArrayList<>();
-        if (max - min <= splitNum) {
-            Range rangeTemp = new Range();
-            rangeTemp.setQuery("(  " + columnName + ">=" + min + " and " + columnName + "<=" + max + ")");
-            rangeTemp.setMax(true);
-            rangeList.add(rangeTemp);
-            rangeList.add(rangeTemp);
-            return rangeList;
-        }
-        if (rangeNum == 0 || (max - min == 0)) {
-            return rangeList;
-        }
-
-        do {
-            Range rangeTemp = new Range();
-            String query = "(  " + columnName + ">=";
-            rangeTemp.setMinId(minTemp);
-            query += minTemp;
-            minTemp += rangeNum;
-            rangeTemp.setMaxId(minTemp);
-            if (minTemp > max) {
-                query += " and " + columnName + "<=" + minTemp + ")";
-                rangeTemp.setQuery(query);
-                rangeTemp.setMax(true);
-                rangeList.add(rangeTemp);
-                break;
-            }
-            query += " and " + columnName + "<" + minTemp + ")";
-            rangeTemp.setQuery(query);
-            rangeList.add(rangeTemp);
-
-        } while (minTemp < max);
-        return rangeList;
-    }
 }

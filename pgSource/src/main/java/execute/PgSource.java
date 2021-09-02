@@ -31,6 +31,8 @@ public class PgSource extends SourceMetadata {
 
     private JdbcTemplate jdbcTemplate;
 
+    protected static Map<String, Queue<SourceTaskInfo>> procSourceTask = new ConcurrentHashMap<>();
+
     public PgSource(ProgramInfo programInfo, MemoryCache memoryCache) {
         super(programInfo, memoryCache);
         jdbcTemplate = PgServerConnection.getJdbcTemplate(sourceName);
@@ -39,33 +41,23 @@ public class PgSource extends SourceMetadata {
 
     @Override
     public void createTask() {
-
-        // 遍历执行源数据源抽取
         // 获取数据源的全部库表
         getAllDbCollections(sourceName);
         // 启动获取提交Task任务的线程
         submitSourceTask();
         // 开始遍历抽取该数据源的所有库表
         startFromSource(sourceName, false);
-
-
     }
 
     @Override
     public void getAllDbCollections(String sourceName) {
-
-        List<Map<String, Object>> dbTableMapList =
-                jdbcTemplate.
-                        queryForList("select  * from information_schema.TABLES where table_type='BASE TABLE' and " +
-                                "concat(table_schema,'.',table_name)  ~ ? ;", dbTableWhite);
+        String sql = "select  * from information_schema.TABLES where table_type='BASE TABLE' and concat(table_schema,'.',table_name)  ~ ? ";
+        List<Map<String, Object>> dbTableMapList = jdbcTemplate.queryForList(sql, dbTableWhite);
         for (Map<String, Object> dbTableNameMap : dbTableMapList) {
             String dbSchemaName = dbTableNameMap.get("table_schema").toString();
             String tableName = dbTableNameMap.get("table_name").toString();
             String dbTable = dbSchemaName + "." + tableName;
-            System.out.println(this.dbTableWhite);
-//            if ((dbSchemaName + "." + tableName).matches(this.dbTableWhite)) {
             dbTables.put(dbTable, dbTable);
-//            }
         }
         Log.info("sourceName:" + sourceName + ",全量同步的表列表:" + dbTables);
     }
@@ -101,15 +93,13 @@ public class PgSource extends SourceMetadata {
             public void run() {
                 while (true) {
                     try {
-//                        if (SourceTaskPoolManager.setSourceActiveThreadNum(proName, 0) > 10) {
-//                            TimeUnit.SECONDS.sleep(10);
-//                        }
                         SourceTaskInfo taskMetadata = taskMetadataQueue.poll();
                         if (taskMetadata != null) {
                             SourceTaskPoolManager.setSourceActiveThreadNum(proName, 1);
                             SourceTaskPoolManager.submit(proName, new PgSourceTask(taskMetadata, proName, memoryCache, 128));
                         } else {
-                            if (taskMetadataQueue.size() == 0 && isGetAllDbTable && dbTables.size() == 0 && SysPoolManager.setSysActiveThreadNum(proName, 0) == 0) {
+                            boolean isOver = taskMetadataQueue.size() == 0 && SourceTaskPoolManager.setSourceActiveThreadNum(proName, 0) == 0 && isGetAllDbTable && dbTables.size() == 0 && SysPoolManager.setSysActiveThreadNum(proName, 0) == 0;
+                            if (isOver) {
                                 break;
                             }
                             TimeUnit.SECONDS.sleep(2);
@@ -125,8 +115,12 @@ public class PgSource extends SourceMetadata {
         SysPoolManager.submit(proName, runnable);
     }
 
-    protected static Map<String, Queue<SourceTaskInfo>> procSourceTask = new ConcurrentHashMap<>();
-
+    /**
+     * 提交TaskInfo到任务队列中
+     *
+     * @param procName
+     * @param taskMetadata
+     */
     public static void pushTaskMeta(String procName, SourceTaskInfo taskMetadata) {
         procSourceTask.get(procName).add(taskMetadata);
     }
