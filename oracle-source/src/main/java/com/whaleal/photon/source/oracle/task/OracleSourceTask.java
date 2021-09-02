@@ -75,15 +75,13 @@ public class OracleSourceTask implements Runnable, SourceTaskInterface {
         ResultSet resultSet = null;
         try {
             statement = connection.createStatement();
-            String sql="select * from  " + dbTableName + " where " + query;
+            String sql = "select * from  " + dbTableName + " where " + query;
             resultSet = statement.executeQuery(sql);
-            System.out.println("sql====="+sql);
+            Log.info("执行的sql语句" + sql);
             while (resultSet.next()) {
                 Log.info("getOracleAbstractColumn == = = == = =");
-                System.out.println("getOracleAbstractColumn == = = == = =");
                 getOracleAbstractColumn(resultSet);
                 Log.info("获取到的dataList    =    " + this.dataList);
-                System.out.println("dataList    =    " + this.dataList);
                 if (cache++ > dataBatchSize) {
                     putDataToCache();
                 }
@@ -94,7 +92,7 @@ public class OracleSourceTask implements Runnable, SourceTaskInterface {
                 putDataToCache();
                 this.dataList = null;
             }
-            Log.info("source任务查询完毕:" + this.taskMetadata.toString());
+            Log.info("source任务执行完毕:" + this.taskMetadata.toString());
         } catch (SQLException throwables) {
             throwables.printStackTrace();
         }
@@ -135,7 +133,7 @@ public class OracleSourceTask implements Runnable, SourceTaskInterface {
         //源数据集合
         batchDataEntity.setDataList(this.dataList);
         //源数据表名
-        batchDataEntity.setDbTableName(this.taskMetadata.getDbTableName().split("\\.")[0] + "bak." + this.taskMetadata.getDbTableName().split("\\.")[1]);
+        batchDataEntity.setDbTableName(this.taskMetadata.getDbTableName() + "BAK");
         //操作行为
         batchDataEntity.setOperation("INSERTMANY");
         //源数据库名

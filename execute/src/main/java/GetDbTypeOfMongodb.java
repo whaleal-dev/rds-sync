@@ -3,12 +3,8 @@ import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCollection;
 import common.photonV.entity.Datasource;
 import datasource.DataSourceUtil;
-import dbconnection.MetadataConnection;
 import dbconnection.mongodb.MongoDbConnection;
-import jdk.nashorn.internal.runtime.Undefined;
 import org.bson.*;
-import org.bson.codecs.BsonCodec;
-import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.conversions.Bson;
 import org.bson.types.Binary;
 import org.bson.types.Decimal128;
@@ -86,9 +82,9 @@ public class GetDbTypeOfMongodb {
 
         List list = new ArrayList();
         list.add("1");
-        list.add(new Document().append("1",1).append("id",new ObjectId()));
+        list.add(new Document().append("1", 1).append("id", new ObjectId()));
         String s = gson.toJson(list);
-        List list1=gson.fromJson(s.toString(),List.class);
+        List list1 = gson.fromJson(s.toString(), List.class);
         System.out.println(s);
         System.out.println(list1);
     }
