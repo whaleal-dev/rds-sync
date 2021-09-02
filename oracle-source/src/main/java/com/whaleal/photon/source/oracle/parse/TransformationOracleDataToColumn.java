@@ -5,7 +5,6 @@ import common.column.*;
 import common.dbtype.EnumOracleDataType;
 
 import java.math.BigDecimal;
-import java.sql.Blob;
 import java.sql.Timestamp;
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
@@ -36,31 +35,17 @@ public class TransformationOracleDataToColumn {
         String type = object.getClass().getSimpleName().toUpperCase();
         EnumOracleDataType enumOracleDataType = EnumOracleDataType.valueOf(type);
         switch (enumOracleDataType) {
-            case LONG:
-                return new LongColumn(columnName, (Long) object);
-            case INT:
-            case SMALLINT:
-            case INTEGER:
-            case NUMBER:
-            case NUMBERIC:
-                return new IntColumn(columnName, (Integer) object);
             case FLOAT:
                 return new FloatColumn(columnName, (Float) object);
-            case BINARY_DOUBLE:
+            case DOUBLE:
                 return new DoubleColumn(columnName, (Double) object);
-            case DECIMAL:
             case BIGDECIMAL:
                 return new BigDecimalColumn(columnName, (BigDecimal) object);
-            case DATE:
-                return new DateColumn(columnName, (String) object);
             case TIMESTAMP:
                 return new TimestampColumn(columnName, ((Timestamp) object).getTime());
-            case BLOB:
-                return new BlobColumn(columnName, (Blob) object);
-            case CHAR:
-            case NCHAR:
-            case VARCHAR:
-            case VARCHAR2:
+            case BYTES:
+                return new StringColumn(columnName, object.toString());
+            case BFILE:
             case STRING:
                 return new StringColumn(columnName, object.toString());
             default:
