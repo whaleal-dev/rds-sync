@@ -24,19 +24,15 @@ import java.util.concurrent.TimeUnit;
 /**
  * @author: lhp
  * @time: 2021/7/19 3:02 下午
- * @desc: 主类
+ * @desc: PgSource类
  */
-@NoArgsConstructor
+
 public class PgSource extends SourceMetadata {
 
     private JdbcTemplate jdbcTemplate;
 
     public PgSource(ProgramInfo programInfo, MemoryCache memoryCache) {
-        this.sourceName = programInfo.getSourceDsName();
-        this.taskName = programInfo.getTaskName();
-        this.proName = programInfo.getProName();
-        this.dbTableWhite = programInfo.getDbTableWhite();
-        this.memoryCache = memoryCache;
+        super(programInfo, memoryCache);
         jdbcTemplate = PgServerConnection.getJdbcTemplate(sourceName);
         procSourceTask.put(proName, taskMetadataQueue);
     }
@@ -68,7 +64,7 @@ public class PgSource extends SourceMetadata {
             String dbTable = dbSchemaName + "." + tableName;
             System.out.println(this.dbTableWhite);
 //            if ((dbSchemaName + "." + tableName).matches(this.dbTableWhite)) {
-                dbTables.put(dbTable, dbTable);
+            dbTables.put(dbTable, dbTable);
 //            }
         }
         Log.info("sourceName:" + sourceName + ",全量同步的表列表:" + dbTables);

@@ -37,11 +37,7 @@ public class OracleSource extends SourceMetadata {
     JdbcTemplate jdbcTemplate = null;
 
     public OracleSource(ProgramInfo programInfo, MemoryCache memoryCache) {
-        this.sourceName = programInfo.getSourceDsName();
-        this.taskName = programInfo.getTaskName();
-        this.proName = programInfo.getProName();
-        this.dbTableWhite = programInfo.getDbTableWhite();
-        this.memoryCache = memoryCache;
+        super(programInfo, memoryCache);
         procSourceTask.put(proName, taskMetadataQueue);
         connection = OracleConnection.getConnection(sourceName);
         jdbcTemplate = OracleConnection.getJdbcTemplate(sourceName);

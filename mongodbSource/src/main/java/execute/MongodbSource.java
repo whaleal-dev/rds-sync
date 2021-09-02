@@ -27,16 +27,14 @@ import java.util.concurrent.TimeUnit;
  * @time: 2021/7/19 3:02 下午
  * @desc: MongodbSource类 获取所有的表，切分任务
  */
-@NoArgsConstructor
+
 public class MongodbSource extends SourceMetadata {
     private MongoClient mongoClient;
 
+    protected static Map<String, Queue<SourceTaskInfo>> procSourceTask = new ConcurrentHashMap<>();
+
     public MongodbSource(ProgramInfo programInfo, MemoryCache memoryCache) {
-        this.sourceName = programInfo.getSourceDsName();
-        this.taskName = programInfo.getTaskName();
-        this.proName = programInfo.getProName();
-        this.dbTableWhite = programInfo.getDbTableWhite();
-        this.memoryCache = memoryCache;
+        super(programInfo, memoryCache);
         procSourceTask.put(proName, taskMetadataQueue);
         mongoClient = MongoDbConnection.getMongoClient(sourceName);
     }
@@ -92,12 +90,12 @@ public class MongodbSource extends SourceMetadata {
 
     @Override
     public void createSourceEntity(String sourceName, String dbTableName) {
-        MongodbSourceSplitRange mongodbSourceSplitRange = new MongodbSourceSplitRange(sourceName);
-        Map<Integer, Range> map = mongodbSourceSplitRange.getIdTypes(dbTableName);
-        Iterator<Map.Entry<Integer, Range>> rangeMap = map.entrySet().iterator();
         Runnable runnable = new Runnable() {
             @Override
             public void run() {
+                MongodbSourceSplitRange mongodbSourceSplitRange = new MongodbSourceSplitRange(sourceName);
+                Map<Integer, Range> map = mongodbSourceSplitRange.getIdTypes(dbTableName);
+                Iterator<Map.Entry<Integer, Range>> rangeMap = map.entrySet().iterator();
                 while (rangeMap.hasNext()) {
                     // sys线程加一
                     SysPoolManager.setSysActiveThreadNum(proName, 1);
@@ -128,12 +126,12 @@ public class MongodbSource extends SourceMetadata {
                             SourceTaskPoolManager.setSourceActiveThreadNum(proName, 1);
                             SourceTaskPoolManager.submit(proName, new MongodbSourceTask(taskMetadata, proName, memoryCache, 128));
                         } else {
-                            if (taskMetadataQueue.size() == 0 && isGetAllDbTable && dbTables.size() == 0 && SysPoolManager.setSysActiveThreadNum(proName, 0) == 0) {
+                            boolean isOver = taskMetadataQueue.size() == 0 && SourceTaskPoolManager.setSourceActiveThreadNum(proName, 0) == 0 && isGetAllDbTable && dbTables.size() == 0 && SysPoolManager.setSysActiveThreadNum(proName, 0) == 0;
+                            if (isOver) {
                                 break;
                             }
                             TimeUnit.SECONDS.sleep(2);
                         }
-
                     } catch (InterruptedException e) {
                         Log.error(e.getMessage());
                         break;
@@ -145,7 +143,6 @@ public class MongodbSource extends SourceMetadata {
         SysPoolManager.submit(proName, runnable);
     }
 
-    protected static Map<String, Queue<SourceTaskInfo>> procSourceTask = new ConcurrentHashMap<>();
 
     public static void pushTaskMeta(String procName, SourceTaskInfo taskMetadata) {
         procSourceTask.get(procName).add(taskMetadata);

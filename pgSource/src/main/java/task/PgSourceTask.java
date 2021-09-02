@@ -162,4 +162,9 @@ public class PgSourceTask implements Runnable, SourceTaskInterface {
         this.dataList = new ArrayList<>();
         this.cache = 0;
     }
+
+    @Override
+    public void dataTransformation(Object object) {
+
+    }
 }

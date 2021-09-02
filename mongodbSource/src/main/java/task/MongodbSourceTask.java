@@ -64,11 +64,14 @@ public class MongodbSourceTask implements Runnable, SourceTaskInterface {
 
     @Override
     public void run() {
-
-        Log.info("启动source任务:" + this.taskMetadata.toString());
-        // 读取数据
-        getDataFromCollection();
-        SourceTaskPoolManager.setSourceActiveThreadNum(procName, -1);
+        try {
+            Log.info("启动source任务:" + this.taskMetadata.toString());
+            // 读取数据
+            getDataFromCollection();
+        } finally {
+            // source线程数-1
+            SourceTaskPoolManager.setSourceActiveThreadNum(procName, -1);
+        }
     }
 
     /**
@@ -129,6 +132,7 @@ public class MongodbSourceTask implements Runnable, SourceTaskInterface {
         }
     }
 
+    @Override
     public void dataTransformation(Object document) {
         List<AbstractColumn> abstractColumns = new ArrayList<>();
         Iterator<Map.Entry<String, Object>> iterator = ((Document) document).entrySet().iterator();
@@ -140,7 +144,7 @@ public class MongodbSourceTask implements Runnable, SourceTaskInterface {
         this.dataList.add(abstractColumns);
     }
 
-    static AtomicInteger atomicInteger = new AtomicInteger();
+    private static AtomicInteger atomicInteger = new AtomicInteger();
 
     /**
      * putDataToCache 推送数据到缓存区中

@@ -159,4 +159,9 @@ public class MysqlSourceTask implements Runnable, SourceTaskInterface {
         this.cache = 0;
     }
 
+    @Override
+    public void dataTransformation(Object object) {
+
+    }
+
 }

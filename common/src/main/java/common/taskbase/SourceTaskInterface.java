@@ -21,4 +21,7 @@ public interface SourceTaskInterface {
      * @desc 放数据到缓存对象中
      */
     void putDataToCache();
+
+
+    void dataTransformation(Object object);
 }

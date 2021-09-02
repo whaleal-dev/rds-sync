@@ -18,7 +18,6 @@ import java.util.Locale;
  * @author liheping
  */
 public class TransformationMongodbDataToColumn {
-
     private static final Gson gson = new Gson();
     /**
      * us时间格式
@@ -80,13 +79,6 @@ public class TransformationMongodbDataToColumn {
             default:
                 return new StringColumn(columnName, object.toString());
         }
-
-
     }
 
-    public static void main(String[] args) {
-
-        BsonTimestamp bsonTimestamp = new BsonTimestamp(System.currentTimeMillis());
-        System.out.println(bsonTimestamp.getValue());
-    }
 }

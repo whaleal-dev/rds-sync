@@ -148,6 +148,11 @@ public class OracleSourceTask implements Runnable, SourceTaskInterface {
     }
 
     @Override
+    public void dataTransformation(Object object) {
+
+    }
+
+    @Override
     public void run() {
         Log.info("启动source任务:" + this.taskMetadata.toString());
         // 读取数据

@@ -19,21 +19,19 @@ import java.util.List;
  * @author liheping
  */
 public class ParseColumnDataToMongodbData {
-    private static DateTimeFormatter timestampSimpleDateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSz");
     private static Gson gson = new Gson();
 
     public static Object parseColumnData(AbstractColumn columnData) {
         String type = columnData.getClass().getSimpleName().toUpperCase();
         EnumColumnDataType enumColumnDataType = EnumColumnDataType.valueOf(type);
+        // 时间类型可能有问题
         switch (enumColumnDataType) {
             case DATETIMECOLUMN:
+            case TIMECOLUN:
                 return new Date((long) columnData.getData());
             case TIMESTAMPCOLUMN:
                 return new BsonTimestamp((long) (columnData.getData()));
             case DATECOLUMN:
-                return columnData.getData().toString();
-            case TIMECOLUN:
-                return new Date((long) (columnData.getData()));
             case PGOBJECTCOLUMN:
                 return columnData.getData().toString();
             case JSONCOLUMN:
@@ -56,5 +54,4 @@ public class ParseColumnDataToMongodbData {
                 return columnData.getData();
         }
     }
-
 }

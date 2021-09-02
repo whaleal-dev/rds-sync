@@ -62,6 +62,13 @@ public abstract class SourceMetadata {
         this.taskMetadataQueue = taskMetadataQueue;
     }
 
+    public SourceMetadata(ProgramInfo programInfo, MemoryCache memoryCache) {
+        this.sourceName = programInfo.getSourceDsName();
+        this.taskName = programInfo.getTaskName();
+        this.proName = programInfo.getProName();
+        this.dbTableWhite = programInfo.getDbTableWhite();
+        this.memoryCache = memoryCache;
+    }
     /**
      * 库表和对应的MongoNamespace
      */

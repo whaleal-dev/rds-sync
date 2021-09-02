@@ -31,15 +31,17 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public class MongodbTargetTask extends AbstractTargetTask {
 
-
     /**
      * mongoClient
      */
     private MongoClient mongoClient;
-
-
+    /**
+     * 待写入的数据
+     */
     private List<WriteModel<Document>> writeModels = new ArrayList<>();
-
+    /**
+     * 该target是否停止
+     */
     private volatile static Map<String, AtomicBoolean> isStop = new ConcurrentHashMap<>();
 
     public MongodbTargetTask(ProgramInfo programInfo, MemoryCache memoryCache) {
@@ -54,13 +56,21 @@ public class MongodbTargetTask extends AbstractTargetTask {
         }
     }
 
-    public static void setIsStopFlagOfTarget(String procName,boolean value) {
+    /**
+     * 设置某pro的target是否停止
+     */
+    public static void setIsStopFlagOfTarget(String procName, boolean value) {
         isStop.get(procName).set(value);
     }
 
     @Override
     public void run() {
-        applyData();
+        try {
+            applyData();
+        } finally {
+            TargetTaskPoolManager.setTargetActiveThreadNum(proName, -1);
+        }
+
     }
 
 
@@ -70,22 +80,15 @@ public class MongodbTargetTask extends AbstractTargetTask {
         while (true) {
             try {
                 if (isStop.get(proName).get()) {
-                    // System.out.println("targetTask-1");
-                    TargetTaskPoolManager.setTargetActiveThreadNum(proName, -1);
-                    //  System.out.println("setTargetActiveThreadNum" + TargetTaskPoolManager.setTargetActiveThreadNum(proName, 0));
                     break;
                 }
                 BatchDataEntity batchDataEntity = memoryCache.getData();
                 // 从缓存中获取一批数据
                 if (batchDataEntity != null) {
-                    // 当前任务拉取的mongoNamespace
+                    // 当前任务拉取的dbTableName
                     this.dbTableName = batchDataEntity.getDbTableName();
-                    //  System.out.println("target:" + atomicInteger.addAndGet(batchDataEntity.getDataList().size()));
-                    // 判断操作行为。如果为INSERTMANY类型，直接应用数据。
                     parseColumnDataToTargetData(batchDataEntity);
                     bulkExecute(dbTableName, -1);
-                } else {
-                    // System.out.println("我是空数据");
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -117,7 +120,6 @@ public class MongodbTargetTask extends AbstractTargetTask {
             String tableName = dbTable.split("\\.", 2)[1];
             BulkWriteResult bulkWriteResult = this.mongoClient.getDatabase(dbName).
                     getCollection(tableName).bulkWrite(writeModels, new BulkWriteOptions().ordered(false));
-
         } catch (Exception e) {
             Log.error(e.getMessage());
         } finally {
