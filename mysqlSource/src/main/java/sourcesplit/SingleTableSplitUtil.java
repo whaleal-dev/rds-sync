@@ -28,10 +28,19 @@ public class SingleTableSplitUtil {
         List<String> rangeList = null;
         //从配置中取分片字段 splitPk
         String splitPkName = null;
+        String sql = "SELECT * FROM " + table;
+        JdbcTemplate jdbcTemplate = MySqlConnection.getJdbcTemplate(programInfo.getSourceDsName());
+        List<Map<String, Object>> dbTableList = jdbcTemplate.queryForList(sql);
+        if (dbTableList.isEmpty()) {
+            return pluginParams;
+        }
         if (StringUtils.isNotBlank(programInfo.getSplitPk())) {
             splitPkName = programInfo.getSplitPk();
         } else {
             splitPkName = getResultPK(programInfo, table);
+        }
+        if (splitPkName.equals("有汉字列")) {
+            return splitChineseTable(programInfo, table, adviceNum);
         }
         //没有可用主键
         if (StringUtils.isEmpty(splitPkName)) {
@@ -108,8 +117,8 @@ public class SingleTableSplitUtil {
 
         // deal pk is null
         tempQuerySql = buildQuerySql(column, table, where)
-                        + (hasWhere ? " and " : " where ")
-                        + String.format(" %s IS NULL", splitPkName);
+                + (hasWhere ? " and " : " where ")
+                + String.format(" %s IS NULL", splitPkName);
         allQuerySql.add(tempQuerySql);
         range = new Range();
         range.setDbTableName(table);
@@ -252,10 +261,9 @@ public class SingleTableSplitUtil {
             return getPK(table, programInfo);
         }else{
             //智能取切分字段
-            Connection connection = MySqlConnection.getConnection(programInfo.getSourceDsName());
             JdbcTemplate jdbcTemplate = MySqlConnection.getJdbcTemplate(programInfo.getSourceDsName());
-            String sql = "select * from "+ table;
-            SqlRowSet sqlRowSet = jdbcTemplate.queryForRowSet(sql);
+            String baseSql = "select * from "+ table;
+            SqlRowSet sqlRowSet = jdbcTemplate.queryForRowSet(baseSql);
             SqlRowSetMetaData sqlRsmd = sqlRowSet.getMetaData();
             int columnCount = sqlRsmd.getColumnCount();
             List<Map<String, String>> longTableFieldList = new ArrayList<>();
@@ -295,26 +303,125 @@ public class SingleTableSplitUtil {
                 return resultName;
                 //取 String 类型字段名中没有汉字字符的第一个字段名
             } else if (!stringTableFieldList.isEmpty()) {
-                for (Map<String, String> tableField : stringTableFieldList) {
-                    String colName = tableField.get("fieldName");
-                    //构建查询某列无汉字字符的 sql 语句
-                    String judgeSql = "SELECT %s FROM %s WHERE length(%s) != char_length(%s)";
-                    String executeSql = String.format(judgeSql, colName, table, colName, colName);
-                    List<Map<String, Object>> dbTableList = jdbcTemplate.queryForList(executeSql);
-                    if (dbTableList.isEmpty()) {
-                        resultName = colName;
-                        //不含汉字的列名
-                        return resultName;
-                    }
-                }
-                return null;
+                resultName = "有汉字列";
+                return resultName;
             }
-            return null;
+            resultName = "有汉字列";
+            return resultName;
         }
     }
 
+    private static List<Range> splitChineseTable(ProgramInfo programInfo, String table, int adviceNum) {
+        //获取表中 length 最长列的列名和列中 length 最小和最大值
+        Map<String, Object> map = getLengthRange(programInfo, table);
+        String column = map.get("column").toString();
+        Float max = Float.parseFloat(map.get("max").toString());
+        Float min = Float.parseFloat(map.get("min").toString());
+        List<Range> lengthRange = new ArrayList<>();
+        Float splitRange = (max - min) / adviceNum;
+        if (adviceNum == 1) {
+            Range range = new Range();
+            range.setDbTableName(table);
+            range.setQuery("SELECT * FROM "+ table);
+            lengthRange.add(range);
+            return lengthRange;
+        } else {
+            for (int k = 1; k <= adviceNum; k++) {
+                if (k == adviceNum) {
+                    String sql1 = "SELECT * FROM %s WHERE ( %s <= LENGTH(%s) AND LENGTH(%s) <= %s )";
+                    String query1 = String.format(sql1, table, min + splitRange * (k - 1), column, column, min + splitRange * k);
+                    Range range1 = new Range();
+                    range1.setDbTableName(table);
+                    range1.setQuery(query1);
+                    lengthRange.add(range1);
+                    String query2 = "SELECT * FROM "+ table + " WHERE LENGTH(" + column + ") is NULL";
+                    Range range2 = new Range();
+                    range2.setDbTableName(table);
+                    range2.setQuery(query2);
+                    lengthRange.add(range2);
+                    break;
+                }
+                String sql = "SELECT * FROM %s WHERE ( %s <= LENGTH(%s) AND LENGTH(%s) < %s )";
+                String query = String.format(sql, table, min + splitRange * (k - 1), column, column, min + splitRange * k);
+                Range range = new Range();
+                range.setDbTableName(table);
+                range.setQuery(query);
+                lengthRange.add(range);
+            }
+        }
+            return lengthRange;
+        }
 
 
+    private static Map<String, Object> getLengthRange(ProgramInfo programInfo, String table) {
+        JdbcTemplate jdbcTemplate = MySqlConnection.getJdbcTemplate(programInfo.getSourceDsName());
+        //获取列名和列类型
+        String baseSql = "select * from "+ table;
+        SqlRowSet sqlRowSet = jdbcTemplate.queryForRowSet(baseSql);
+        SqlRowSetMetaData sqlRsmd = sqlRowSet.getMetaData();
+        List<Map<String, String>> tableFieldList = new ArrayList<>();
+        List<Long> maxList = new ArrayList<>();
+        int columnCount = sqlRsmd.getColumnCount();
+        for (int i = 1; i <= columnCount; i++) {
+            Map<String,String> fieldMap = new HashMap<>();
+            fieldMap.put("fieldName", sqlRsmd.getColumnName(i));
+            fieldMap.put("fieldType", String.valueOf(sqlRsmd.getColumnType(i)));
+            tableFieldList.add(fieldMap);
+        }
+        Long result = -1L;
+        String resultName = "";
+        List<Map<Long, String>> maxMapList = new ArrayList<>();
+        if (!tableFieldList.isEmpty()) {
+            for (Map<String, String> tableField : tableFieldList) {
+                String colName = tableField.get("fieldName");
+                String maxlengthkey = "MAX(LENGTH(%s))";
+                String maxKey = String.format(maxlengthkey, colName);
+                String length = "SELECT %s FROM %s";
+                String maxlengthSql = String.format(length, maxKey, table);
+                List<Map<String, Object>> list = jdbcTemplate.queryForList(maxlengthSql);
+                if(!list.isEmpty()){
+                    Long max = Long.parseLong(list.get(0).get(maxKey).toString());
+                    Map<Long, String> maxMap = new HashMap<>();
+                    maxMap.put(max, colName);
+                    maxMapList.add(maxMap);
+                    maxList.add(max);
+                    for (Long maxNum : maxList) {
+                        if (maxNum >= result) {
+                            //得到 length 最大的值
+                            result = maxNum;
+                        }
+                    }
+                }
+            }
+            for (Map<Long, String> rmap : maxMapList) {
+                if (!StringUtils.isEmpty(rmap.get(result))){
+                    //得到 length 最大的值对应的列名
+                    resultName = rmap.get(result);
+                }
+            }
+            Long minresult = result;
+            String minlengthkey = "MIN(LENGTH(%s))";
+            String minkey = String.format(minlengthkey, resultName);
+            String length = "SELECT %s FROM %s";
+            String minlengthSql = String.format(length, minkey, table);
+            List<Map<String, Object>> list = jdbcTemplate.queryForList(minlengthSql);
+            List<Long> minlist = new ArrayList<>();
+            Long min = Long.parseLong(list.get(0).get(minkey).toString());
+            minlist.add(min);
+            for (Long minNum : minlist) {
+                if (minNum <= minresult) {
+                    //得到列中length最小的值
+                    minresult = minNum;
+                }
+            }
+            Map<String, Object> map = new HashMap<>();
+            map.put("column", resultName);
+            map.put("min", minresult.floatValue());
+            map.put("max", result.floatValue());
+            return map;
+    }
+        return null;
+}
 
     // warn: Types.NUMERIC is used for oracle! because oracle use NUMBER to
     // store INT, SMALLINT, INTEGER etc, and only oracle need to concern
@@ -372,21 +479,25 @@ public class SingleTableSplitUtil {
      * @return
      */
     public static String getPK(String table, ProgramInfo programInfo) {
-        //TODO get
-        Connection conn = MySqlConnection.getConnection(programInfo.getSourceDsName());
+        JdbcTemplate jdbcTemplate = MySqlConnection.getJdbcTemplate(programInfo.getSourceDsName());
         String PKName = null;
-        try {
-            DatabaseMetaData dmd = conn.getMetaData();
-            String[] tables = StringUtils.split(table,".");
-            ResultSet rs = dmd.getPrimaryKeys(null, "%", tables[1]);
-            rs.next();
-            PKName = rs.getString("column_name");
-            rs.close();
+        String baseSql = "select * from "+ table;
+        SqlRowSet sqlRowSet = jdbcTemplate.queryForRowSet(baseSql);
+        SqlRowSetMetaData sqlRsmd = sqlRowSet.getMetaData();
+        String fieldName = String.valueOf(sqlRsmd.getColumnName(1));
+        String fieldType = String.valueOf(sqlRsmd.getColumnType(1));
+        //获取所有的 Long 和 String 字段名
+        Boolean isLongType = isLongType(Integer.parseInt(fieldType));
+        Boolean isStringType = isStringType(Integer.parseInt(fieldType));
+        //取 Long 类型字段名中最大数值最大者
+        if (isLongType) {
+            PKName = fieldName;
             return PKName;
-        } catch (SQLException throwables) {
-            throwables.printStackTrace();
-            return null;
+        } else if (isStringType) {
+            PKName = "有汉字列";
+            return PKName;
         }
+        return null;
 
     }
 

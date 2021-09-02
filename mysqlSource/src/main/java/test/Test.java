@@ -2,7 +2,6 @@ package test;
 
 import common.dataclass.Range;
 import common.photonV.entity.ProgramInfo;
-import programInfo.ProgramInfoUtil;
 import datasource.DataSourceUtil;
 import dbconnection.mysql.MySqlConnection;
 import org.apache.commons.lang3.StringUtils;
@@ -11,6 +10,9 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.jdbc.support.rowset.SqlRowSetMetaData;
+import programInfo.ProgramInfoUtil;
+import sourcesplit.MysqlSourceSplitRange;
+import util.Log;
 
 import java.sql.*;
 import java.util.*;
@@ -23,17 +25,18 @@ public class Test {
 
 
     public static void main(String[] args) throws SQLException {
-        ProgramInfo programInfo = ProgramInfoUtil.getProgramInfo("proc2");
+        ProgramInfo configuration = ProgramInfoUtil.getProgramInfo("proc2");
         System.out.println("=========================================================================================");
         System.out.println("=======================================读取到配置如下=======================================");
         System.out.println("=========================================================================================");
-        System.out.println(programInfo);
+        System.out.println(configuration);
         System.out.println("=========================================================================================");
         System.out.println("=========================================================================================");
 
         //取某列最大的 length
-        Connection conn = MySqlConnection.getConnection(programInfo.getSourceDsName());
-        JdbcTemplate jdbcTemplate = MySqlConnection.getJdbcTemplate(programInfo.getSourceDsName());
+        /*Connection connection = MySqlConnection.createConnection(configuration.getSourceDsName(),
+                DataSourceUtil.getDataSourceByDsName(configuration.getSourceDsName()));
+        JdbcTemplate jdbcTemplate = MySqlConnection.getJdbcTemplate(configuration.getSourceDsName());
         String table = "community.community_banner";
         String baseSql = "select * from "+ table;
         SqlRowSet sqlRowSet = jdbcTemplate.queryForRowSet(baseSql);
@@ -75,7 +78,7 @@ public class Test {
             for (Map<Long, String> rmap : maxMapList) {
                 System.out.println("rmap.get(result) = "    + rmap.get(result));
                 if (!StringUtils.isEmpty(rmap.get(result))){
-                resultName = rmap.get(result);
+                    resultName = rmap.get(result);
                 }
             }
             System.out.println("    最大result  =   " + result);
@@ -96,17 +99,112 @@ public class Test {
                 }
             }
             System.out.println("    最小result = " + minresult);
-            Pair<Long, Long> pair = new ImmutablePair<Long, Long>(minresult, result);
+            Pair<Float, Float> pair = new ImmutablePair<Float, Float>(minresult.floatValue(), result.floatValue());
             System.out.println("pair = " + pair);
-            int splitNumber = -1;
             List<Range> lengthRange = new ArrayList<>();
-            Range range = new Range();
-            range.setDbTableName(table);
-            range.setQuery("SELECT * FROM "+ table + " WHERE LENGTH(" + resultName + ") is NULL");
-            lengthRange.add(range);
+            int splitNumber = -1;
+            Float min1 = pair.getKey();
+            Float max1 = pair.getValue();
+            System.out.println("min1 = " + min1);
+            System.out.println("max1 = " + max1);
 
-            System.out.println("lengthRange  =   " + lengthRange.get(0).getQuery());
-        }
+            splitNumber = 3;
+            Float nnn = (max1 - min1);
+            //每份数
+            Float mmm = (max1 - min1) / splitNumber;
+            Float aaa = (max1 - min1) % splitNumber;
+            System.out.println("取余 aaa = " + aaa);
+            System.out.println("每份多少 mmm =" + mmm);
+            System.out.println(" 范围 nnn =" + nnn);
+            if (splitNumber == 1) {
+                Range range = new Range();
+                range.setDbTableName(table);
+                range.setQuery("SELECT * FROM "+ table);
+                lengthRange.add(range);
+                //return lengthRange;
+            }else if (splitNumber == 2) {
+                String sql = "SELECT * FROM %s WHERE ( %s <= LENGTH(%s) AND LENGTH(%s) <= %s )";
+                String query = String.format(sql, table, minresult.floatValue(), resultName, resultName, minresult.floatValue() + mmm);
+                Range range = new Range();
+                range.setDbTableName(table);
+                range.setQuery(query);
+                lengthRange.add(range);
+                String sql1 = "SELECT * FROM %s WHERE ( %s < LENGTH(%s) AND LENGTH(%s) <= %s )";
+                String query1 = String.format(sql1, table, minresult.floatValue() + mmm, resultName, resultName, minresult.floatValue() + mmm * 2);
+                Range range1 = new Range();
+                range1.setDbTableName(table);
+                range1.setQuery(query1);
+                lengthRange.add(range1);
+                String query2 = "SELECT * FROM "+ table + " WHERE LENGTH(" + resultName + ") is NULL";
+                Range range2 = new Range();
+                range2.setDbTableName(table);
+                range2.setQuery(query2);
+                lengthRange.add(range2);
+                //return lengthRange;
+            }else if (splitNumber == 3){
+                String sql = "SELECT * FROM %s WHERE ( %s <= LENGTH(%s) AND LENGTH(%s) < %s )";
+                String query = String.format(sql, table, minresult.floatValue(), resultName, resultName, minresult.floatValue() + mmm);
+                Range range = new Range();
+                range.setDbTableName(table);
+                range.setQuery(query);
+                lengthRange.add(range);
+                String sql1 = "SELECT * FROM %s WHERE ( %s <= LENGTH(%s) AND LENGTH(%s) < %s )";
+                String query1 = String.format(sql1, table, minresult.floatValue() + mmm, resultName, resultName, minresult.floatValue() + 2*mmm);
+                Range range1 = new Range();
+                range1.setDbTableName(table);
+                range1.setQuery(query1);
+                lengthRange.add(range1);
+
+                String sql2 = "SELECT * FROM %s WHERE ( %s <= LENGTH(%s) AND LENGTH(%s) <= %s )";
+                String query2 = String.format(sql2, table, minresult.floatValue() + mmm* 2, resultName, resultName, minresult.floatValue() + 3*mmm);
+                Range range2 = new Range();
+                range2.setDbTableName(table);
+                range2.setQuery(query2);
+                lengthRange.add(range2);
+                String query3 = "SELECT * FROM "+ table + " WHERE LENGTH(" + resultName + ") is NULL";
+                Range range3 = new Range();
+                range3.setDbTableName(table);
+                range3.setQuery(query3);
+                lengthRange.add(range3);
+
+            } else {
+                for (int k = 1; k <= splitNumber; k++) {
+                    if (k == splitNumber) {
+                        String sql1 = "SELECT * FROM %s WHERE ( %s <= LENGTH(%s) AND LENGTH(%s) <= %s )";
+                        String query1 = String.format(sql1, table, minresult.floatValue() + mmm* (k-1), resultName, resultName, minresult.floatValue() + k*mmm);
+                        Range range1 = new Range();
+                        range1.setDbTableName(table);
+                        range1.setQuery(query1);
+                        lengthRange.add(range1);
+                        String query2 = "SELECT * FROM "+ table + " WHERE LENGTH(" + resultName + ") is NULL";
+                        Range range2 = new Range();
+                        range2.setDbTableName(table);
+                        range2.setQuery(query2);
+                        lengthRange.add(range2);
+                        break;
+                    }
+                    String sql = "SELECT * FROM %s WHERE ( %s <= LENGTH(%s) AND LENGTH(%s) < %s )";
+                    String query = String.format(sql, table, minresult.floatValue() + mmm* (k-1), resultName, resultName, minresult.floatValue() + k*mmm);
+                    Range range = new Range();
+                    range.setDbTableName(table);
+                    range.setQuery(query);
+                    lengthRange.add(range);
+
+                }
+            }
+            for (int i = 0 ; i <= lengthRange.size()-1; i++) {
+                System.out.println(lengthRange.get(i).getQuery());
+            }
+
+//            System.out.println(lengthRange.get(1).getQuery());
+//            System.out.println(lengthRange.get(2).getQuery());
+//            System.out.println(lengthRange.get(3).getQuery());
+//            System.out.println(lengthRange.get(4).getQuery());
+//            System.out.println(lengthRange.get(5).getQuery());
+//            System.out.println(lengthRange.get(6).getQuery());
+//            System.out.println(lengthRange.get(7).getQuery());
+
+        }*/
 //        System.out.println("tableFieldList  =   " + tableFieldList);
 //        List<Map<String, String>> longTableFieldList = new ArrayList<>();
 //        List<Map<String, String>> stringTableFieldList = new ArrayList<>();
@@ -137,9 +235,9 @@ public class Test {
 
 
         //取表字段类型
-//        Connection connection = MySqlConnection.createConnection(programInfo.getSourceDsName(),
-//                DataSourceUtil.getDataSourceByDsName(programInfo.getSourceDsName()));
-//        JdbcTemplate jdbcTemplate = MySqlConnection.getJdbcTemplate(programInfo.getSourceDsName());
+//        Connection connection = MySqlConnection.createConnection(configuration.getSourceDsName(),
+//                DataSourceUtil.getDataSourceByDsName(configuration.getSourceDsName()));
+//        JdbcTemplate jdbcTemplate = MySqlConnection.getJdbcTemplate(configuration.getSourceDsName());
 ////        List<Map<String, Object>> tableMeteColumn = jdbcTemplate.queryForList(
 ////                "SELECT column_name,data_type FROM information_schema.columns t WHERE t.table_catalog='test' AND table_name ='student' order by ordinal_position ");
 ////        Set<String> intColumnSet = new HashSet<>();
@@ -178,13 +276,13 @@ public class Test {
 //        }
 ////        System.out.println("    " + "tableFieldList" + longTableFieldList.get(0));
 //        if (!longFieldMap.isEmpty()) {
-//            Pair<Object, Object> pair = SingleTableSplitUtil.getPKRange(programInfo, longTableFieldList.get(0).get("fieldName"), tableName, null);
+//            Pair<Object, Object> pair = SingleTableSplitUtil.getPKRange(configuration, longTableFieldList.get(0).get("fieldName"), tableName, null);
 //            Long max = Long.parseLong(pair.getRight().toString());
 //            String maxName = longTableFieldList.get(0).get("fieldName");
 //            for (Map<String, String> tableField : longTableFieldList) {
 //                System.out.println("    " + tableName + "表中为 bigint 、 int、 tinyint 的字段名为 =   " + tableField.get("fieldName"));
 //                String split = tableField.get("fieldName");
-//                Pair<Object, Object> minMaxPK = SingleTableSplitUtil.getPKRange(programInfo, split, tableName, null);
+//                Pair<Object, Object> minMaxPK = SingleTableSplitUtil.getPKRange(configuration, split, tableName, null);
 //                System.out.println("    "+ tableField.get("fieldName") + "字段的范围为" + "minMaxPK    =   " + minMaxPK.toString());
 //                System.out.println("    minMaxPK.right  =   "+ minMaxPK.getRight());
 //                if ( max <= Long.parseLong(minMaxPK.getRight().toString())) {
@@ -217,23 +315,23 @@ public class Test {
         // minMaxPK 最小到最大字段
 //        String split = getPK(tableName, connection);
 //        String split = "dict_node";
-//        Pair<Object, Object> minMaxPK = SingleTableSplitUtil.getPKRange(programInfo, split, tableName, null);
+//        Pair<Object, Object> minMaxPK = SingleTableSplitUtil.getPKRange(configuration, split, tableName, null);
 //        System.out.println("minMaxPK    =   " + minMaxPK.toString());
 
         //切表测试
-/*//        programInfo.setDbTableWhite("(community.community_dict)||(community.sys_menu)");
-//        programInfo.setDbTableWhite("(community.community_dict)||(community.sys_menu)||(community.community.banner)");
-        programInfo.setDbTableWhite("community.test");
-//        programInfo.setDbTableWhite("community.community_category");
-//        programInfo.setDbTableWhite("community.community_banner");
-//        programInfo.setSplitPk("dict_node");
-//        programInfo.setDbTableWhite("community.sys_.*");
-        programInfo.setAdviceNumber(3);
-//        programInfo.setDbTableWhite("community.sys_captcha");
+//        configuration.setDbTableWhite("(community.community_dict)||(community.sys_menu)");
+//        configuration.setDbTableWhite("(community.community_dict)||(community.sys_menu)||(community.community.banner)");
+        configuration.setDbTableWhite("community.test1");
+//        configuration.setDbTableWhite("community.community_category");
+//        configuration.setDbTableWhite("community.community_banner");
+//        configuration.setSplitPk("dict_node");
+//        configuration.setDbTableWhite("community.sys_.*");
+        configuration.setAdviceNumber(5);
+//        configuration.setDbTableWhite("community.sys_captcha");
         List<Range> list = new ArrayList<>();
         try {
-            System.out.println("====" + programInfo);
-            list = MysqlSourceSplitRange.doSplit(programInfo);
+            System.out.println("====" + configuration);
+            list = MysqlSourceSplitRange.doSplit(configuration);
         } catch (Exception e) {
             e.printStackTrace();
             Log.error(e.getMessage());
@@ -242,23 +340,21 @@ public class Test {
             System.out.println("切分的range    =   " + range);
         }
         System.out.println("切分份数    =   " + list.size());
-        System.out.println("使用的切分字段     :   " + programInfo.getSplitPk());*/
-
         //获取主键测试
-/*        Connection conn = MySqlConnection.createConnection(programInfo.getSourceDsName(),
-                DataSourceUtil.getDataSourceByDsName(programInfo.getSourceDsName()));
+/*        Connection conn = MySqlConnection.createConnection(configuration.getSourceDsName(),
+                DataSourceUtil.getDataSourceByDsName(configuration.getSourceDsName()));
         String pkName = getPK("community_banner", conn);
         System.out.println("pkName =       " + pkName);
 
-        List<String> tables = MysqlSourceSplitRange.getDbTables(programInfo);
+        List<String> tables = MysqlSourceSplitRange.getDbTables(configuration);
         System.out.println("tables =  " + tables.toString());
         for (String table : tables){
             System.out.println("table =    " + table);
         }*/
 
         // jdbc 获取各种表信息
-//        Connection conn = MySqlConnection.createConnection(programInfo.getSourceDsName(),
-//                DataSourceUtil.getDataSourceByDsName(programInfo.getSourceDsName()));
+//        Connection conn = MySqlConnection.createConnection(configuration.getSourceDsName(),
+//                DataSourceUtil.getDataSourceByDsName(configuration.getSourceDsName()));
 //        System.out.println(getTables(conn));
 //        System.out.println("=============================");
 //        Statement st = conn.createStatement();
@@ -286,17 +382,17 @@ public class Test {
 
 
 
-//        List<Range> listRange = ReaderSplitUtil.doSplit(programInfo, programInfo.getAdviceNumber(),
-//                ReaderSplitUtil.getTableNumber(programInfo));
+//        List<Range> listRange = ReaderSplitUtil.doSplit(configuration, configuration.getAdviceNumber(),
+//                ReaderSplitUtil.getTableNumber(configuration));
 //        System.out.println("listRange =  " + listRange.toString());
 //        for (Range splitRange : listRange){
 //            System.out.println("splitRange =    " + splitRange);
 //        }
 
 
-//        test1(programInfo);
-//        List<ProgramInfo> listConf = ReaderSplitUtil.doSplit(programInfo, programInfo.getInt("adviceNumber", 2));
-//        ProgramInfo splitConf = listConf.get(1);
+//        test1(configuration);
+//        List<Configuration> listConf = ReaderSplitUtil.doSplit(configuration, configuration.getInt("adviceNumber", 2));
+//        Configuration splitConf = listConf.get(1);
 //        MysqlSourceTaskInfo taskMetadata = MysqlSourceTaskInfo.builder().rangeSql(splitConf.getString(Key.QUERY_SQL))
 //                .sourceUrl(splitConf.getString(Key.JDBC_URL)).databaseType(splitConf.getString(Key.DATABASE_TYPE))
 //                .sourceUsername(splitConf.getString(Key.USERNAME)).sourcePassword(splitConf.getString(Key.PASSWORD))
@@ -307,8 +403,8 @@ public class Test {
 //                .build();
 //
 //        System.out.println("taskMetadata =      " + taskMetadata);
-//        getDataFromCollection(programInfo);
-//        getAllDbTables(programInfo);
+//        getDataFromCollection(configuration);
+//        getAllDbTables(configuration);
 
 
     private static boolean isLongType(int type) {
@@ -411,8 +507,8 @@ public class Test {
     public static void getDataFromCollection(ProgramInfo conf) {
 //
 //        MysqlSourceTaskInfo taskMetadata = new MysqlSourceTaskInfo();
-//        List<ProgramInfo> listConf = ReaderSplitUtil.doSplit(conf, conf.getInt("adviceNumber", 2));
-//        ProgramInfo splitConf = listConf.get(1);
+//        List<Configuration> listConf = ReaderSplitUtil.doSplit(conf, conf.getInt("adviceNumber", 2));
+//        Configuration splitConf = listConf.get(1);
 //
 //        String rangeSql = splitConf.getString(Key.QUERY_SQL);
 //        String sourceUrl = splitConf.getString(Key.JDBC_URL);

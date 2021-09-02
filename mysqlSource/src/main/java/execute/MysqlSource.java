@@ -31,6 +31,7 @@ public class MysqlSource extends SourceMetadata {
 
     public MysqlSource(ProgramInfo programInfo, MemoryCache memoryCache) {
         super(programInfo, memoryCache);
+        this.programInfo=programInfo;
         procSourceTask.put(proName, taskMetadataQueue);
         connection = MySqlConnection.getConnection(programInfo.getSourceDsName());
         jdbcTemplate = MySqlConnection.getJdbcTemplate(sourceName);
