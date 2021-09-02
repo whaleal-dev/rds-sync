@@ -299,6 +299,7 @@ public class SingleTableSplitUtil {
             } else if (!stringTableFieldList.isEmpty()) {
                 for (Map<String, String> tableField : stringTableFieldList) {
                     String colName = tableField.get("fieldName");
+                    //构建查询某列无汉字字符的 sql 语句
                     String judgeSql = "SELECT %s FROM %s WHERE length(%s) != char_length(%s)";
                     String executeSql = String.format(judgeSql, colName, table, colName, colName);
                     List<Map<String, Object>> dbTableList = jdbcTemplate.queryForList(executeSql);
@@ -313,6 +314,8 @@ public class SingleTableSplitUtil {
             return null;
         }
     }
+
+
 
 
     // warn: Types.NUMERIC is used for oracle! because oracle use NUMBER to
