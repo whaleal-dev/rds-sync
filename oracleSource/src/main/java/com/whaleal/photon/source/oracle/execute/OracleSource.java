@@ -31,39 +31,36 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class OracleSource extends SourceMetadata {
 
-    protected static Map<String, Queue<SourceTaskInfo>> procSourceTask = new ConcurrentHashMap<>();
-    //数据库的连接对象
-    Connection connection = null;
-    JdbcTemplate jdbcTemplate = null;
+    private static Map<String, Queue<SourceTaskInfo>> procSourceTask = new ConcurrentHashMap<>();
+
+    private JdbcTemplate jdbcTemplate = null;
 
     public OracleSource(ProgramInfo programInfo, MemoryCache memoryCache) {
         super(programInfo, memoryCache);
         procSourceTask.put(proName, taskMetadataQueue);
-        connection = OracleConnection.getConnection(sourceName);
         jdbcTemplate = OracleConnection.getJdbcTemplate(sourceName);
     }
 
     @Override
     public void createTask() {
-        // 遍历执行源数据源抽取
         // 获取数据源的全部库表
         getAllDbCollections(sourceName);
         // 启动获取提交Task任务的线程
         submitSourceTask();
         // 开始遍历抽取该数据源的所有库表
         startFromSource(sourceName, false);
-
     }
 
     @Override
     public void getAllDbCollections(String sourceName) {
-        List<Map<String, Object>> dbTableMapList = jdbcTemplate.queryForList("select * from USER_TABLES");
+        String sql = "select * from USER_TABLES";
+        List<Map<String, Object>> dbTableMapList = jdbcTemplate.queryForList(sql);
         for (Map<String, Object> dbTableNameMap : dbTableMapList) {
             String dbSchemaName = dbTableNameMap.get("TABLESPACE_NAME").toString();
             String tableName = dbTableNameMap.get("TABLE_NAME").toString();
             String dbTable = dbSchemaName + "." + tableName;
             if (dbTable.matches(dbTableWhite)) {
-                dbTables.put(dbTable, tableName);
+                dbTables.put(dbTable, dbTable);
             }
         }
         Log.info("sourceName:" + sourceName + ",全量同步的表列表:" + dbTables);
@@ -82,8 +79,8 @@ public class OracleSource extends SourceMetadata {
 
     @Override
     public void createSourceEntity(String sourceName, String dbTableName) {
-        OracleSourceSplitRange source = new OracleSourceSplitRange(sourceName);
-        List<Range> rangeList = source.getRangeList(dbTableName);
+        OracleSourceSplitRange sourceSplitRange = new OracleSourceSplitRange(sourceName);
+        List<Range> rangeList = sourceSplitRange.getRangeList(dbTableName);
         for (Range range : rangeList) {
             SourceTaskInfo sourceTaskInfo = new SourceTaskInfo();
             sourceTaskInfo.setSourceDsName(sourceName);
@@ -106,7 +103,8 @@ public class OracleSource extends SourceMetadata {
                         SourceTaskPoolManager.setSourceActiveThreadNum(proName, 1);
                         SourceTaskPoolManager.submit(proName, new OracleSourceTask(taskMetadata, proName, memoryCache, 128));
                     } else {
-                        if (taskMetadataQueue.size() == 0 && isGetAllDbTable && dbTables.size() == 0 && SysPoolManager.setSysActiveThreadNum(proName, 0) == 0) {
+                        boolean isOver = taskMetadataQueue.size() == 0 && SourceTaskPoolManager.setSourceActiveThreadNum(proName, 0) == 0 && isGetAllDbTable && dbTables.size() == 0 && SysPoolManager.setSysActiveThreadNum(proName, 0) == 0;
+                        if (isOver) {
                             break;
                         }
                         TimeUnit.SECONDS.sleep(2);

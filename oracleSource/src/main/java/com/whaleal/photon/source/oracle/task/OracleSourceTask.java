@@ -5,6 +5,7 @@ import com.whaleal.photon.source.oracle.parse.TransformationOracleDataToColumn;
 import common.column.AbstractColumn;
 import common.dataclass.BatchDataEntity;
 import common.dataclass.Range;
+import common.taskbase.AbstractSourceTask;
 import common.taskbase.SourceTaskInfo;
 import common.taskbase.SourceTaskInterface;
 import dbconnection.oracle.OracleConnection;
@@ -23,17 +24,9 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @author cs
  * @date 2021/08/31
  */
-public class OracleSourceTask implements Runnable, SourceTaskInterface {
+public class OracleSourceTask extends AbstractSourceTask {
 
-    static AtomicInteger atomicInteger = new AtomicInteger();
-
-    private MemoryCache memoryCache;
-
-    private String procName;
-    /**
-     * 任务配置信息
-     */
-    private SourceTaskInfo taskMetadata;
+    private static AtomicInteger atomicInteger = new AtomicInteger();
     /**
      * connection
      */
@@ -43,28 +36,24 @@ public class OracleSourceTask implements Runnable, SourceTaskInterface {
      */
     private JdbcTemplate jdbcTemplate;
     /**
-     * 缓存大小
-     */
-    private long cache = 0L;
-    /**
-     * 每个批次数据的大小
-     */
-    public int dataBatchSize = 128;
-
-    /**
      * 缓存数据集合
      */
     private List<List<AbstractColumn>> dataList = new ArrayList<>();
 
     public OracleSourceTask(SourceTaskInfo taskMetadata, String procName, MemoryCache memoryCache, int dataBatchSize) {
-        this.procName = procName;
-        this.memoryCache = memoryCache;
-        this.dataBatchSize = dataBatchSize;
-        this.taskMetadata = taskMetadata;
+        super(taskMetadata, procName, memoryCache, dataBatchSize);
         this.connection = OracleConnection.getConnection(this.taskMetadata.getSourceDsName());
         this.jdbcTemplate = OracleConnection.getJdbcTemplate(procName);
     }
 
+    @Override
+    public void run() {
+
+        Log.info("启动source任务:" + this.taskMetadata.toString());
+        // 读取数据
+        getDataFromCollection();
+        SourceTaskPoolManager.setSourceActiveThreadNum(procName, -1);
+    }
 
     @Override
     public void getDataFromCollection() {
@@ -74,40 +63,51 @@ public class OracleSourceTask implements Runnable, SourceTaskInterface {
         Statement statement = null;
         ResultSet resultSet = null;
         try {
+
+            String tableName = dbTableName.split("\\.", 2)[1];
             statement = connection.createStatement();
-            String sql = "select * from  " + dbTableName + " where " + query;
+            String sql = "select * from  " + tableName + " where " + query;
             resultSet = statement.executeQuery(sql);
             Log.info("执行的sql语句" + sql);
             while (resultSet.next()) {
-                Log.info("getOracleAbstractColumn == = = == = =");
-                getOracleAbstractColumn(resultSet);
-                Log.info("获取到的dataList    =    " + this.dataList);
+                dataTransformation(resultSet);
                 if (cache++ > dataBatchSize) {
                     putDataToCache();
                 }
-
-            }
-            // 推送最后一批数据
-            if (cache > 0) {
-                putDataToCache();
-                this.dataList = null;
             }
             Log.info("source任务执行完毕:" + this.taskMetadata.toString());
         } catch (SQLException throwables) {
             throwables.printStackTrace();
+        } finally {
+            try {
+                if (resultSet != null) {
+                    resultSet.close();
+                }
+                if (statement != null) {
+                    statement.close();
+                }
+            } catch (Exception e) {
+                Log.error(e.getMessage());
+            }
+            if (cache > 0) {
+                putDataToCache();
+                this.dataList = null;
+            }
+            Log.info("source任务查询完毕:" + this.taskMetadata.toString());
         }
     }
 
     /**
-     * 获取AbstractColumn集合
+     * dataTransformation
      *
      * @param rs
      * @return
      */
-    private void getOracleAbstractColumn(ResultSet rs) {
+    @Override
+    public void dataTransformation(Object rs) {
         try {
             //获取有关ResultSet对象中列的类型和属性的信息的对象
-            ResultSetMetaData md = rs.getMetaData();
+            ResultSetMetaData md = ((ResultSet) rs).getMetaData();
             List<AbstractColumn> abstractColumns = new ArrayList<>();
             //获取数据库内容不为空
             //遍历rs中的属性与值
@@ -115,12 +115,11 @@ public class OracleSourceTask implements Runnable, SourceTaskInterface {
                 //属性名下划线改驼峰
                 String columnName = md.getColumnName(i);
                 //值
-                Object values = rs.getObject(md.getColumnName(i));
+                Object values = ((ResultSet) rs).getObject(md.getColumnName(i));
                 AbstractColumn abstractColumn = TransformationOracleDataToColumn.parseValue(columnName, values);
                 abstractColumns.add(abstractColumn);
             }
             this.dataList.add(abstractColumns);
-
         } catch (Exception e) {
             Log.error(e.getMessage());
         }
@@ -147,16 +146,5 @@ public class OracleSourceTask implements Runnable, SourceTaskInterface {
         this.cache = 0;
     }
 
-    @Override
-    public void dataTransformation(Object object) {
 
-    }
-
-    @Override
-    public void run() {
-        Log.info("启动source任务:" + this.taskMetadata.toString());
-        // 读取数据
-        getDataFromCollection();
-        SourceTaskPoolManager.setSourceActiveThreadNum(procName, -1);
-    }
 }

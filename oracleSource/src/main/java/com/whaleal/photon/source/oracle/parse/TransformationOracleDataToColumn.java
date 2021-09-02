@@ -16,16 +16,6 @@ import java.util.Locale;
  * @date 2021/08/31
  */
 public class TransformationOracleDataToColumn {
-    private static final Gson gson = new Gson();
-
-    /**
-     * us时间格式
-     */
-    private final static DateTimeFormatter formatterOfUs = DateTimeFormatter.ofPattern("EEE MMM dd HH:mm:ss zzz yyyy", Locale.US);
-    /**
-     * 中国时间格式
-     */
-    private final static DateTimeFormatter formatterOfZh = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss", Locale.CHINA);
 
     public static AbstractColumn parseValue(String columnName, Object object) {
         if (object == null) {
@@ -44,10 +34,11 @@ public class TransformationOracleDataToColumn {
             case TIMESTAMP:
                 return new TimestampColumn(columnName, ((Timestamp) object).getTime());
             case BYTES:
-                return new StringColumn(columnName, object.toString());
+                return new BytesColumn(columnName, (byte[]) object);
+            case INTEGER:
+                return new IntColumn(columnName, (Integer) object);
             case BFILE:
             case STRING:
-                return new StringColumn(columnName, object.toString());
             default:
                 return new StringColumn(columnName, object.toString());
         }

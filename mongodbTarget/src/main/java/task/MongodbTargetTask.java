@@ -121,6 +121,7 @@ public class MongodbTargetTask extends AbstractTargetTask {
             BulkWriteResult bulkWriteResult = this.mongoClient.getDatabase(dbName).
                     getCollection(tableName).bulkWrite(writeModels, new BulkWriteOptions().ordered(false));
         } catch (Exception e) {
+            e.printStackTrace();
             Log.error(e.getMessage());
         } finally {
             writeModels = new ArrayList<>();

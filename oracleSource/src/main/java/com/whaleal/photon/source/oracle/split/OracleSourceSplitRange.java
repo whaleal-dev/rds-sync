@@ -33,18 +33,12 @@ public class OracleSourceSplitRange {
     }
 
     public List<Range> getRangeList(String dbTableName) {
-        //根据sql语句来查询得到最终的结果
-        Map<String, Object> tableMeteColumn = jdbcTemplate.queryForMap(
-                "select a.constraint_name,  a.column_name from user_cons_columns a, user_constraints b where a.constraint_name = b.constraint_name  and b.constraint_type = 'P' and a.table_name = '" + dbTableName + "'");
-        //把所有int类型的数据放到我们的项目中
-//        Set<String> intColumnSet = new HashSet<>();
-//        for (Map<String, Object> columnMap : tableMeteColumn) {
-//            if ("INTEGER".equalsIgnoreCase(columnMap.get("data_type").toString())) {
-//                intColumnSet.add(columnMap.get("column_name").toString());
-//            }
-//        }
-        List<Range> rangeList = new ArrayList<>();
 
+        String tableName = dbTableName.split("\\.", 2)[1];
+        //根据sql语句来查询得到最终的结果
+        String sql = "select a.constraint_name,  a.column_name from user_cons_columns a, user_constraints b where a.constraint_name = b.constraint_name  and b.constraint_type = 'P' and a.table_name = '" + tableName + "'";
+        Map<String, Object> tableMeteColumn = jdbcTemplate.queryForMap(sql);
+        List<Range> rangeList = new ArrayList<>();
         //根据什么键进行切分需要进行一个判断，如果有的话就去找，如果没有的话就算了
         if (!StringUtils.isEmpty(tableMeteColumn)) {
             String pkColumn = tableMeteColumn.get("COLUMN_NAME").toString();
@@ -61,7 +55,6 @@ public class OracleSourceSplitRange {
                 range.setMinId(min);
                 maxDiffTemp = difference;
             }
-
             rangeList = getRangeList(range, 3);
             System.out.println(rangeList);
             Range rangeOfNull = new Range();
@@ -69,7 +62,6 @@ public class OracleSourceSplitRange {
             rangeOfNull.setDbTableName(dbTableName);
             rangeOfNull.setQuery("(" + range.getColumnName() + " is null)");
             rangeList.add(rangeOfNull);
-
         } else {
             Range rangeOfNull = new Range();
             rangeOfNull.setDbTableName(dbTableName);
@@ -81,12 +73,14 @@ public class OracleSourceSplitRange {
     }
 
     public Map<String, Object> getMaxDifference(String intColumnName, String dbTableName) {
+
+        String tableName = dbTableName.split("\\.", 2)[1];
         long difference = 0;
         int min = 0;
         int max = 0;
         try {
-            min = jdbcTemplate.queryForObject("select min(" + intColumnName + ") from " + dbTableName + "", Integer.class);
-            max = jdbcTemplate.queryForObject("select max(" + intColumnName + ") from " + dbTableName + "", Integer.class);
+            min = jdbcTemplate.queryForObject("select min(" + intColumnName + ") from " + tableName + "", Integer.class);
+            max = jdbcTemplate.queryForObject("select max(" + intColumnName + ") from " + tableName + "", Integer.class);
         } catch (Exception e) {
             Log.error("切分表失败" + e.getMessage());
         }

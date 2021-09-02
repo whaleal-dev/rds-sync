@@ -12,6 +12,7 @@ public enum EnumOracleDataType {
     BFILE("BFILE"),
     DOUBLE("DOUBLE"),
     FLOAT("FLOAT"),
+    INTEGER("INTEGER"),
     STRING("STRING"),
     TIMESTAMP("TIMESTAMP"),
     BYTES("BYTE[]");

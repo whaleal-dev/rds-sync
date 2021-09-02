@@ -12,16 +12,11 @@ import thread.SysPoolManager;
 import thread.TargetTaskPoolManager;
 import util.Log;
 
-public class OracleTest {
+public class OracleTestCS {
     public static void main(String[] args) throws InterruptedException {
         testOracleToMongoDb();
 
 
-//        List<Map<String, Object>> mapList = OracleConnection.getJdbcTemplate("pg").queryForList("select * from USER ");
-//
-//        for (Map<String, Object> map : mapList) {
-//            System.out.println(map.get("intclmn").getClass());
-//        }
 
     }
 
