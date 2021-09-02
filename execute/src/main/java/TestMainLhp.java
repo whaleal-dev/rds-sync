@@ -1,7 +1,7 @@
 import cache.MemoryCache;
 import common.OplogMetadata;
 import common.photonV.entity.TaskTrigger;
-import conf.ProgramInfo;
+import common.photonV.entity.ProgramInfo;
 import configuration.ConfigurationUtil;
 import datasource.DataSourceUtil;
 import dbconnection.mongodb.MongoDbConnection;

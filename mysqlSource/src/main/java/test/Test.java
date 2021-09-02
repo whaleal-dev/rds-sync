@@ -1,7 +1,7 @@
 package test;
 
 import common.dataclass.Range;
-import conf.ProgramInfo;
+import common.photonV.entity.ProgramInfo;
 import configuration.ConfigurationUtil;
 import datasource.DataSourceUtil;
 import dbconnection.mysql.MySqlConnection;

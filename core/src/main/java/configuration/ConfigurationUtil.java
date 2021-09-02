@@ -1,6 +1,6 @@
 package configuration;
 
-import conf.ProgramInfo;
+import common.photonV.entity.ProgramInfo;
 import dbconnection.MetadataConnection;
 
 import java.util.Map;

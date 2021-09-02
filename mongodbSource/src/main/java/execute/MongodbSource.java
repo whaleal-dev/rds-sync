@@ -10,7 +10,7 @@ import common.dataclass.Range;
 import lombok.NoArgsConstructor;
 import thread.SourceTaskPoolManager;
 import thread.SysPoolManager;
-import conf.ProgramInfo;
+import common.photonV.entity.ProgramInfo;
 import dbconnection.mongodb.MongoDbConnection;
 import sourcesplit.MongodbSourceSplitRange;
 import task.MongodbSourceTask;

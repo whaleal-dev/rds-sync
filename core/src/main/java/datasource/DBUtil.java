@@ -1,7 +1,7 @@
 package datasource;
 
 import common.photonV.entity.Datasource;
-import conf.ProgramInfo;
+import common.photonV.entity.ProgramInfo;
 import configuration.ConfigurationUtil;
 import org.apache.commons.dbcp.BasicDataSource;
 import org.springframework.jdbc.core.JdbcTemplate;

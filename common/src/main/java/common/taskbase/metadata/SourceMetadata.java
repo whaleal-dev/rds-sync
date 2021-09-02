@@ -2,7 +2,7 @@ package common.taskbase.metadata;
 
 import cache.MemoryCache;
 import common.taskbase.SourceTaskInfo;
-import conf.ProgramInfo;
+import common.photonV.entity.ProgramInfo;
 
 import java.sql.SQLException;
 import java.util.Map;

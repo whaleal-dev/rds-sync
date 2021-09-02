@@ -2,7 +2,7 @@ package sourcesplit;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import common.dataclass.Range;
-import conf.ProgramInfo;
+import common.photonV.entity.ProgramInfo;
 import datasource.DataSourceUtil;
 import dbconnection.mysql.MySqlConnection;
 import org.apache.commons.lang3.StringUtils;

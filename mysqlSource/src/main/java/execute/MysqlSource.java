@@ -4,7 +4,7 @@ import cache.MemoryCache;
 import common.dataclass.Range;
 import common.taskbase.SourceTaskInfo;
 import common.taskbase.metadata.SourceMetadata;
-import conf.ProgramInfo;
+import common.photonV.entity.ProgramInfo;
 import datasource.DataSourceUtil;
 import dbconnection.mysql.MySqlConnection;
 import org.springframework.jdbc.core.JdbcTemplate;

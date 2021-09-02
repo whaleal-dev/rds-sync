@@ -1,6 +1,6 @@
 import cache.MemoryCache;
 import com.whaleal.photon.source.oracle.execute.OracleSource;
-import conf.ProgramInfo;
+import common.photonV.entity.ProgramInfo;
 import configuration.ConfigurationUtil;
 import datasource.DataSourceUtil;
 import dbconnection.mongodb.MongoDbConnection;

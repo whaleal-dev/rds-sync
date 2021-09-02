@@ -1,7 +1,7 @@
 package execute;
 
 import cache.MemoryCache;
-import conf.ProgramInfo;
+import common.photonV.entity.ProgramInfo;
 import lombok.AllArgsConstructor;
 import task.MongodbTargetTask;
 import thread.TargetTaskPoolManager;

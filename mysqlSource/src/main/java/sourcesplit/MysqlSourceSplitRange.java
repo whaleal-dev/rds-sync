@@ -1,7 +1,7 @@
 package sourcesplit;
 
 import common.dataclass.Range;
-import conf.ProgramInfo;
+import common.photonV.entity.ProgramInfo;
 import datasource.DataSourceUtil;
 import dbconnection.mysql.MySqlConnection;
 

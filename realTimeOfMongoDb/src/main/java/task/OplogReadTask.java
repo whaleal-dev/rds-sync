@@ -6,7 +6,7 @@ import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import common.OplogMetadata;
-import conf.ProgramInfo;
+import common.photonV.entity.ProgramInfo;
 import dbconnection.mongodb.MongoDbConnection;
 import org.bson.BsonTimestamp;
 import org.bson.Document;

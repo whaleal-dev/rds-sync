@@ -6,7 +6,7 @@ import com.whaleal.photon.source.oracle.task.OracleSourceTask;
 import common.dataclass.Range;
 import common.taskbase.SourceTaskInfo;
 import common.taskbase.metadata.SourceMetadata;
-import conf.ProgramInfo;
+import common.photonV.entity.ProgramInfo;
 import dbconnection.oracle.OracleConnection;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.JdbcTemplate;

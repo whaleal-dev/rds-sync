@@ -1,4 +1,4 @@
-package conf;
+package common.photonV.entity;
 
 import cache.MemoryCache;
 import lombok.Data;

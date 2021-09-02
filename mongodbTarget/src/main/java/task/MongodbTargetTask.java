@@ -9,7 +9,7 @@ import com.mongodb.client.model.WriteModel;
 import common.column.AbstractColumn;
 import common.dataclass.BatchDataEntity;
 import common.taskbase.AbstractTargetTask;
-import conf.ProgramInfo;
+import common.photonV.entity.ProgramInfo;
 import dbconnection.mongodb.MongoDbConnection;
 
 import org.bson.Document;

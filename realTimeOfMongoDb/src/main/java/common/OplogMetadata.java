@@ -1,7 +1,7 @@
 package common;
 
 import common.dataclass.BatchDataEntity;
-import conf.ProgramInfo;
+import common.photonV.entity.ProgramInfo;
 import lombok.*;
 import org.bson.Document;
 

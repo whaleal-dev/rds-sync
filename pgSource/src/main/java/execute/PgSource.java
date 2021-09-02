@@ -4,7 +4,7 @@ import cache.MemoryCache;
 import common.dataclass.Range;
 import common.taskbase.SourceTaskInfo;
 import common.taskbase.metadata.SourceMetadata;
-import conf.ProgramInfo;
+import common.photonV.entity.ProgramInfo;
 import dbconnection.pgserver.PgServerConnection;
 import lombok.NoArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;

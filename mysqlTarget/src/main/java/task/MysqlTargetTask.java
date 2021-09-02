@@ -6,7 +6,7 @@ import common.columnclass.ColumnType;
 import common.dataclass.BatchDataEntity;
 import common.dbtype.DbTypeFlag;
 import common.taskbase.AbstractTargetTask;
-import conf.ProgramInfo;
+import common.photonV.entity.ProgramInfo;
 import dbconnection.mysql.MySqlConnection;
 import org.springframework.jdbc.core.JdbcTemplate;
 import parse.ParseColumnDataToMysqlData;

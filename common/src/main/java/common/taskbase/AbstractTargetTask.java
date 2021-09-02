@@ -2,7 +2,7 @@ package common.taskbase;
 
 import cache.MemoryCache;
 import common.dataclass.BatchDataEntity;
-import conf.ProgramInfo;
+import common.photonV.entity.ProgramInfo;
 
 /**
  * @description:
