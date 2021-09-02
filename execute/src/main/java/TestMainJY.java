@@ -32,14 +32,16 @@ public class TestMainJY {
 //        programInfo.setDbTableWhite("(community.community_dict)||(community.sys_menu)");
 //        programInfo.setDbTableWhite("(community.community_dict)||(community.sys_menu)||(community.community.banner)");
 //        programInfo.setDbTableWhite("community.sys_user_token");
-        programInfo.setDbTableWhite("community.sys_captcha");
+//        programInfo.setDbTableWhite("community.sys_captcha");
+//        programInfo.setDbTableWhite("community.test1");
+//        programInfo.setDbTableWhite("community.sys_captcha");
 //        programInfo.setAdviceNumber(4);
-//        programInfo.setDbTableWhite("(community.community_dict)||(community.sys_captcha)");
+        programInfo.setDbTableWhite("(community.community_dict)||(community.sys_captcha)");
 //        programInfo.setDbTableWhite("community.+");
 //        programInfo.setDbTableWhite("community.community_banner");
 //        programInfo.setDbTableWhite("community.test");
 //        programInfo.setSplitPk("banner_link");
-        programInfo.setAdviceNumber(3);
+        programInfo.setAdviceNumber(5);
 //        programInfo.setDbTableWhite("community.sys_.*");
 //        programInfo.setAdviceNumber(5);
 

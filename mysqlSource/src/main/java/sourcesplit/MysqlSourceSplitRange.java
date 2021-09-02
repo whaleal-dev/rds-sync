@@ -27,7 +27,7 @@ public class MysqlSourceSplitRange {
         List<Range> splittedRanges = new ArrayList<Range>();
         List<String> tables = getDbTables(programInfo);
         //单表
-        //TODO
+        // hive 数据库会用
         /*if (tables.size() == 1) {
             Integer splitFactor = programInfo.getSplitFactor();
             eachTableShouldSplittedNumber = eachTableShouldSplittedNumber * splitFactor;
