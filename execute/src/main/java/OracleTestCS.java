@@ -1,11 +1,11 @@
 import cache.MemoryCache;
 import com.whaleal.photon.source.oracle.execute.OracleSource;
 import common.photonV.entity.ProgramInfo;
-import programInfo.ProgramInfoUtil;
 import datasource.DataSourceUtil;
 import dbconnection.mongodb.MongoDbConnection;
 import dbconnection.oracle.OracleConnection;
 import execute.MongodbTarget;
+import programInfo.ProgramInfoUtil;
 import task.MongodbTargetTask;
 import thread.SourceTaskPoolManager;
 import thread.SysPoolManager;
@@ -15,12 +15,9 @@ import util.Log;
 public class OracleTestCS {
     public static void main(String[] args) throws InterruptedException {
         testOracleToMongoDb();
-
-
-
     }
 
-    public static void testOracleToMongoDb(){
+    public static void testOracleToMongoDb() {
         //获取配置
         ProgramInfo programInfo = ProgramInfoUtil.getProgramInfo("proc4");
 

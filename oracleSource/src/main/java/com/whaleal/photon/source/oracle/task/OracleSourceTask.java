@@ -116,7 +116,6 @@ public class OracleSourceTask extends AbstractSourceTask {
                 String columnName = md.getColumnName(i);
                 //值
                 Object values = ((ResultSet) rs).getObject(md.getColumnName(i));
-                System.out.println(columnName +"          "+values.getClass());
                 AbstractColumn abstractColumn = TransformationOracleDataToColumn.parseValue(columnName, values);
                 abstractColumns.add(abstractColumn);
             }
@@ -133,7 +132,7 @@ public class OracleSourceTask extends AbstractSourceTask {
         //源数据集合
         batchDataEntity.setDataList(this.dataList);
         //源数据表名
-        batchDataEntity.setDbTableName(this.taskMetadata.getDbTableName() + "BAK");
+        batchDataEntity.setDbTableName(this.taskMetadata.getDbTableName().split("\\.")[0] + "bak." + this.taskMetadata.getDbTableName().split("\\.")[1]);
         //操作行为
         batchDataEntity.setOperation("INSERTMANY");
         //源数据库名
