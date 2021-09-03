@@ -1,6 +1,5 @@
 package parse;
 
-import com.google.gson.Gson;
 import common.column.*;
 import common.dbtype.java.EnumMySqlDataInJavaType;
 
@@ -22,6 +21,7 @@ public class MysqlDataToColumnData {
             return new NullColumn(columnName, null);
         }
         String type = object.getClass().getSimpleName().toUpperCase();
+        System.out.println("type      "+type);
         EnumMySqlDataInJavaType enumMySqlDataInJavaType = EnumMySqlDataInJavaType.valueOf(type);
         switch (enumMySqlDataInJavaType) {
             case INTEGER:
