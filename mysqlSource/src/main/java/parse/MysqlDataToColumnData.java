@@ -21,7 +21,9 @@ public class MysqlDataToColumnData {
             return new NullColumn(columnName, null);
         }
         String type = object.getClass().getSimpleName().toUpperCase();
-        System.out.println("type      "+type);
+        if(("BYTE[]").equals(type)){
+            type="BYTES";
+        }
         EnumMySqlDataInJavaType enumMySqlDataInJavaType = EnumMySqlDataInJavaType.valueOf(type);
         switch (enumMySqlDataInJavaType) {
             case INTEGER:
