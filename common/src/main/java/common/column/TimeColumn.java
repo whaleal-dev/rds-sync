@@ -6,15 +6,15 @@ package common.column;
  * @time: 2021/9/1 2:35 下午
  */
 public class TimeColumn extends AbstractColumn {
-    private long data;
+    private String data;
 
-    public TimeColumn(String columnName, Long object) {
+    public TimeColumn(String columnName, String object) {
         this.columnName = columnName;
         this.data = object;
     }
 
     @Override
-    public Long getData() {
+    public String getData() {
         return this.data;
     }
 }

@@ -37,7 +37,7 @@ public class MysqlDataToColumnData {
             case DATE:
                 return new DateTimeColumn(columnName, ((Date) object).getTime());
             case TIME:
-                return new TimeColumn(columnName, ((Date) object).getTime());
+                return new TimeColumn(columnName, object.toString());
             case TIMESTAMP:
                 return new TimestampColumn(columnName, ((Date) object).getTime());
             case BYTES:

@@ -18,6 +18,9 @@ public class ParseTypeFromColumnType {
         ColumnType columnType = new ColumnType();
         columnType.setColumnName(columnData.getColumnName());
         int objectLength = columnData.toString().length();
+        if(objectLength==0){
+            objectLength=1;
+        }
         String type = columnData.getClass().getSimpleName().toUpperCase();
         EnumCommonColumnDataType enumCommonColumnDataType = EnumCommonColumnDataType.valueOf(type);
         switch (enumCommonColumnDataType) {
@@ -61,7 +64,7 @@ public class ParseTypeFromColumnType {
             case DATECOLUMN:
                 columnType.setColumnType(MySqlType.DATE);
                 break;
-            case TIMECOLUN:
+            case TIMECOLUMN:
                 columnType.setColumnType(MySqlType.TIME);
                 break;
             case DATETIMECOLUMN:

@@ -23,8 +23,6 @@ public class ColumnDataToMongodbData {
         // 时间类型可能有问题
         switch (enumCommonColumnDataType) {
             case DATETIMECOLUMN:
-            case TIMECOLUN:
-                return new Date((long) columnData.getData());
             case TIMESTAMPCOLUMN:
                 return new BsonTimestamp((long) (columnData.getData()));
             case DATECOLUMN:
@@ -46,8 +44,14 @@ public class ColumnDataToMongodbData {
             case FLOATCOLUMN:
             case OBJECTIDCOLUMN:
             case BOOLCOLUMN:
+            case TIMECOLUMN:
             default:
                 return columnData.getData();
         }
+    }
+
+    public static void main(String[] args) {
+        Date date = new Date();
+
     }
 }

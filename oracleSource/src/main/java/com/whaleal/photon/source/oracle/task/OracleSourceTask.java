@@ -42,7 +42,7 @@ public class OracleSourceTask extends AbstractSourceTask {
     public OracleSourceTask(SourceTaskInfo taskMetadata, String procName, MemoryCache memoryCache, int dataBatchSize) {
         super(taskMetadata, procName, memoryCache, dataBatchSize);
         this.connection = OracleConnection.getConnection(this.taskMetadata.getSourceDsName());
-        this.jdbcTemplate = OracleConnection.getJdbcTemplate(procName);
+        this.jdbcTemplate = OracleConnection.getJdbcTemplate(this.taskMetadata.getSourceDsName());
     }
 
     @Override
@@ -115,12 +115,13 @@ public class OracleSourceTask extends AbstractSourceTask {
                 String columnName = md.getColumnName(i);
                 //值
                 Object values = ((ResultSet) rs).getObject(md.getColumnName(i));
-                System.out.println(columnName +"          "+values.getClass());
+                // System.out.println(columnName +"          "+values.getClass());
                 AbstractColumn abstractColumn = OracleDataToColumnData.parseValue(columnName, values);
                 abstractColumns.add(abstractColumn);
             }
             this.dataList.add(abstractColumns);
         } catch (Exception e) {
+            e.printStackTrace();
             Log.error(e.getMessage());
         }
 

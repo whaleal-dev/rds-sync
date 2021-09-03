@@ -74,15 +74,18 @@ public enum EnumCommonColumnDataType {
     /**
      * 时间类型 时分秒毫秒
      */
-    TIMECOLUN("TIMECOLUN"),
+    TIMECOLUMN("TIMECOLUMN"),
     /**
      * bytes类型
      */
     BYTESCOLUMN("BYTESCOLUMN"),
+
+
     /**
      * 布尔类型
      */
     BOOLCOLUMN("BOOLCOLUMN");
+
     private final String upperCase;
 
     EnumCommonColumnDataType(String upperCase) {

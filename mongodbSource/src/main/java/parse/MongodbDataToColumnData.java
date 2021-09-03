@@ -71,4 +71,8 @@ public class MongodbDataToColumnData {
         }
     }
 
+//    public static void main(String[] args) {
+//        BsonMinKey key= new BsonMinKey("1");
+//        key.toString();
+//    }
 }

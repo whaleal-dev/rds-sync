@@ -22,7 +22,7 @@ public class MysqlTarget extends AbstractTarget {
 
     @Override
     public void startToTarget() {
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i <programInfo.getTargetThreadNum(); i++) {
             TargetTaskPoolManager.setTargetActiveThreadNum(procName, 1);
             TargetTaskPoolManager.submit(procName, new MysqlTargetTask(programInfo, memoryCache));
         }

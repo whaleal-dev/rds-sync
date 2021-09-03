@@ -85,6 +85,9 @@ public class ColumnType implements Serializable {
                 stringBuilder.append(")");
             }
         }
+        if(columnType.equalsIgnoreCase("timestamp")){
+            stringBuilder.append("(6) DEFAULT '0000-00-00 00:00:00' ");
+        }
         if (descType != null && DbTypeFlag.ORACLE.equalsIgnoreCase(descType)) {
             return stringBuilder.toString().replaceAll("`", "\"");
         }

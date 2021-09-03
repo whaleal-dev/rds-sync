@@ -1,5 +1,7 @@
 package common.dbtype.java;
 
+import org.postgresql.util.PGInterval;
+
 /**
  * MongoDB数据类型类
  *
@@ -21,7 +23,13 @@ public enum EnumPgDataInJavaType {
     TIME("TIME"),
     TIMESTAMP("TIMESTAMP"),
     BOOLEAN("BOOLEAN"),
-    BYTES("BYTE[]");
+    BYTES("BYTE[]"),
+    DATE("DATE"),
+    PGPOINT("PGPOINT"),
+    PGLINE("PGLINE"),
+    PGLSEG("PGLSEG"),
+    PGBOX("PGBOX"),
+    PGPATH("PGPATH");
 
 
     private final String upperCase;
@@ -39,7 +47,6 @@ public enum EnumPgDataInJavaType {
     public static void main(String[] args) {
         Byte[] bytes = new Byte[]{1, 0};
         System.out.println(bytes.getClass().getSimpleName());
-
     }
 }
 

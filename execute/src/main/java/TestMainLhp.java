@@ -30,7 +30,7 @@ import util.StringUtil;
 public class TestMainLhp {
     public static void main(String[] args) throws InterruptedException {
         //创建pro
-        ProgramInfo programInfo = ProgramInfoUtil.getProgramInfo("proc2");
+        ProgramInfo programInfo = ProgramInfoUtil.getProgramInfo("proc4");
         //获取数据源对象
         Datasource dataSourceDb = DataSourceUtil.getDataSourceByDsName(programInfo.getSourceDsName());
         Datasource dataTargetDb = DataSourceUtil.getDataSourceByDsName(programInfo.getTargetDsName());
@@ -55,6 +55,8 @@ public class TestMainLhp {
             testOracleToMongoDb(programInfo, memoryCache, taskTrigger);
         } else if (dataSourceDb.getType().equalsIgnoreCase(DbTypeFlag.MONGODB) && dataTargetDb.getType().equalsIgnoreCase(DbTypeFlag.MYSQL)) {
             testMongoDbToMysql(programInfo, memoryCache, taskTrigger);
+        }else if (dataSourceDb.getType().equalsIgnoreCase(DbTypeFlag.PG) && dataTargetDb.getType().equalsIgnoreCase(DbTypeFlag.MYSQL)) {
+            testPgToMysql(programInfo, memoryCache, taskTrigger);
         }
 
     }
@@ -164,7 +166,17 @@ public class TestMainLhp {
 
         getProExeInfo(programInfo, mongodbSource, memoryCache);
     }
+    public static void testPgToMysql(ProgramInfo programInfo, MemoryCache memoryCache, TaskTrigger taskTrigge) {
 
+
+        PgSource pgSource = new PgSource(programInfo, memoryCache);
+        pgSource.createTask();
+
+        MysqlTarget mysqlTarget = new MysqlTarget(programInfo, memoryCache, programInfo.getProName());
+        mysqlTarget.startToTarget();
+
+        getProExeInfo(programInfo, pgSource, memoryCache);
+    }
     public static TaskTrigger generateTaskTriggerInfo(String taskName, String procName) {
         TaskTrigger taskTrigger = new TaskTrigger();
         taskTrigger.setId(StringUtil.generateUUID());

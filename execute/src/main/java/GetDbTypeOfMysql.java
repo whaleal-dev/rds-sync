@@ -4,7 +4,12 @@ import dbconnection.MetadataConnection;
 
 import java.io.FileNotFoundException;
 import java.sql.*;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.*;
+import java.util.Date;
 
 /**
  * @description:
@@ -22,30 +27,40 @@ public class GetDbTypeOfMysql {
 //
 //        preparedStatement.setBlob(1, in);
 //        preparedStatement.executeUpdate();
+//
+//        Connection connection = MetadataConnection.getConnection();
+//        Statement statement = connection.createStatement();
+//        ResultSet resultSet = statement.executeQuery("select * from test.test");
+//        ResultSetMetaData md = resultSet.getMetaData();
+//        while (resultSet.next()) {
+//            List<AbstractColumn> abstractColumns = new ArrayList<>();
+//            //获取数据库内容不为空
+//            //遍历rs中的属性与值
+//            for (int i = 1; i <= md.getColumnCount(); i++) {
+//                //属性名下划线改驼峰
+//                String columnName = md.getColumnName(i);
+//                //值
+//                Object values = resultSet.getObject(md.getColumnName(i));
+//
+//                if(values!=null){
+//                    String type = values.getClass().getSimpleName().toUpperCase();
+//                    System.out.print(type + "(\"" + type + "\"),");
+//                }
+//
+//
+//
+//            }
+//        }
 
-        Connection connection = MetadataConnection.getConnection();
-        Statement statement = connection.createStatement();
-        ResultSet resultSet = statement.executeQuery("select * from test.test");
-        ResultSetMetaData md = resultSet.getMetaData();
-        while (resultSet.next()) {
-            List<AbstractColumn> abstractColumns = new ArrayList<>();
-            //获取数据库内容不为空
-            //遍历rs中的属性与值
-            for (int i = 1; i <= md.getColumnCount(); i++) {
-                //属性名下划线改驼峰
-                String columnName = md.getColumnName(i);
-                //值
-                Object values = resultSet.getObject(md.getColumnName(i));
 
-                if(values!=null){
-                    String type = values.getClass().getSimpleName().toUpperCase();
-                    System.out.print(type + "(\"" + type + "\"),");
-                }
+        Date date=new java.util.Date(1630553229060L);
+        System.out.println(date.toString());
+        Instant instant = date.toInstant();
+        ZoneId zoneId = ZoneId.systemDefault();
+        LocalDateTime localDateTime = instant.atZone(zoneId).toLocalDateTime();
+        System.out.println("Date = " + date);
+        System.out.println("LocalDateTime = " + localDateTime.toString());
 
-
-
-            }
-        }
 
     }
 }

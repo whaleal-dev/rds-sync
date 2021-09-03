@@ -1,11 +1,12 @@
 package parse;
+
 import common.column.*;
 import common.dbtype.java.EnumPgDataInJavaType;
 import org.postgresql.util.PGobject;
+
 import java.math.BigDecimal;
 import java.sql.Time;
 import java.sql.Timestamp;
-
 
 
 /**
@@ -18,12 +19,17 @@ public class PgDataToColumnData {
             return new NullColumn(columnName, null);
         }
         String type = object.getClass().getSimpleName().toUpperCase();
+        if (type.startsWith("PG")) {
+            type = "PGOBJECT";
+        }
         EnumPgDataInJavaType dataType = EnumPgDataInJavaType.valueOf(type);
         switch (dataType) {
             case PGOBJECT:
                 return new PgObjectColumn(columnName, (PGobject) object);
             case LONG:
                 return new LongColumn(columnName, (Long) object);
+            case DATE:
+                return new DateColumn(columnName, object.toString());
             case DOUBLE:
                 return new DoubleColumn(columnName, (Double) object);
             case INTEGER:
@@ -33,7 +39,7 @@ public class PgDataToColumnData {
             case FLOAT:
                 return new FloatColumn(columnName, (Float) object);
             case TIME:
-                return new TimeColumn(columnName, ((Time) object).getTime());
+                return new TimeColumn(columnName, object.toString());
             case TIMESTAMP:
                 return new TimestampColumn(columnName, ((Timestamp) object).getTime());
             case BOOLEAN:
