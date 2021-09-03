@@ -33,7 +33,7 @@ public class OracleSource extends SourceMetadata {
 
     private static Map<String, Queue<SourceTaskInfo>> procSourceTask = new ConcurrentHashMap<>();
 
-    private JdbcTemplate jdbcTemplate = null;
+    private JdbcTemplate jdbcTemplate;
 
     public OracleSource(ProgramInfo programInfo, MemoryCache memoryCache) {
         super(programInfo, memoryCache);

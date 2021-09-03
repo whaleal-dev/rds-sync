@@ -19,7 +19,7 @@ public enum EnumMySqlDataInJavaType {
     DATE("DATE"),
     TIME("TIME"),
     TIMESTAMP("TIMESTAMP"),
-    BYTES("BYTE[]");
+    BYTES("BYTES");
 
     private final String upperCase;
 

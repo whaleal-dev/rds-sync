@@ -19,6 +19,10 @@ public abstract class AbstractSourceTask implements Runnable {
      */
     protected MemoryCache memoryCache;
     /**
+     * 源数据源名称
+     */
+    protected String sourceDsName;
+    /**
      * 程序名
      */
     protected String procName;
@@ -41,6 +45,7 @@ public abstract class AbstractSourceTask implements Runnable {
 
 
     public AbstractSourceTask(SourceTaskInfo taskMetadata, String procName, MemoryCache memoryCache, int dataBatchSize) {
+        this.sourceDsName=taskMetadata.getSourceDsName();
         this.procName = procName;
         this.memoryCache = memoryCache;
         this.dataBatchSize = dataBatchSize;
