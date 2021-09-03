@@ -379,19 +379,31 @@ public class SingleTableSplitUtil {
                 String length = "SELECT %s FROM %s";
                 String maxlengthSql = String.format(length, maxKey, table);
                 List<Map<String, Object>> list = jdbcTemplate.queryForList(maxlengthSql);
-                if(!list.isEmpty()){
-                    Long max = Long.parseLong(list.get(0).get(maxKey).toString());
-                    Map<Long, String> maxMap = new HashMap<>();
-                    maxMap.put(max, colName);
-                    maxMapList.add(maxMap);
-                    maxList.add(max);
-                    for (Long maxNum : maxList) {
-                        if (maxNum >= result) {
-                            //得到 length 最大的值
-                            result = maxNum;
+                Map<String ,Object> map= list.get(0);
+                if(!list.isEmpty()) {
+                    if (map.get(maxKey) == null) {
+                        break;
+                    } else {
+                        Long max = Long.parseLong(map.get(maxKey).toString());
+                        Map<Long, String> maxMap = new HashMap<>();
+                        maxMap.put(max, colName);
+                        maxMapList.add(maxMap);
+                        maxList.add(max);
+                        for (Long maxNum : maxList) {
+                            if (maxNum >= result) {
+                                //得到 length 最大的值
+                                result = maxNum;
+                            }
                         }
                     }
                 }
+//                if(!list.isEmpty()){
+//
+////                    if (list.get(0).get(maxKey).equals(null)){
+////                        break;
+////                    }
+//
+//                }
             }
             for (Map<Long, String> rmap : maxMapList) {
                 if (!StringUtils.isEmpty(rmap.get(result))){
@@ -478,6 +490,7 @@ public class SingleTableSplitUtil {
      * @param programInfo
      * @return
      */
+    //TODO
     public static String getPK(String table, ProgramInfo programInfo) {
         JdbcTemplate jdbcTemplate = MySqlConnection.getJdbcTemplate(programInfo.getSourceDsName());
         String PKName = null;

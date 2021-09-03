@@ -11,6 +11,7 @@ public enum EnumCommonColumnDataType {
      * int类型
      */
     INTCOLUMN("INTCOLUMN"),
+    TIMECOLUMN("TIMECOLUMN"),
     /**
      * decimal类型
      */
