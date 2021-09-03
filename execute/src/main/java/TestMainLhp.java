@@ -29,28 +29,32 @@ import util.StringUtil;
  */
 public class TestMainLhp {
     public static void main(String[] args) throws InterruptedException {
-
+        //创建pro
         ProgramInfo programInfo = ProgramInfoUtil.getProgramInfo("proc2");
-
+        //获取数据源对象
         Datasource dataSourceDb = DataSourceUtil.getDataSourceByDsName(programInfo.getSourceDsName());
         Datasource dataTargetDb = DataSourceUtil.getDataSourceByDsName(programInfo.getTargetDsName());
+        //创建数据源链接
         createDataSourceConnection(dataSourceDb, dataTargetDb);
-
+        //创建触发对象实例
         TaskTrigger taskTrigger = generateTaskTriggerInfo(programInfo.getTaskName(), programInfo.getProName());
         TriggerUtil.insertTriggerInfo(taskTrigger);
-
+        //创建线程池
         createThreadPoolManager(programInfo);
-
+        //创建缓存类
+        MemoryCache memoryCache = new MemoryCache(programInfo.getTaskName(), programInfo.getProName(), programInfo.getCacheNum(), programInfo.getCacheSize(), true);
+        programInfo.setMemoryCache(memoryCache);
+        // 开始传输数据
         if (dataSourceDb.getType().equalsIgnoreCase(DbTypeFlag.MONGODB) && dataTargetDb.getType().equalsIgnoreCase(DbTypeFlag.MONGODB)) {
-            testMongoDbToMongoDb(programInfo, taskTrigger);
+            testMongoDbToMongoDb(programInfo, memoryCache, taskTrigger);
         } else if (dataSourceDb.getType().equalsIgnoreCase(DbTypeFlag.MYSQL) && dataTargetDb.getType().equalsIgnoreCase(DbTypeFlag.MONGODB)) {
-            testMysqlToMongoDb(programInfo, taskTrigger);
+            testMysqlToMongoDb(programInfo, memoryCache, taskTrigger);
         } else if (dataSourceDb.getType().equalsIgnoreCase(DbTypeFlag.PG) && dataTargetDb.getType().equalsIgnoreCase(DbTypeFlag.MONGODB)) {
-            testPgToMongoDb(programInfo, taskTrigger);
+            testPgToMongoDb(programInfo, memoryCache, taskTrigger);
         } else if (dataSourceDb.getType().equalsIgnoreCase(DbTypeFlag.ORACLE) && dataTargetDb.getType().equalsIgnoreCase(DbTypeFlag.MONGODB)) {
-            testOracleToMongoDb(programInfo, taskTrigger);
+            testOracleToMongoDb(programInfo, memoryCache, taskTrigger);
         } else if (dataSourceDb.getType().equalsIgnoreCase(DbTypeFlag.MONGODB) && dataTargetDb.getType().equalsIgnoreCase(DbTypeFlag.MYSQL)) {
-            testMongoDbToMysql(programInfo, taskTrigger);
+            testMongoDbToMysql(programInfo, memoryCache, taskTrigger);
         }
 
     }
@@ -149,10 +153,8 @@ public class TestMainLhp {
 
     }
 
-    public static void testMongoDbToMysql(ProgramInfo programInfo, TaskTrigger taskTrigge) {
+    public static void testMongoDbToMysql(ProgramInfo programInfo, MemoryCache memoryCache, TaskTrigger taskTrigge) {
 
-        MemoryCache memoryCache = new MemoryCache(programInfo.getTaskName(), programInfo.getProName(), programInfo.getCacheNum(), programInfo.getCacheSize(), true);
-        programInfo.setMemoryCache(memoryCache);
 
         MongodbSource mongodbSource = new MongodbSource(programInfo, memoryCache);
         mongodbSource.createTask();
@@ -160,41 +162,7 @@ public class TestMainLhp {
         MysqlTarget mysqlTarget = new MysqlTarget(programInfo, memoryCache, programInfo.getProName());
         mysqlTarget.startToTarget();
 
-        while (true) {
-            try {
-                Thread.sleep(10000);
-                int sourceThread = SourceTaskPoolManager.setSourceActiveThreadNum(programInfo.getProName(), 0);
-                boolean getAllDbTable = mongodbSource.isGetAllDbTable();
-                int sourceTaskQueueSize = mongodbSource.getTaskMetadataQueueSize();
-                int setSysActiveThreadNum = SysPoolManager.setSysActiveThreadNum(programInfo.getProName(), 0);
-                int targetActiveThreadNum = TargetTaskPoolManager.setTargetActiveThreadNum(programInfo.getProName(), 0);
-                int allDataCacheNum = memoryCache.getAllDataCacheNum();
-                Log.info(setSysActiveThreadNum + "");
-                Log.info("sum:" + (sourceThread + sourceTaskQueueSize + sourceTaskQueueSize + allDataCacheNum + setSysActiveThreadNum));
-                Log.info("sourceThread:" + sourceThread);
-                Log.info("sourceTaskQueueSize:" + sourceTaskQueueSize);
-                Log.info("setSysActiveThreadNum:" + setSysActiveThreadNum);
-                Log.info("targetActiveThreadNum:" + targetActiveThreadNum);
-                Log.info("allDataCacheNum:" + allDataCacheNum);
-                Log.info("getAllDbTable:" + getAllDbTable);
-                if ((sourceThread + sourceTaskQueueSize + sourceTaskQueueSize + allDataCacheNum + setSysActiveThreadNum + targetActiveThreadNum) == 0 && getAllDbTable) {
-                    Thread.sleep(10000);
-                    TargetTaskPoolManager.destroy(programInfo.getProName());
-                    SourceTaskPoolManager.destroy(programInfo.getProName());
-                    SysPoolManager.destroy(programInfo.getProName());
-
-                    MysqlTargetTask.setIsStopFlagOfTarget(programInfo.getProName(), false);
-                    memoryCache.gcMemoryCache();
-
-                    Log.info("procName:" + programInfo.getProName() + "关闭成功");
-                    break;
-                } else if ((sourceThread + sourceTaskQueueSize + sourceTaskQueueSize + allDataCacheNum + setSysActiveThreadNum) == 0 && getAllDbTable) {
-                    MysqlTargetTask.setIsStopFlagOfTarget(programInfo.getProName(), true);
-                }
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
+        getProExeInfo(programInfo, mongodbSource, memoryCache);
     }
 
     public static TaskTrigger generateTaskTriggerInfo(String taskName, String procName) {
@@ -205,10 +173,8 @@ public class TestMainLhp {
         return taskTrigger;
     }
 
-    public static void testMongoDbToMongoDb(ProgramInfo programInfo, TaskTrigger taskTrigger) {
+    public static void testMongoDbToMongoDb(ProgramInfo programInfo, MemoryCache memoryCache, TaskTrigger taskTrigger) {
 
-        MemoryCache memoryCache = new MemoryCache(programInfo.getTaskName(), programInfo.getProName(), programInfo.getCacheNum(), programInfo.getCacheSize(), true);
-        programInfo.setMemoryCache(memoryCache);
 
         MongodbTarget mongodbTarget = new MongodbTarget(programInfo, memoryCache, programInfo.getProName());
         mongodbTarget.startToTarget();
@@ -216,51 +182,10 @@ public class TestMainLhp {
         MongodbSource mongodbSource = new MongodbSource(programInfo, memoryCache);
         mongodbSource.createTask();
 
-        while (true) {
-            try {
-                Thread.sleep(10000);
-                int sourceThread = SourceTaskPoolManager.setSourceActiveThreadNum(programInfo.getProName(), 0);
-                boolean getAllDbTable = mongodbSource.isGetAllDbTable();
-                int sourceTaskQueueSize = mongodbSource.getTaskMetadataQueueSize();
-                int setSysActiveThreadNum = SysPoolManager.setSysActiveThreadNum(programInfo.getProName(), 0);
-                int targetActiveThreadNum = TargetTaskPoolManager.setTargetActiveThreadNum(programInfo.getProName(), 0);
-                int allDataCacheNum = memoryCache.getAllDataCacheNum();
-                Log.info(setSysActiveThreadNum + "");
-                Log.info("sum:" + (sourceThread + sourceTaskQueueSize + sourceTaskQueueSize + allDataCacheNum + setSysActiveThreadNum));
-                Log.info("sourceThread:   " + sourceThread);
-                Log.info("sourceTaskQueueSize:   " + sourceTaskQueueSize);
-                Log.info("setSysActiveThreadNum:   " + setSysActiveThreadNum);
-                Log.info("targetActiveThreadNum:   " + targetActiveThreadNum);
-                Log.info("allDataCacheNum:   " + allDataCacheNum);
-                Log.info("getAllDbTable:   " + getAllDbTable);
-                if ((sourceThread + sourceTaskQueueSize + sourceTaskQueueSize + allDataCacheNum + setSysActiveThreadNum + targetActiveThreadNum) == 0 && getAllDbTable) {
-                    Thread.sleep(10000);
-                    TargetTaskPoolManager.destroy(programInfo.getProName());
-                    SourceTaskPoolManager.destroy(programInfo.getProName());
-                    SysPoolManager.destroy(programInfo.getProName());
-
-                    memoryCache.gcMemoryCache();
-                    MongodbTargetTask.setIsStopFlagOfTarget(programInfo.getProName(), false);
-
-                    taskTrigger.setState("success");
-
-                    TriggerUtil.updateTriggerInfo(taskTrigger);
-                    Log.info("procName:" + programInfo.getProName() + "关闭成功");
-                    break;
-                } else if ((sourceThread + sourceTaskQueueSize + sourceTaskQueueSize + allDataCacheNum + setSysActiveThreadNum) == 0 && getAllDbTable) {
-                    MongodbTargetTask.setIsStopFlagOfTarget(programInfo.getProName(), true);
-                }
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
+        getProExeInfo(programInfo, mongodbSource, memoryCache);
     }
 
-    public static void testMysqlToMongoDb(ProgramInfo programInfo, TaskTrigger taskTrigger) {
-
-        MemoryCache memoryCache = new MemoryCache(programInfo.getTaskName(), programInfo.getProName(), programInfo.getCacheNum(), programInfo.getCacheSize(), true);
-
-        programInfo.setMemoryCache(memoryCache);
+    public static void testMysqlToMongoDb(ProgramInfo programInfo, MemoryCache memoryCache, TaskTrigger taskTrigger) {
 
         MongodbTarget mongodbTarget = new MongodbTarget(programInfo, memoryCache, programInfo.getProName());
         mongodbTarget.startToTarget();
@@ -268,46 +193,11 @@ public class TestMainLhp {
         MysqlSource mysqlSource = new MysqlSource(programInfo, memoryCache);
         mysqlSource.createTask();
 
-        while (true) {
-            try {
-                Thread.sleep(10000);
-                int sourceThread = SourceTaskPoolManager.setSourceActiveThreadNum(programInfo.getProName(), 0);
-                boolean getAllDbTable = mysqlSource.isGetAllDbTable();
-                int sourceTaskQueueSize = mysqlSource.getTaskMetadataQueueSize();
-                int setSysActiveThreadNum = SysPoolManager.setSysActiveThreadNum(programInfo.getProName(), 0);
-                int targetActiveThreadNum = TargetTaskPoolManager.setTargetActiveThreadNum(programInfo.getProName(), 0);
-                int allDataCacheNum = memoryCache.getAllDataCacheNum();
-                Log.info(setSysActiveThreadNum + "");
-                Log.info("sum:" + (sourceThread + sourceTaskQueueSize + allDataCacheNum + setSysActiveThreadNum));
-                Log.info("sourceThread:" + sourceThread);
-                Log.info("sourceTaskQueueSize:" + sourceTaskQueueSize);
-                Log.info("setSysActiveThreadNum:" + setSysActiveThreadNum);
-                Log.info("targetActiveThreadNum:" + targetActiveThreadNum);
-                Log.info("allDataCacheNum:" + allDataCacheNum);
-                Log.info("getAllDbTable:" + getAllDbTable);
-                if ((sourceThread + sourceTaskQueueSize + allDataCacheNum + setSysActiveThreadNum + targetActiveThreadNum) == 0 && getAllDbTable) {
-                    Thread.sleep(10000);
-                    TargetTaskPoolManager.destroy(programInfo.getProName());
-                    SourceTaskPoolManager.destroy(programInfo.getProName());
-                    SysPoolManager.destroy(programInfo.getProName());
-
-                    MongodbTargetTask.setIsStopFlagOfTarget(programInfo.getProName(), false);
-                    memoryCache.gcMemoryCache();
-
-                    Log.info("procName:" + programInfo.getProName() + "关闭成功");
-                    break;
-                } else if ((sourceThread + sourceTaskQueueSize + sourceTaskQueueSize + allDataCacheNum + setSysActiveThreadNum) == 0 && getAllDbTable) {
-                    MongodbTargetTask.setIsStopFlagOfTarget(programInfo.getProName(), true);
-                }
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
+        getProExeInfo(programInfo, mysqlSource, memoryCache);
     }
 
-    public static void testPgToMongoDb(ProgramInfo programInfo, TaskTrigger taskTrigger) {
-        MemoryCache memoryCache = new MemoryCache(programInfo.getTaskName(), programInfo.getProName(), programInfo.getCacheNum(), programInfo.getCacheSize(), true);
-        programInfo.setMemoryCache(memoryCache);
+    public static void testPgToMongoDb(ProgramInfo programInfo, MemoryCache memoryCache, TaskTrigger taskTrigger) {
+
 
         MongodbTarget mongodbTarget = new MongodbTarget(programInfo, memoryCache, programInfo.getProName());
         mongodbTarget.startToTarget();
@@ -315,87 +205,17 @@ public class TestMainLhp {
         PgSource pgSource = new PgSource(programInfo, memoryCache);
         pgSource.createTask();
 
-        while (true) {
-            try {
-                Thread.sleep(10000);
-                int sourceThread = SourceTaskPoolManager.setSourceActiveThreadNum(programInfo.getProName(), 0);
-                boolean getAllDbTable = pgSource.isGetAllDbTable();
-                int sourceTaskQueueSize = pgSource.getTaskMetadataQueueSize();
-                int setSysActiveThreadNum = SysPoolManager.setSysActiveThreadNum(programInfo.getProName(), 0);
-                int targetActiveThreadNum = TargetTaskPoolManager.setTargetActiveThreadNum(programInfo.getProName(), 0);
-                int allDataCacheNum = memoryCache.getAllDataCacheNum();
-                Log.info(setSysActiveThreadNum + "");
-                Log.info("sum:" + (sourceThread + sourceTaskQueueSize + allDataCacheNum + setSysActiveThreadNum));
-                Log.info("sourceThread:" + sourceThread);
-                Log.info("sourceTaskQueueSize:" + sourceTaskQueueSize);
-                Log.info("setSysActiveThreadNum:" + setSysActiveThreadNum);
-                Log.info("targetActiveThreadNum:" + targetActiveThreadNum);
-                Log.info("allDataCacheNum:" + allDataCacheNum);
-                Log.info("getAllDbTable:" + getAllDbTable);
-                if ((sourceThread + sourceTaskQueueSize + allDataCacheNum + setSysActiveThreadNum + targetActiveThreadNum) == 0 && getAllDbTable) {
-                    Thread.sleep(10000);
-                    TargetTaskPoolManager.destroy(programInfo.getProName());
-                    SourceTaskPoolManager.destroy(programInfo.getProName());
-                    SysPoolManager.destroy(programInfo.getProName());
-
-                    MongodbTargetTask.setIsStopFlagOfTarget(programInfo.getProName(), false);
-                    memoryCache.gcMemoryCache();
-
-                    Log.info("procName:" + programInfo.getProName() + "关闭成功");
-                    break;
-                } else if ((sourceThread + sourceTaskQueueSize + sourceTaskQueueSize + allDataCacheNum + setSysActiveThreadNum) == 0 && getAllDbTable) {
-                    MongodbTargetTask.setIsStopFlagOfTarget(programInfo.getProName(), true);
-                }
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
+        getProExeInfo(programInfo, pgSource, memoryCache);
     }
 
-    public static void testOracleToMongoDb(ProgramInfo programInfo, TaskTrigger taskTrigger) {
-        //缓存
-        MemoryCache memoryCache = new MemoryCache(programInfo.getTaskName(), programInfo.getProName(), programInfo.getCacheNum(), programInfo.getCacheSize(), true);
-        programInfo.setMemoryCache(memoryCache);
+    public static void testOracleToMongoDb(ProgramInfo programInfo, MemoryCache memoryCache, TaskTrigger taskTrigger) {
+
 
         MongodbTarget mongodbTarget = new MongodbTarget(programInfo, memoryCache, programInfo.getProName());
         mongodbTarget.startToTarget();
 
         OracleSource oracleSource = new OracleSource(programInfo, memoryCache);
         oracleSource.createTask();
-        while (true) {
-            try {
-                Thread.sleep(10000);
-                int sourceThread = SourceTaskPoolManager.setSourceActiveThreadNum(programInfo.getProName(), 0);
-                boolean getAllDbTable = oracleSource.isGetAllDbTable();
-                int sourceTaskQueueSize = oracleSource.getTaskMetadataQueueSize();
-                int setSysActiveThreadNum = SysPoolManager.setSysActiveThreadNum(programInfo.getProName(), 0);
-                int targetActiveThreadNum = TargetTaskPoolManager.setTargetActiveThreadNum(programInfo.getProName(), 0);
-                int allDataCacheNum = memoryCache.getAllDataCacheNum();
-                Log.info(setSysActiveThreadNum + "");
-                Log.info("sum:" + (sourceThread + sourceTaskQueueSize + allDataCacheNum + setSysActiveThreadNum));
-                Log.info("sourceThread:" + sourceThread);
-                Log.info("sourceTaskQueueSize:" + sourceTaskQueueSize);
-                Log.info("setSysActiveThreadNum:" + setSysActiveThreadNum);
-                Log.info("targetActiveThreadNum:" + targetActiveThreadNum);
-                Log.info("allDataCacheNum:" + allDataCacheNum);
-                Log.info("getAllDbTable:" + getAllDbTable);
-                if ((sourceThread + sourceTaskQueueSize + allDataCacheNum + setSysActiveThreadNum + targetActiveThreadNum) == 0 && getAllDbTable) {
-                    Thread.sleep(10000);
-                    TargetTaskPoolManager.destroy(programInfo.getProName());
-                    SourceTaskPoolManager.destroy(programInfo.getProName());
-                    SysPoolManager.destroy(programInfo.getProName());
-
-                    AbstractTargetTask.setIsStopFlagOfTarget(programInfo.getProName(), false);
-                    memoryCache.gcMemoryCache();
-
-                    Log.info("procName:" + programInfo.getProName() + "关闭成功");
-                    break;
-                } else if ((sourceThread + sourceTaskQueueSize + sourceTaskQueueSize + allDataCacheNum + setSysActiveThreadNum) == 0 && getAllDbTable) {
-                    AbstractTargetTask.setIsStopFlagOfTarget(programInfo.getProName(), true);
-                }
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
+        getProExeInfo(programInfo, oracleSource, memoryCache);
     }
 }
