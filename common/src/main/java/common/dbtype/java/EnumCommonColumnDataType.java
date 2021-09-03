@@ -72,10 +72,7 @@ public enum EnumCommonColumnDataType {
      * pg的对象类型
      */
     PGOBJECTCOLUMN("PGOBJECTCOLUMN"),
-    /**
-     * 时间类型 时分秒毫秒
-     */
-    TIMECOLUMN("TIMECOLUMN"),
+
     /**
      * bytes类型
      */
