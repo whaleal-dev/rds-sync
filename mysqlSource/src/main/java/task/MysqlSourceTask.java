@@ -52,7 +52,7 @@ public class MysqlSourceTask extends AbstractSourceTask {
             resultSet = statement.executeQuery(sql);
             while (resultSet.next()) {
                 dataTransformation(resultSet);
-                System.out.println("dataList    =    " + this.dataList);
+//                System.out.println("dataList    =    " + this.dataList);
                 if (cache++ > dataBatchSize) {
                     putDataToCache();
                 }

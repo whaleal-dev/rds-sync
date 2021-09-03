@@ -29,11 +29,11 @@ public class SingleTableSplitUtil {
         //从配置中取分片字段 splitPk
         String splitPkName = null;
         String sql = "SELECT * FROM " + table;
-        JdbcTemplate jdbcTemplate = MySqlConnection.getJdbcTemplate(programInfo.getSourceDsName());
-        List<Map<String, Object>> dbTableList = jdbcTemplate.queryForList(sql);
-        if (dbTableList.isEmpty()) {
-            return pluginParams;
-        }
+//        JdbcTemplate jdbcTemplate = MySqlConnection.getJdbcTemplate(programInfo.getSourceDsName());
+//        List<Map<String, Object>> dbTableList = jdbcTemplate.queryForList(sql);
+//        if (dbTableList.isEmpty()) {
+//            return pluginParams;
+//        }
         if (StringUtils.isNotBlank(programInfo.getSplitPk())) {
             splitPkName = programInfo.getSplitPk();
         } else {
@@ -257,8 +257,8 @@ public class SingleTableSplitUtil {
      */
     private static String getResultPK(ProgramInfo programInfo, String table){
         //取主键为切分字段
-        if (!StringUtils.isEmpty(getPK(table, programInfo))){
-            return getPK(table, programInfo);
+        if (!StringUtils.isEmpty(getPK1(table, programInfo))){
+            return getPK1(table, programInfo);
         }else{
             //智能取切分字段
             JdbcTemplate jdbcTemplate = MySqlConnection.getJdbcTemplate(programInfo.getSourceDsName());
@@ -511,6 +511,25 @@ public class SingleTableSplitUtil {
             return PKName;
         }
         return null;
+
+    }
+
+    public static String getPK1(String table, ProgramInfo programInfo) {
+        //TODO get
+        Connection conn = MySqlConnection.getConnection(programInfo.getSourceDsName());
+        String PKName = null;
+        try {
+            DatabaseMetaData dmd = conn.getMetaData();
+            String[] tables = StringUtils.split(table,".");
+            ResultSet rs = dmd.getPrimaryKeys(null, "%", tables[1]);
+            rs.next();
+            PKName = rs.getString("column_name");
+            rs.close();
+            return PKName;
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+            return null;
+        }
 
     }
 

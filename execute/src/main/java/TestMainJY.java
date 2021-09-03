@@ -38,11 +38,12 @@ public class TestMainJY {
 //        programInfo.setAdviceNumber(4);
 //        programInfo.setDbTableWhite("(community.community_dict)||(community.sys_captcha)");
 //        programInfo.setDbTableWhite("test.test");
-        programInfo.setDbTableWhite("community.+");
+        programInfo.setDbTableWhite("community.test4");
 //        programInfo.setDbTableWhite("community.community_banner");
 //        programInfo.setDbTableWhite("community.test");
 //        programInfo.setSplitPk("banner_link");
-        programInfo.setAdviceNumber(5);
+        programInfo.setAdviceNumber(10);
+//        programInfo.setSplitPk("id");
 //        programInfo.setDbTableWhite("community.sys_.*");
 //        programInfo.setAdviceNumber(5);
 

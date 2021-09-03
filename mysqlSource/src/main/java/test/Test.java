@@ -1,21 +1,16 @@
 package test;
 
-import common.dataclass.Range;
 import common.photonV.entity.ProgramInfo;
 import datasource.DataSourceUtil;
 import dbconnection.mysql.MySqlConnection;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.apache.commons.lang3.tuple.Pair;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.support.rowset.SqlRowSet;
-import org.springframework.jdbc.support.rowset.SqlRowSetMetaData;
 import programInfo.ProgramInfoUtil;
-import sourcesplit.MysqlSourceSplitRange;
-import util.Log;
 
 import java.sql.*;
-import java.util.*;
+import java.time.Year;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+import java.util.UUID;
 
 /**
  * @author: jy
@@ -32,6 +27,148 @@ public class Test {
         System.out.println(configuration);
         System.out.println("=========================================================================================");
         System.out.println("=========================================================================================");
+
+        Connection conn = null;
+        MySqlConnection.createConnection(configuration.getSourceDsName(),
+                DataSourceUtil.getDataSourceByDsName(configuration.getSourceDsName()));
+        conn = MySqlConnection.getConnection(configuration.getSourceDsName());
+        PreparedStatement pst =  null;
+        long beginTime = 0;
+        long endTime = 0;
+        try {
+            if(conn != null) {
+                System.out.println("获取连接成功");
+                beginTime = System.currentTimeMillis();//开始计时
+                String sqlPrefix = "insert into test1 (c1,c2,c3,c4,c5,c6,c7,c8,c9,z1,z2,z3,z4,z5,z6,z7,z8,z9,x10,x1,x2,x3) values ";
+                // 保存sql后缀
+                StringBuffer suffix = new StringBuffer();
+                // 设置事务为非自动提交
+                conn.setAutoCommit(false);
+                // 比起st，pst会更好些
+                pst = (PreparedStatement) conn.prepareStatement("");//准备执行语句
+                // 外层循环，总提交事务次数
+                for (int i = 1; i <= 100; i++) {
+                    suffix = new StringBuffer();
+                    // 第j次提交步长
+                    for (int j = 1; j <= 10000; j++) {
+                        // 构建SQL后缀
+                        suffix.append("('"/*+
+                                i                                  +"','"*/+
+                                UUID.randomUUID().toString() +"','"+
+                                UUID.randomUUID().toString()
+                                +"','"+
+                                i +"','"+
+                                i       +"','"+
+                                j +"','"+
+                                i*j       +"','"+
+                                (i / j)      +"','"+
+                                (i / j)      +"','"+
+                                (i / j) +"','"+
+                                new Date(1)
+                                +"','"+
+                                new Time(1)
+                                +"','"+
+                                "1997" +"','"+
+                                new Timestamp(1) +"','"+
+                                new Timestamp(2) +"','"+
+                                1      +"','"+
+                                2      +"','"+
+                                1 +"','"+
+                                (i + j)      +"','"+
+                                1      +"','"+
+                                1      +"','"+
+                                1      +"','"+
+                                (i+j)*j
+                                        +"'"+"),");
+                    }
+                    // 构建完整SQL
+                    //String sql = sqlPrefix + suffix.substring(0, suffix.length() - 1, suffix.length() - 2,suffix.length() - 3);
+                    String sql = sqlPrefix + suffix.substring(0, suffix.length() - 1);
+                    // 添加执行SQL
+                    pst.addBatch(sql);
+                    // 执行操作
+                    pst.executeBatch();
+                    // 提交事务
+                    conn.commit();
+                    // 清空上一次添加的数据
+                    suffix = new StringBuffer();
+                }
+                endTime = System.currentTimeMillis();;//开始计时
+            }else {
+                System.out.println("数据库连接失败");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("数据库地址错误");
+        }finally {//释放资源
+            System.out.println("插入成功，所有时间："+ (endTime-beginTime));
+            if(conn != null) {
+                try {
+                    conn.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+            if(pst != null) {
+                try {
+                    pst.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        //JDBC插入 很慢
+        /*Connection conn = null;
+        PreparedStatement pstm = null;
+        ResultSet rt = null;
+        try {
+            MySqlConnection.createConnection(configuration.getSourceDsName(),
+                    DataSourceUtil.getDataSourceByDsName(configuration.getSourceDsName()));
+            conn = MySqlConnection.getConnection(configuration.getSourceDsName());
+            String sql = "INSERT INTO userinfo(uid,uname,uphone,uaddress) VALUES(?,CONCAT('姓名',?),?,?)";
+            pstm = conn.prepareStatement(sql);
+//            conn.setAutoCommit(false);
+            Long startTime = System.currentTimeMillis();
+            Random rand = new Random();
+            int a, b, c, d;
+            for (int i = 1; i <= 100000; i++) {
+                pstm.setInt(1, i);
+                pstm.setInt(2, i);
+                a = rand.nextInt(i);
+                b = rand.nextInt(i);
+                c = rand.nextInt(i);
+                d = rand.nextInt(i);
+                pstm.setString(3, "188" + a + "88" + b + c + "66" + d +i);
+                pstm.setString(4, "xxxxxxxxxx_" + "188" + a + "88" + b + c + "66" + d);
+                pstm.executeUpdate();
+//                pstm.addBatch();
+                System.out.println("===============正在插入" + pstm);
+            }
+//            conn.commit();
+//            pstm.executeBatch();
+            Long endTime = System.currentTimeMillis();
+            System.out.println("OK,用时：" + (endTime - startTime));
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        } finally {
+            if (pstm != null) {
+                try {
+                    pstm.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                    throw new RuntimeException(e);
+                }
+            }
+            if (conn != null) {
+                try {
+                    conn.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                    throw new RuntimeException(e);
+                }
+            }
+        }*/
 
         //取某列最大的 length
         /*Connection connection = MySqlConnection.createConnection(configuration.getSourceDsName(),
@@ -232,8 +369,6 @@ public class Test {
 //        System.out.println("result = " + result);
 
 
-
-
         //取表字段类型
 //        Connection connection = MySqlConnection.createConnection(configuration.getSourceDsName(),
 //                DataSourceUtil.getDataSourceByDsName(configuration.getSourceDsName()));
@@ -311,7 +446,6 @@ public class Test {
 //        }
 
 
-
         // minMaxPK 最小到最大字段
 //        String split = getPK(tableName, connection);
 //        String split = "dict_node";
@@ -319,7 +453,7 @@ public class Test {
 //        System.out.println("minMaxPK    =   " + minMaxPK.toString());
 
         //切表测试
-//        configuration.setDbTableWhite("(community.community_dict)||(community.sys_menu)");
+/*//        configuration.setDbTableWhite("(community.community_dict)||(community.sys_menu)");
 //        configuration.setDbTableWhite("(community.community_dict)||(community.sys_menu)||(community.community.banner)");
         configuration.setDbTableWhite("community.test1");
 //        configuration.setDbTableWhite("community.community_category");
@@ -339,7 +473,7 @@ public class Test {
         for (Range range : list) {
             System.out.println("切分的range    =   " + range);
         }
-        System.out.println("切分份数    =   " + list.size());
+        System.out.println("切分份数    =   " + list.size());*/
         //获取主键测试
 /*        Connection conn = MySqlConnection.createConnection(configuration.getSourceDsName(),
                 DataSourceUtil.getDataSourceByDsName(configuration.getSourceDsName()));
@@ -373,13 +507,6 @@ public class Test {
 //        st.close();
 //        conn.close();
     }
-
-
-
-
-
-
-
 
 
 //        List<Range> listRange = ReaderSplitUtil.doSplit(configuration, configuration.getAdviceNumber(),
@@ -564,7 +691,10 @@ public class Test {
 //        }
 //        dataList.add(abstractColumns);
 //    }
-    /**获取数据库中所有表名称
+
+    /**
+     * 获取数据库中所有表名称
+     *
      * @param conn
      * @return
      * @throws SQLException
@@ -579,27 +709,29 @@ public class Test {
         return tablesList;
     }
 
-    /**获取表中所有字段名称
+    /**
+     * 获取表中所有字段名称
+     *
      * @param rs
      * @throws SQLException
      */
     private static List<String> getColNames(ResultSet rs) throws SQLException {
         ResultSetMetaData metaData = rs.getMetaData();
         int count = metaData.getColumnCount();
-        System.out.println("getCatalogName(int column) 获取指定列的表目录名称。"+metaData.getCatalogName(1));
-        System.out.println("getColumnClassName(int column) 构造其实例的 Java 类的完全限定名称。"+metaData.getColumnClassName(1));
-        System.out.println("getColumnCount()  返回此 ResultSet 对象中的列数。"+metaData.getColumnCount());
-        System.out.println("getColumnDisplaySize(int column) 指示指定列的最大标准宽度，以字符为单位. "+metaData.getColumnDisplaySize(1));
-        System.out.println("getColumnLabel(int column) 获取用于打印输出和显示的指定列的建议标题。 "+metaData.getColumnLabel(1));
-        System.out.println("getColumnName(int column)  获取指定列的名称。"+metaData.getColumnName(1));
-        System.out.println("getColumnType(int column) 获取指定列的 SQL 类型。 "+metaData.getColumnType(1));
-        System.out.println("getColumnTypeName(int column) 获取指定列的数据库特定的类型名称。 "+metaData.getColumnTypeName(1));
-        System.out.println("getPrecision(int column)  获取指定列的指定列宽。 "+metaData.getPrecision(1));
-        System.out.println("getScale(int column) 获取指定列的小数点右边的位数。 "+metaData.getScale(1));
-        System.out.println("getSchemaName(int column) 获取指定列的表模式。 "+metaData.getSchemaName(1));
-        System.out.println("getTableName(int column) 获取指定列的名称。 "+metaData.getTableName(1));
+        System.out.println("getCatalogName(int column) 获取指定列的表目录名称。" + metaData.getCatalogName(1));
+        System.out.println("getColumnClassName(int column) 构造其实例的 Java 类的完全限定名称。" + metaData.getColumnClassName(1));
+        System.out.println("getColumnCount()  返回此 ResultSet 对象中的列数。" + metaData.getColumnCount());
+        System.out.println("getColumnDisplaySize(int column) 指示指定列的最大标准宽度，以字符为单位. " + metaData.getColumnDisplaySize(1));
+        System.out.println("getColumnLabel(int column) 获取用于打印输出和显示的指定列的建议标题。 " + metaData.getColumnLabel(1));
+        System.out.println("getColumnName(int column)  获取指定列的名称。" + metaData.getColumnName(1));
+        System.out.println("getColumnType(int column) 获取指定列的 SQL 类型。 " + metaData.getColumnType(1));
+        System.out.println("getColumnTypeName(int column) 获取指定列的数据库特定的类型名称。 " + metaData.getColumnTypeName(1));
+        System.out.println("getPrecision(int column)  获取指定列的指定列宽。 " + metaData.getPrecision(1));
+        System.out.println("getScale(int column) 获取指定列的小数点右边的位数。 " + metaData.getScale(1));
+        System.out.println("getSchemaName(int column) 获取指定列的表模式。 " + metaData.getSchemaName(1));
+        System.out.println("getTableName(int column) 获取指定列的名称。 " + metaData.getTableName(1));
         List<String> colNameList = new ArrayList<String>();
-        for(int i = 1; i<=count; i++){
+        for (int i = 1; i <= count; i++) {
             colNameList.add(metaData.getColumnName(i));
         }
         System.out.println(colNameList);
