@@ -30,7 +30,8 @@ import util.StringUtil;
 public class TestMainLhp {
     public static void main(String[] args) throws InterruptedException {
         //创建pro
-        ProgramInfo programInfo = ProgramInfoUtil.getProgramInfo("proc2");
+        ProgramInfo programInfo = ProgramInfoUtil.getProgramInfo("proc5");
+
         //获取数据源对象
         Datasource dataSourceDb = DataSourceUtil.getDataSourceByDsName(programInfo.getSourceDsName());
         Datasource dataTargetDb = DataSourceUtil.getDataSourceByDsName(programInfo.getTargetDsName());
@@ -57,6 +58,8 @@ public class TestMainLhp {
             testMongoDbToMysql(programInfo, memoryCache, taskTrigger);
         }else if (dataSourceDb.getType().equalsIgnoreCase(DbTypeFlag.PG) && dataTargetDb.getType().equalsIgnoreCase(DbTypeFlag.MYSQL)) {
             testPgToMysql(programInfo, memoryCache, taskTrigger);
+        }else if (dataSourceDb.getType().equalsIgnoreCase(DbTypeFlag.MYSQL) && dataTargetDb.getType().equalsIgnoreCase(DbTypeFlag.MYSQL)) {
+            testMysqlToMysql(programInfo, memoryCache, taskTrigger);
         }
 
     }
@@ -74,6 +77,7 @@ public class TestMainLhp {
                     OracleConnection.createConnection(dataSourceDb.getName(), dataSourceDb);
                 }
             } catch (Exception e) {
+                e.printStackTrace();
                 Log.error(e.getMessage());
             }
         }
@@ -229,5 +233,16 @@ public class TestMainLhp {
         OracleSource oracleSource = new OracleSource(programInfo, memoryCache);
         oracleSource.createTask();
         getProExeInfo(programInfo, oracleSource, memoryCache);
+    }
+
+    public static void testMysqlToMysql(ProgramInfo programInfo, MemoryCache memoryCache, TaskTrigger taskTrigger) {
+
+
+        MysqlTarget mysqlTarget = new MysqlTarget(programInfo, memoryCache, programInfo.getProName());
+        mysqlTarget.startToTarget();
+
+        MysqlSource mysqlSource = new MysqlSource(programInfo, memoryCache);
+        mysqlSource.createTask();
+        getProExeInfo(programInfo, mysqlSource, memoryCache);
     }
 }

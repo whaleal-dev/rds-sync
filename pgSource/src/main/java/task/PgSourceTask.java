@@ -13,10 +13,7 @@ import parse.PgDataToColumnData;
 import thread.SourceTaskPoolManager;
 import util.Log;
 
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -65,14 +62,17 @@ public class PgSourceTask extends AbstractSourceTask {
         String dbTableName = this.taskMetadata.getDbTableName();
         Range range = this.taskMetadata.getRange();
         String query = range.getQuery();
-        Statement statement = null;
+        PreparedStatement statement = null;
         ResultSet resultSet = null;
         try {
             //读取collection中的数据
-            statement = connection.createStatement();
+            connection.setAutoCommit(false);
             String sql = "select * from  " + dbTableName + " where " + query;
-            System.out.println("sql=====" + sql);
-            resultSet = statement.executeQuery(sql);
+            statement = connection.prepareStatement(sql,
+                    ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+            //也可以修改jdbc url通过defaultFetchSize参数来设置，这样默认所以的返回结果都是通过流方式读取.
+            statement.setFetchSize(1024);
+            resultSet = statement.executeQuery();
             while (resultSet.next()) {
                 dataTransformation(resultSet);
                 if (cache++ > dataBatchSize) {

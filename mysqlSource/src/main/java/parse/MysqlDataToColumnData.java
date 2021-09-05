@@ -15,14 +15,13 @@ import java.util.Date;
 public class MysqlDataToColumnData {
 
 
-
     public static AbstractColumn parseValue(String columnName, Object object) {
         if (object == null) {
             return new NullColumn(columnName, null);
         }
         String type = object.getClass().getSimpleName().toUpperCase();
-        if(("BYTE[]").equals(type)){
-            type="BYTES";
+        if (("BYTE[]").equals(type)) {
+            type = "BYTES";
         }
         EnumMySqlDataInJavaType enumMySqlDataInJavaType = EnumMySqlDataInJavaType.valueOf(type);
         switch (enumMySqlDataInJavaType) {
@@ -37,7 +36,7 @@ public class MysqlDataToColumnData {
             case BIGDECIMAL:
                 return new BigDecimalColumn(columnName, (BigDecimal) object);
             case DATE:
-                return new DateTimeColumn(columnName, ((Date) object).getTime());
+                return new DateColumn(columnName, object.toString());
             case TIME:
                 return new TimeColumn(columnName, object.toString());
             case TIMESTAMP:

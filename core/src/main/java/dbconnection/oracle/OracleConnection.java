@@ -70,10 +70,11 @@ public final class OracleConnection {
             basicDataSource.setPassword(datasource.getPassword());
             jdbcTemplateOracleMap.put(dsName, new JdbcTemplate(basicDataSource));
             oracleConnectionMap.put(dsName, basicDataSource.getConnection());
-            System.out.println("成功连接数据库");
+            System.out.println("成功连接数据库"+dsName);
         } catch (Exception exception) {
-            Log.error(exception.getMessage());
             exception.printStackTrace();
+            Log.error(exception.getMessage());
+
         }
     }
 

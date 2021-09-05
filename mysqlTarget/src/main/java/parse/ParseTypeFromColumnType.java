@@ -37,6 +37,11 @@ public class ParseTypeFromColumnType {
                 break;
             case BIGDECIMALCOLUMN:
                 columnType.setColumnType(MySqlType.DECIMAL);
+                columnType.setPrecision(0);
+                if (columnData.getData().toString().contains(".")) {
+                    columnType.setPrecision(columnData.getData().toString().split("\\.")[1].length());
+                }
+                columnType.setLength(columnData.getData().toString().length());
                 break;
             case LONGCOLUMN:
                 columnType.setColumnType(MySqlType.BIGINT);
@@ -117,9 +122,9 @@ public class ParseTypeFromColumnType {
         ColumnType columnTypeTemp = null;
         EnumMySqlDataType enumMySqlDataType = EnumMySqlDataType.valueOf(oldValueType);
         switch (enumMySqlDataType) {
-            case BIGINT:
-            case INT:
-            case TINYINT:
+//            case BIGINT:
+//            case INT:
+//            case TINYINT:
             case CHAR:
             case VARCHAR:
                 if (newValueLength > oldValueLength) {

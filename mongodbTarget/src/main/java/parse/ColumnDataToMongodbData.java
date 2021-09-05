@@ -23,6 +23,7 @@ public class ColumnDataToMongodbData {
         // 时间类型可能有问题
         switch (enumCommonColumnDataType) {
             case DATETIMECOLUMN:
+                return new Date((long) (columnData.getData()));
             case TIMESTAMPCOLUMN:
                 return new BsonTimestamp((long) (columnData.getData()));
             case DATECOLUMN:

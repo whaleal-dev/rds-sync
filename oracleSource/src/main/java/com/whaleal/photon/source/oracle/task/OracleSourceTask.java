@@ -30,10 +30,7 @@ public class OracleSourceTask extends AbstractSourceTask {
      * connection
      */
     private Connection connection;
-    /**
-     * jdbcTemplate
-     */
-    private JdbcTemplate jdbcTemplate;
+
     /**
      * 缓存数据集合
      */
@@ -42,12 +39,10 @@ public class OracleSourceTask extends AbstractSourceTask {
     public OracleSourceTask(SourceTaskInfo taskMetadata, String procName, MemoryCache memoryCache, int dataBatchSize) {
         super(taskMetadata, procName, memoryCache, dataBatchSize);
         this.connection = OracleConnection.getConnection(sourceDsName);
-        this.jdbcTemplate = OracleConnection.getJdbcTemplate(sourceDsName);
     }
 
     @Override
     public void run() {
-
         Log.info("启动source任务:" + this.taskMetadata.toString());
         // 读取数据
         getDataFromCollection();
@@ -73,7 +68,7 @@ public class OracleSourceTask extends AbstractSourceTask {
                     putDataToCache();
                 }
             }
-            Log.info("source任务执行完毕:" + this.taskMetadata.toString());
+
         } catch (Exception e) {
             e.printStackTrace();
             Log.error(e.getMessage());

@@ -1,6 +1,10 @@
 import com.google.gson.Gson;
 import common.column.AbstractColumn;
+import common.photonV.entity.Datasource;
+import datasource.DataSourceUtil;
 import dbconnection.MetadataConnection;
+import dbconnection.mysql.MySqlConnection;
+import dbconnection.pgserver.PgServerConnection;
 
 import java.io.FileNotFoundException;
 import java.sql.*;
@@ -19,48 +23,58 @@ import java.util.Date;
 public class GetDbTypeOfMysql {
     static Gson gson = new Gson();
 
-    public static void main(String[] args) throws FileNotFoundException, SQLException {
+    public static void main(String[] args) throws FileNotFoundException, SQLException, InterruptedException {
 //        InputStream in = new FileInputStream("/Users/liheping/Desktop/project/photonT/common/src/main/java/common/dbtype/DbTypeFlag.java");//生成被插入文件的节点流
-//        Connection connection = MetadataConnection.getConnection();
+
+        Connection connection = MetadataConnection.getConnection();
+        Statement statement = connection.createStatement();
+        ResultSet resultSet = statement.executeQuery("select * from test.test");
+        ResultSetMetaData md = resultSet.getMetaData();
+        while (resultSet.next()) {
+            List<AbstractColumn> abstractColumns = new ArrayList<>();
+            //获取数据库内容不为空
+            //遍历rs中的属性与值
+            for (int i = 1; i <= md.getColumnCount(); i++) {
+                //属性名下划线改驼峰
+                String columnName = md.getColumnName(i);
+                //值
+                Object values = resultSet.getObject(md.getColumnName(i));
+                if(values!=null){
+                    String type = values.getClass().getSimpleName().toUpperCase();
+                     System.out.print(type + "(\"" + type + "\"),");
+                   // System.out.println(columnName+"       "+values);
+                }
+
+            }
+        }
+
+
+//        Date date=new java.util.Date(1630553229060L);
+//        System.out.println(date.toString());
+//        Instant instant = date.toInstant();
+//        ZoneId zoneId = ZoneId.systemDefault();
+//        LocalDateTime localDateTime = instant.atZone(zoneId).toLocalDateTime();
+//        System.out.println("Date = " + date);
+//        System.out.println("LocalDateTime = " + localDateTime.toString());
+
+
+
+//        Datasource mysqltest = DataSourceUtil.getDataSourceByDsName("mysqltest");
 //
-//        PreparedStatement preparedStatement = connection.prepareStatement("insert into test.test(x2) values(?)");
+//        MySqlConnection.createConnection(mysqltest.getName(), mysqltest);
+//        Connection pgConnection = MySqlConnection.getConnection("mysqltest");
+//        Statement statement = pgConnection.createStatement();
+//        PreparedStatement ps = pgConnection.prepareStatement("select * from test2", ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
 //
-//        preparedStatement.setBlob(1, in);
-//        preparedStatement.executeUpdate();
-//
-//        Connection connection = MetadataConnection.getConnection();
-//        Statement statement = connection.createStatement();
-//        ResultSet resultSet = statement.executeQuery("select * from test.test");
-//        ResultSetMetaData md = resultSet.getMetaData();
-//        while (resultSet.next()) {
-//            List<AbstractColumn> abstractColumns = new ArrayList<>();
-//            //获取数据库内容不为空
-//            //遍历rs中的属性与值
-//            for (int i = 1; i <= md.getColumnCount(); i++) {
-//                //属性名下划线改驼峰
-//                String columnName = md.getColumnName(i);
-//                //值
-//                Object values = resultSet.getObject(md.getColumnName(i));
-//
-//                if(values!=null){
-//                    String type = values.getClass().getSimpleName().toUpperCase();
-//                    System.out.print(type + "(\"" + type + "\"),");
-//                }
-//
-//
-//
-//            }
+//        //也可以修改jdbc url通过defaultFetchSize参数来设置，这样默认所以的返回结果都是通过流方式读取.
+//        Thread.sleep(10000);
+//        ps.setFetchSize(128);
+//        ResultSet rs = ps.executeQuery();
+//        Thread.sleep(10000);
+//        while (rs.next()) {
+//            System.out.println(rs.getString("id"));
 //        }
-
-
-        Date date=new java.util.Date(1630553229060L);
-        System.out.println(date.toString());
-        Instant instant = date.toInstant();
-        ZoneId zoneId = ZoneId.systemDefault();
-        LocalDateTime localDateTime = instant.atZone(zoneId).toLocalDateTime();
-        System.out.println("Date = " + date);
-        System.out.println("LocalDateTime = " + localDateTime.toString());
-
+//        Thread.sleep(10000);
 
     }
 }

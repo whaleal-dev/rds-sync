@@ -39,7 +39,11 @@ public class ColumnDataToMysqlData {
                 return columnData.getData();
             case TIMESTAMPCOLUMN:
             case DATETIMECOLUMN:
-                return "'" + parseDateTime(new java.util.Date((long) columnData.getData())) + "'";
+                long dateLong = ((long) columnData.getData());
+                if(dateLong==0L){
+                    return null;
+                }
+                return "'" + parseDateTime(new java.util.Date(dateLong)) + "'";
             case STRINGCOLUMN:
             case OBJECTIDCOLUMN:
             case JSONCOLUMN:
@@ -63,7 +67,7 @@ public class ColumnDataToMysqlData {
     }
 
     public static void main(String[] args) {
-        Time time = new Time(2L);
+        Time time = new Time(0);
         System.out.println(time.toString());
     }
 }

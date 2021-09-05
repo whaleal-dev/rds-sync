@@ -70,7 +70,7 @@ public final class PgServerConnection {
         try {
             BasicDataSource basicDataSource = new BasicDataSource();
             basicDataSource.setDriverClassName("org.postgresql.Driver");
-            basicDataSource.setUrl(datasource.getUrl());
+            basicDataSource.setUrl(datasource.getUrl()+"?useCursorFetch=true");
             basicDataSource.setUsername(datasource.getUsername());
             basicDataSource.setPassword(datasource.getPassword());
             System.out.println("成功连接数据库");

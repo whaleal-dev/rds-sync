@@ -52,8 +52,8 @@ public class PgSourceSplitRange {
             for (String intColumnName : intColumnSet) {
                 Map<String, Object> infoMap = getMaxDifference(intColumnName, dbTableName);
                 Long difference = (Long) infoMap.get("difference");
-                Long min = (Long) infoMap.get("min");
-                Long max = (Long) infoMap.get("max");
+                int min = (Integer) infoMap.get("min");
+                int max = (Integer) infoMap.get("max");
                 if (difference > maxDiffTemp) {
                     range.setColumnName(intColumnName);
                     range.setMaxId(max);
@@ -68,7 +68,7 @@ public class PgSourceSplitRange {
                 rangeOfNull.setQuery("( 1=1 )");
                 rangeList.add(rangeOfNull);
             } else {
-                rangeList = RangeSplitUtil.getRangeListByLongType((Long) range.getMinId(), (Long) range.getMaxId(), 5, range.getColumnName());
+                rangeList = RangeSplitUtil.getRangeListByLongType((Integer) range.getMinId(), (Integer) range.getMaxId(), 10, range.getColumnName());
             }
         } else {
             Range rangeOfNull = new Range();
@@ -82,19 +82,19 @@ public class PgSourceSplitRange {
 
     public Map<String, Object> getMaxDifference(String intColumnName, String dbTableName) {
         long difference = 0L;
-        Long min = 0L;
-        Long max = 0L;
+        int min = 0;
+        int max = 0;
         String sql = "select min(" + intColumnName + ")  min, max(" + intColumnName + ")  max from " + dbTableName + "";
         try {
             List<Map<String, Object>> mapList = jdbcTemplate.queryForList(sql);
             if (mapList.size() != 0) {
-                min = (Long) mapList.get(0).get("min");
-                max = (Long) mapList.get(0).get("max");
+                min = (Integer) mapList.get(0).get("min");
+                max = (Integer) mapList.get(0).get("max");
             }
         } catch (Exception e) {
             Log.error(e.getMessage());
-            min = 0L;
-            max = 0L;
+            min = 0;
+            max = 0;
         }
         difference = (max - min);
         Map<String, Object> infoMap = new HashMap<>();
