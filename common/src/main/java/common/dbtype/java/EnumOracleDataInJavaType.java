@@ -18,7 +18,7 @@ public enum EnumOracleDataInJavaType {
     INTEGER("INTEGER"),
     STRING("STRING"),
     TIMESTAMP("TIMESTAMP"),
-    BYTES("BYTE[]");
+    BYTES("BYTES");
 
     private final String upperCase;
 

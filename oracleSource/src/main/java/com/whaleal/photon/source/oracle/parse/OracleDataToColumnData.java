@@ -20,6 +20,9 @@ public class OracleDataToColumnData {
         }
         //获取 mysql 值的数据类型
         String type = object.getClass().getSimpleName().toUpperCase();
+        if (("BYTE[]").equals(type)) {
+            type = "BYTES";
+        }
         EnumOracleDataInJavaType enumOracleDataInJavaType = EnumOracleDataInJavaType.valueOf(type);
         switch (enumOracleDataInJavaType) {
             case FLOAT:
