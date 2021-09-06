@@ -17,9 +17,9 @@ public class ParseTypeFromColumnType {
     public static ColumnType parseType(AbstractColumn columnData) {
         ColumnType columnType = new ColumnType();
         columnType.setColumnName(columnData.getColumnName());
-        int objectLength = columnData.toString().length();
-        if(objectLength==0){
-            objectLength=1;
+        int objectLength = (int) (columnData.getData().toString().replaceAll("'", "\\`").length() * 1.2);
+        if (objectLength == 0) {
+            objectLength = 1;
         }
         String type = columnData.getClass().getSimpleName().toUpperCase();
         EnumCommonColumnDataType enumCommonColumnDataType = EnumCommonColumnDataType.valueOf(type);
@@ -62,10 +62,7 @@ public class ParseTypeFromColumnType {
                 }
                 columnType.setLength(columnData.getData().toString().length());
                 break;
-            case OBJECTIDCOLUMN:
-                columnType.setColumnType(MySqlType.CHAR);
-                columnType.setLength(objectLength);
-                break;
+
             case DATECOLUMN:
                 columnType.setColumnType(MySqlType.DATE);
                 break;
@@ -80,12 +77,14 @@ public class ParseTypeFromColumnType {
                 break;
             case BYTESCOLUMN:
                 // 需要优化
+                // 需要比较不同的clob信息
                 columnType.setColumnType(MySqlType.BLOB);
                 break;
             case JSONCOLUMN:
             case STRINGCOLUMN:
             case ARRAYCOLUMN:
             case PGOBJECTCOLUMN:
+            case MONGODBOBJECTCOLUMN:
             default:
                 columnType.setColumnType(MySqlType.VARCHAR);
                 dealStringType(objectLength, columnType);

@@ -1,4 +1,4 @@
-package common.dbtype;
+package common.dbtype.other;
 
 import java.util.HashMap;
 import java.util.Map;

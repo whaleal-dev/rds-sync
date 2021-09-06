@@ -1,10 +1,5 @@
 package common.column;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
-
 import java.sql.Blob;
 
 /**
@@ -12,11 +7,8 @@ import java.sql.Blob;
  *
  * @author: jy
  * @Date: 2021/08/26
+ * @desc: 可以使用byte来替代
  */
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-@ToString
 public class BlobColumn extends AbstractColumn {
 
     private Blob data;

@@ -31,8 +31,6 @@ public enum EnumMongoDbDataInJavaType {
     MAXKEY("MAXKEY"),
     BSONTIMESTAMP("BSONTIMESTAMP");
 
-
-
     private final String upperCase;
 
     EnumMongoDbDataInJavaType(String upperCase) {

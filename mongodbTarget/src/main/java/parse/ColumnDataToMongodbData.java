@@ -20,13 +20,13 @@ public class ColumnDataToMongodbData {
     public static Object parseColumnData(AbstractColumn columnData) {
         String type = columnData.getClass().getSimpleName().toUpperCase();
         EnumCommonColumnDataType enumCommonColumnDataType = EnumCommonColumnDataType.valueOf(type);
-        // 时间类型可能有问题
         switch (enumCommonColumnDataType) {
             case DATETIMECOLUMN:
                 return new Date((long) (columnData.getData()));
             case TIMESTAMPCOLUMN:
                 return new BsonTimestamp((long) (columnData.getData()));
             case DATECOLUMN:
+            case TIMECOLUMN:
             case PGOBJECTCOLUMN:
                 return columnData.getData().toString();
             case JSONCOLUMN:
@@ -43,9 +43,8 @@ public class ColumnDataToMongodbData {
             case LONGCOLUMN:
             case DOUBLECOLUMN:
             case FLOATCOLUMN:
-            case OBJECTIDCOLUMN:
+            case MONGODBOBJECTCOLUMN:
             case BOOLCOLUMN:
-            case TIMECOLUMN:
             default:
                 return columnData.getData();
         }

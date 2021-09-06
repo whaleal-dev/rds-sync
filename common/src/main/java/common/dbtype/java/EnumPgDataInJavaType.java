@@ -12,9 +12,9 @@ public enum EnumPgDataInJavaType {
     /**
      * pg在java中的类型类型
      */
-    STRING("STRING"),
     //为pgObject的统称类
     PGOBJECT("PGOBJECT"),
+    STRING("STRING"),
     LONG("LONG"),
     DOUBLE("DOUBLE"),
     INTEGER("INTEGER"),
@@ -23,7 +23,7 @@ public enum EnumPgDataInJavaType {
     TIME("TIME"),
     TIMESTAMP("TIMESTAMP"),
     BOOLEAN("BOOLEAN"),
-    BYTES("BYTE[]"),
+    BYTES("BYTES"),
     DATE("DATE"),
     PGPOINT("PGPOINT"),
     PGLINE("PGLINE"),

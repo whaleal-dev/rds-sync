@@ -86,6 +86,7 @@ public class ColumnType implements Serializable {
             }
         }
         if(columnType.equalsIgnoreCase("timestamp")){
+            // 默认时间戳精确度为毫秒级
             stringBuilder.append("(6)");
         }
         if (descType != null && DbTypeFlag.ORACLE.equalsIgnoreCase(descType)) {

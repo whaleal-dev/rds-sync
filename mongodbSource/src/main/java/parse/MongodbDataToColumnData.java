@@ -8,10 +8,8 @@ import org.bson.*;
 import org.bson.types.*;
 
 import java.math.BigDecimal;
-import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.List;
-import java.util.Locale;
 
 
 /**
@@ -19,6 +17,7 @@ import java.util.Locale;
  */
 public class MongodbDataToColumnData {
     private static final Gson gson = new Gson();
+
     public static AbstractColumn parseValue(String columnName, Object object) {
         if (object == null) {
             return new NullColumn(columnName, null);
@@ -59,20 +58,28 @@ public class MongodbDataToColumnData {
             case DOCUMENT:
                 return new JsonColumn(columnName, gson.toJson(object));
             case OBJECTID:
-                return new ObjectIdColumn(columnName, (ObjectId) object);
+                return new MongodbObjectColumn(columnName, (ObjectId) object);
             case STRING:
+                return new StringColumn(columnName, object.toString());
             case BSONDBPOINTER:
             case BSONUNDEFINED:
             case CODEWITHSCOPE:
             case MAXKEY:
             case MINKEY:
             default:
-                return new StringColumn(columnName, object.toString());
+                return new MongodbObjectColumn(columnName, object);
         }
     }
 
-//    public static void main(String[] args) {
-//        BsonMinKey key= new BsonMinKey("1");
-//        key.toString();
-//    }
+    public static void main(String[] args) {
+        //BsonMinKey key= new BsonMinKey("1");
+        //key.toString();
+
+        System.out.println(System.currentTimeMillis());
+        BsonTimestamp bb = new BsonTimestamp(System.currentTimeMillis());
+        System.out.println(bb.getValue());
+
+        System.out.println(bb.getTime());
+
+    }
 }

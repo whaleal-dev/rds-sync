@@ -1,13 +1,8 @@
 package sourcesplit;
 
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.client.MongoClient;
 import common.dataclass.Range;
-import common.dbtype.MongoDbTypeNumber;
-import dbconnection.mongodb.MongoDbConnection;
 import dbconnection.pgserver.PgServerConnection;
-import org.bson.Document;
 import org.springframework.jdbc.core.JdbcTemplate;
 import util.Log;
 import util.split.RangeSplitUtil;

@@ -3,6 +3,7 @@ package parse;
 
 import common.column.AbstractColumn;
 import common.dbtype.java.EnumCommonColumnDataType;
+import org.bson.BsonTimestamp;
 
 import java.sql.Time;
 import java.sql.Timestamp;
@@ -40,12 +41,14 @@ public class ColumnDataToMysqlData {
             case TIMESTAMPCOLUMN:
             case DATETIMECOLUMN:
                 long dateLong = ((long) columnData.getData());
-                if(dateLong==0L){
+                if (dateLong == 0L) {
                     return null;
+                } else if ((dateLong + "").toString().length() > 13) {
+                    dateLong = dateLong >> 32;
                 }
                 return "'" + parseDateTime(new java.util.Date(dateLong)) + "'";
             case STRINGCOLUMN:
-            case OBJECTIDCOLUMN:
+            case MONGODBOBJECTCOLUMN:
             case JSONCOLUMN:
             case ARRAYCOLUMN:
             case PGOBJECTCOLUMN:
@@ -57,17 +60,25 @@ public class ColumnDataToMysqlData {
     }
 
     public static String parseDateTime(java.util.Date date) {
-        System.out.println(date.toString());
+       // System.out.println(date.toString());
         Instant instant = date.toInstant();
         ZoneId zoneId = ZoneId.systemDefault();
         LocalDateTime localDateTime = instant.atZone(zoneId).toLocalDateTime();
-        System.out.println("Date = " + date);
-        System.out.println("LocalDateTime = " + localDateTime);
+       // System.out.println("Date = " + date);
+       // System.out.println("LocalDateTime = " + localDateTime);
         return localDateTime.toString();
     }
 
     public static void main(String[] args) {
-        Time time = new Time(0);
-        System.out.println(time.toString());
+        BsonTimestamp bsonTimestamp = new BsonTimestamp(1624263190, 16175);
+        System.out.println(bsonTimestamp.toString());
+        System.out.println(bsonTimestamp.getTime());
+        System.out.println(bsonTimestamp.getValue());
+        System.out.println(bsonTimestamp.getValue() << 32);
+        System.out.println(bsonTimestamp.getValue() >> 32);
+
+
+        String s="'[JdbcDatasourceTestVo(databaseType=mysql, jdbcDatabase=mysql, jdbcUsername=root, jdbcPassword=123123, jdbcIp=192.168.3.33, port=8333, jdbcDriverClass=null)]'";
+        System.out.println(s.length());
     }
 }

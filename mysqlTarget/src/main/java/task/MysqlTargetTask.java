@@ -132,7 +132,7 @@ public class MysqlTargetTask extends AbstractTargetTask {
 
     @Override
     public void bulkExecute(String dbTable, long batchNo) {
-        System.out.println("targetNum:" + atomicInteger.addAndGet(sqlList.size()));
+      //  System.out.println("targetNum:" + atomicInteger.addAndGet(sqlList.size()));
         try {
             Statement statement = connection.createStatement();
             connection.setAutoCommit(false);
@@ -292,6 +292,8 @@ public class MysqlTargetTask extends AbstractTargetTask {
                     MySqlConnection.getJdbcTemplate(dsName).execute(alterSql);
                     columnTypeMap.put((dsName + ":" + dbTableName + ":" + columnName).toUpperCase(), columnTypeTemp);
                     Log.info(columnType.getLength() + "." + columnType.getPrecision() + "    =   " + columnValue.getColumnName() + "    =   " + columnValue.getData() + "    =   " + alterSql);
+                    Log.info(columnTypeTemp.getLength() + "." + columnTypeTemp.getPrecision() + "    =   " + columnTypeTemp.getColumnName() + "    =   " + columnTypeTemp);
+
                 }
             }
         }

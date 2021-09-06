@@ -6,14 +6,11 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 /**
- * @description:日期字段类 年月日
+ * @description:日期字段类 年月日 时间格式 2021-08-23
  * @author: lhp
  * @time: 2021/8/23 9:53 上午
  */
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-@ToString
+
 public class DateColumn extends AbstractColumn {
     private String data;
 

@@ -1,9 +1,7 @@
 package common.column;
 
-import java.util.List;
-
 /**
- * @description:
+ * @description:byte数组 适用于二进制对象
  * @author: lhp
  * @time: 2021/9/1 2:37 下午
  */
@@ -19,6 +17,4 @@ public class BytesColumn extends AbstractColumn {
     public byte[] getData() {
         return this.data;
     }
-
-
 }

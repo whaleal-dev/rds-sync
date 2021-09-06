@@ -11,6 +11,7 @@ public enum EnumCommonColumnDataType {
      * int类型
      */
     INTCOLUMN("INTCOLUMN"),
+
     TIMECOLUMN("TIMECOLUMN"),
     /**
      * decimal类型
@@ -56,10 +57,7 @@ public enum EnumCommonColumnDataType {
      * 时间戳类型
      */
     TIMESTAMPCOLUMN("TIMESTAMPCOLUMN"),
-    /**
-     * mongodb的ObjectId类型
-     */
-    OBJECTIDCOLUMN("OBJECTIDCOLUMN"),
+
     /**
      * null类型
      */
@@ -69,20 +67,23 @@ public enum EnumCommonColumnDataType {
      */
     SHORTCOLUMN("SHORTCOLUMN"),
     /**
-     * pg的对象类型
+     * 布尔类型
      */
-    PGOBJECTCOLUMN("PGOBJECTCOLUMN"),
+    BOOLCOLUMN("BOOLCOLUMN"),
 
     /**
      * bytes类型
      */
     BYTESCOLUMN("BYTESCOLUMN"),
-
-
     /**
-     * 布尔类型
+     * mongodb类型
      */
-    BOOLCOLUMN("BOOLCOLUMN");
+    MONGODBOBJECTCOLUMN("MONGODBOBJECTCOLUMN"),
+    /**
+     * pg的对象类型
+     */
+    PGOBJECTCOLUMN("PGOBJECTCOLUMN");
+
 
     private final String upperCase;
 

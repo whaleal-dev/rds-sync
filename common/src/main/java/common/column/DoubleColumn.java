@@ -10,10 +10,7 @@ import lombok.ToString;
  * @author: lhp
  * @time: 2021/8/23 9:54 上午
  */
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-@ToString
+
 public class DoubleColumn extends AbstractColumn {
     private double data;
 

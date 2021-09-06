@@ -14,7 +14,6 @@ import java.util.Date;
  */
 public class MysqlDataToColumnData {
 
-
     public static AbstractColumn parseValue(String columnName, Object object) {
         if (object == null) {
             return new NullColumn(columnName, null);

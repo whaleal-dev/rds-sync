@@ -13,10 +13,6 @@ import java.math.BigDecimal;
  * @author: jy
  * @Date: 2021/08/26
  */
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-@ToString
 public class BigDecimalColumn extends AbstractColumn {
 
     private BigDecimal data;

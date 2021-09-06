@@ -21,6 +21,8 @@ public class PgDataToColumnData {
         String type = object.getClass().getSimpleName().toUpperCase();
         if (type.startsWith("PG")) {
             type = "PGOBJECT";
+        } else if (("BYTE[]").equals(type)) {
+            type = "BYTES";
         }
         EnumPgDataInJavaType dataType = EnumPgDataInJavaType.valueOf(type);
         switch (dataType) {

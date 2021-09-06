@@ -10,10 +10,7 @@ import lombok.ToString;
  * @author: lhp
  * @time: 2021/8/23 9:53 上午
  */
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-@ToString
+
 public class DateTimeColumn extends AbstractColumn {
     private Long data;
 

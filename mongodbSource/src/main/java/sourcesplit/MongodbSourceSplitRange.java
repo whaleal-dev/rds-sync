@@ -4,7 +4,7 @@ package sourcesplit;
 import com.mongodb.BasicDBObject;
 import com.mongodb.client.MongoClient;
 import common.dataclass.Range;
-import common.dbtype.MongoDbTypeNumber;
+import common.dbtype.other.MongoDbTypeNumber;
 import dbconnection.mongodb.MongoDbConnection;
 import org.bson.Document;
 
