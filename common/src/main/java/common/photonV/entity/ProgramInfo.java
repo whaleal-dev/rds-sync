@@ -93,10 +93,6 @@ public class ProgramInfo {
      */
     private Object PK_TYPE;
     /**
-     * 为避免导入hive小文件 默认基数为5，可以通过 splitFactor 配置基数
-     */
-    private Integer splitFactor = 5;
-    /**
      *
      */
     private Integer fetchSize = 500;
