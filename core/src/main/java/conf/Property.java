@@ -29,6 +29,7 @@ public class Property {
         setFileName("photonT.properties");
         // 读取./下的配置文件
         setFileName("core/src/main/resources/photonT.properties");
+        setFileName("src/main/resources/photonT.properties");
     }
 
     public static void setFileName(String fileNameTemp) {

@@ -21,9 +21,9 @@ public class MetadataConnection {
      */
     static {
         BasicDataSource basicDataSource = new BasicDataSource();
-        basicDataSource.setUrl(Property.getPropertiesByKey("url"));
-        basicDataSource.setUsername(Property.getPropertiesByKey("userName"));
-        basicDataSource.setPassword(Property.getPropertiesByKey("password"));
+        basicDataSource.setUrl("jdbc:mysql://192.168.3.19:3306/photon?useUnicode=true&characterEncoding=utf-8");
+        basicDataSource.setUsername("root");
+        basicDataSource.setPassword("123456");
         jdbcTemplate = new JdbcTemplate(basicDataSource);
         try {
             connection = basicDataSource.getConnection();

@@ -3,6 +3,7 @@ import common.column.AbstractColumn;
 import common.photonV.entity.Datasource;
 import datasource.DataSourceUtil;
 import dbconnection.MetadataConnection;
+import dbconnection.oracle.OracleConnection;
 import dbconnection.pgserver.PgServerConnection;
 
 import java.io.FileNotFoundException;
@@ -31,30 +32,33 @@ public class GetDbTypeOfOracle {
 //        preparedStatement.setBlob(1, in);
 //        preparedStatement.executeUpdate();
 //
-        Datasource pg = DataSourceUtil.getDataSourceByDsName("oracle2");
+        Datasource pg = DataSourceUtil.getDataSourceByDsName("oracle3");
 
-        PgServerConnection.createConnection(pg.getName(), pg);
-        Connection pgConnection = PgServerConnection.getConnection("oracle2");
-        Statement statement = pgConnection.createStatement();
-        ResultSet resultSet = statement.executeQuery("select * from  STU where (  STU_ID>=5 and STU_ID<7)");
+        OracleConnection.createConnection(pg.getName(), pg);
+        Connection pgConnection = PgServerConnection.getConnection("oracle3");
+        Statement statement = OracleConnection.getConnection("oracle3").createStatement();
+        ResultSet resultSet = statement.executeQuery("select * from TTYPE");
         ResultSetMetaData md = resultSet.getMetaData();
+        System.out.println(System.currentTimeMillis());
+        int num=0;
         while (resultSet.next()) {
             List<AbstractColumn> abstractColumns = new ArrayList<>();
             //获取数据库内容不为空
-            //遍历rs中的属性与值
-            for (int i = 1; i <= md.getColumnCount(); i++) {
-                //属性名下划线改驼峰
-                String columnName = md.getColumnName(i);
-                //值
-                Object values = resultSet.getObject(md.getColumnName(i));
-
-//                if (values != null) {
-//                    String type = values.getClass().getSimpleName().toUpperCase();
-//                    System.out.print(type + "(\"" + type + "\"),");
-//                }
-                System.out.println(columnName + "   value:      " + columnName);
+            //遍历rs中的属性与值\
+            if(num++>100000){
+                break;
             }
+
+            System.out.println(num);
+//            for (int i = 1; i <= md.getColumnCount(); i++) {
+//                //属性名下划线改驼峰
+//                String columnName = md.getColumnName(i);
+//                //值
+//                Object values = resultSet.getObject(md.getColumnName(i));
+//
+//            }
         }
+        System.out.println(System.currentTimeMillis());
 
 
 

@@ -164,4 +164,31 @@ public class ParseTypeFromColumnType {
         return isAlter;
     }
 
+
+    public static boolean isModifyType(ColumnType columnType, AbstractColumn columnValue) {
+        ColumnType columnTypeNew = ParseTypeFromColumnType.parseType(columnValue);
+        boolean isAlter = false;
+        if (columnType.getColumnType().equalsIgnoreCase(columnTypeNew.getColumnType())) {
+            if (columnType.getColumnType().contains("INT") && columnTypeNew.getColumnType().contains("INT")) {
+                isAlter = false;
+            } else if (columnType.getColumnType().contains("CHAR") && columnTypeNew.getColumnType().contains("CHAR")) {
+                isAlter = false;
+            } else if (columnType.getColumnType().contains("DOUBLE") && columnTypeNew.getColumnType().contains("FLOAT")) {
+                isAlter = false;
+            } else if (columnType.getColumnType().contains("DOUBLE") && columnTypeNew.getColumnType().contains("DECIMAL")) {
+                isAlter = false;
+            } else if (columnType.getColumnType().contains("FLOAT") && columnTypeNew.getColumnType().contains("DECIMAL")) {
+                isAlter = false;
+            } else if (columnType.getColumnType().contains("FLOAT") && columnTypeNew.getColumnType().contains("DOUBLE")) {
+                isAlter = false;
+            } else if (columnType.getColumnType().contains("DATETIME") && columnTypeNew.getColumnType().contains("TIMESTAMP")) {
+                isAlter = false;
+            } else if (columnType.getColumnType().contains("TIMESTAMP") && columnTypeNew.getColumnType().contains("DATETIME")) {
+                isAlter = false;
+            } else {
+                isAlter = true;
+            }
+        }
+        return isAlter;
+    }
 }

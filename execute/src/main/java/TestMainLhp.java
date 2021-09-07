@@ -28,9 +28,25 @@ import util.StringUtil;
  * @time: 2021/8/31 2:04 下午
  */
 public class TestMainLhp {
-    public static void main(String[] args) throws InterruptedException {
+    public static void main(String[] args) {
+        for (int i = 1; i < 11; i++) {
+            try {
+                String procName = "proc" + i;
+                System.out.println(procName);
+                exe(procName);
+            } catch (Exception e) {
+                Log.error(e.getMessage());
+            }
+        }
+    }
+
+
+    public static void exe(String procName) throws InterruptedException {
         //创建pro
-        ProgramInfo programInfo = ProgramInfoUtil.getProgramInfo("proc6");
+        ProgramInfo programInfo = ProgramInfoUtil.getProgramInfo(procName);
+        if (programInfo == null || programInfo.getProName().length() == 0) {
+            return;
+        }
         //获取数据源对象
         Datasource dataSourceDb = DataSourceUtil.getDataSourceByDsName(programInfo.getSourceDsName());
         Datasource dataTargetDb = DataSourceUtil.getDataSourceByDsName(programInfo.getTargetDsName());
@@ -55,12 +71,11 @@ public class TestMainLhp {
             testOracleToMongoDb(programInfo, memoryCache, taskTrigger);
         } else if (dataSourceDb.getType().equalsIgnoreCase(DbTypeFlag.MONGODB) && dataTargetDb.getType().equalsIgnoreCase(DbTypeFlag.MYSQL)) {
             testMongoDbToMysql(programInfo, memoryCache, taskTrigger);
-        }else if (dataSourceDb.getType().equalsIgnoreCase(DbTypeFlag.PG) && dataTargetDb.getType().equalsIgnoreCase(DbTypeFlag.MYSQL)) {
+        } else if (dataSourceDb.getType().equalsIgnoreCase(DbTypeFlag.PG) && dataTargetDb.getType().equalsIgnoreCase(DbTypeFlag.MYSQL)) {
             testPgToMysql(programInfo, memoryCache, taskTrigger);
-        }else if (dataSourceDb.getType().equalsIgnoreCase(DbTypeFlag.MYSQL) && dataTargetDb.getType().equalsIgnoreCase(DbTypeFlag.MYSQL)) {
+        } else if (dataSourceDb.getType().equalsIgnoreCase(DbTypeFlag.MYSQL) && dataTargetDb.getType().equalsIgnoreCase(DbTypeFlag.MYSQL)) {
             testMysqlToMysql(programInfo, memoryCache, taskTrigger);
         }
-
     }
 
     public static void createDataSourceConnection(Datasource... dataSourceList) {
@@ -169,6 +184,7 @@ public class TestMainLhp {
 
         getProExeInfo(programInfo, mongodbSource, memoryCache);
     }
+
     public static void testPgToMysql(ProgramInfo programInfo, MemoryCache memoryCache, TaskTrigger taskTrigge) {
 
 
@@ -180,6 +196,7 @@ public class TestMainLhp {
 
         getProExeInfo(programInfo, pgSource, memoryCache);
     }
+
     public static TaskTrigger generateTaskTriggerInfo(String taskName, String procName) {
         TaskTrigger taskTrigger = new TaskTrigger();
         taskTrigger.setId(StringUtil.generateUUID());
