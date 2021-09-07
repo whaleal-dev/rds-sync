@@ -29,7 +29,7 @@ import util.StringUtil;
  */
 public class TestMainLhp {
     public static void main(String[] args) {
-        for (int i = 1; i < 11; i++) {
+        for (int i = 10; i < 11; i++) {
             try {
                 String procName = "proc" + i;
                 System.out.println(procName);
@@ -69,6 +69,8 @@ public class TestMainLhp {
             testPgToMongoDb(programInfo, memoryCache, taskTrigger);
         } else if (dataSourceDb.getType().equalsIgnoreCase(DbTypeFlag.ORACLE) && dataTargetDb.getType().equalsIgnoreCase(DbTypeFlag.MONGODB)) {
             testOracleToMongoDb(programInfo, memoryCache, taskTrigger);
+        } else if (dataSourceDb.getType().equalsIgnoreCase(DbTypeFlag.ORACLE) && dataTargetDb.getType().equalsIgnoreCase(DbTypeFlag.MYSQL)) {
+            testOracleToMysql(programInfo, memoryCache, taskTrigger);
         } else if (dataSourceDb.getType().equalsIgnoreCase(DbTypeFlag.MONGODB) && dataTargetDb.getType().equalsIgnoreCase(DbTypeFlag.MYSQL)) {
             testMongoDbToMysql(programInfo, memoryCache, taskTrigger);
         } else if (dataSourceDb.getType().equalsIgnoreCase(DbTypeFlag.PG) && dataTargetDb.getType().equalsIgnoreCase(DbTypeFlag.MYSQL)) {
@@ -261,4 +263,16 @@ public class TestMainLhp {
         mysqlSource.createTask();
         getProExeInfo(programInfo, mysqlSource, memoryCache);
     }
+    public static void testOracleToMysql(ProgramInfo programInfo, MemoryCache memoryCache, TaskTrigger taskTrigger) {
+
+
+        MysqlTarget mysqlTarget = new MysqlTarget(programInfo, memoryCache, programInfo.getProName());
+        mysqlTarget.startToTarget();
+
+        OracleSource oracleSource = new OracleSource(programInfo, memoryCache);
+        oracleSource.createTask();
+        getProExeInfo(programInfo, oracleSource, memoryCache);
+    }
+
+
 }
