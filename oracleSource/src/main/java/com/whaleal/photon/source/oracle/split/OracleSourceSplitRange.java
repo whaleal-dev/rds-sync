@@ -1,26 +1,27 @@
 package com.whaleal.photon.source.oracle.split;
 
-import common.dataclass.Range;
-import dbconnection.oracle.OracleConnection;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.util.StringUtils;
-import util.Log;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import common.dataclass.Range;
+import common.photonV.entity.Datasource;
+import common.taskbase.SplitRangeOfRdbInterface;
+import datasource.DataSourceUtil;
+import dbconnection.oracle.OracleConnection;
+import dbconnection.pgserver.PgServerConnection;
+import org.springframework.jdbc.core.JdbcTemplate;
+import util.Log;
+import util.split.RangeSplitUtil;
+
+import java.math.BigDecimal;
+import java.sql.Connection;
+import java.util.*;
 
 /**
- * 甲骨文源分离范围
- *
- * @author cs
- * @date 2021/09/01
+ * @author: lhp
+ * @time: 2021/7/16 3:04 下午
+ * @desc:
  */
-public class OracleSourceSplitRange {
-    /**
-     * jdbcTemplate
-     */
+public class OracleSourceSplitRange implements SplitRangeOfRdbInterface {
+
     private JdbcTemplate jdbcTemplate;
     /**
      * 数据源名称
@@ -32,59 +33,30 @@ public class OracleSourceSplitRange {
         this.jdbcTemplate = OracleConnection.getJdbcTemplate(sourceDsName);
     }
 
-    public List<Range> getRangeList(String dbTableName) {
-
-        String tableName = dbTableName.split("\\.", 2)[1];
-        //根据sql语句来查询得到最终的结果
-        String sql = "select a.constraint_name,  a.column_name from user_cons_columns a, user_constraints b where a.constraint_name = b.constraint_name  and b.constraint_type = 'P' and a.table_name = '" + tableName + "'";
-        Map<String, Object> tableMeteColumn = jdbcTemplate.queryForMap(sql);
-        List<Range> rangeList = new ArrayList<>();
-        //根据什么键进行切分需要进行一个判断，如果有的话就去找，如果没有的话就算了
-        if (!StringUtils.isEmpty(tableMeteColumn)) {
-            String pkColumn = tableMeteColumn.get("COLUMN_NAME").toString();
-            Range range = new Range();
-            range.setDbTableName(dbTableName);
-            long maxDiffTemp = 0;
-            Map<String, Object> infoMap = getMaxDifference(pkColumn, dbTableName);
-            Long difference = (Long) infoMap.get("difference");
-            int min = (Integer) infoMap.get("min");
-            int max = (Integer) infoMap.get("max");
-            if (difference > maxDiffTemp) {
-                range.setColumnName(pkColumn);
-                range.setMaxId(max);
-                range.setMinId(min);
-                maxDiffTemp = difference;
-            }
-            rangeList = getRangeList(range, 3);
-            System.out.println(rangeList);
-            Range rangeOfNull = new Range();
-            rangeOfNull.setColumnName(range.getColumnName());
-            rangeOfNull.setDbTableName(dbTableName);
-            rangeOfNull.setQuery("(" + range.getColumnName() + " is null)");
-            rangeList.add(rangeOfNull);
-        } else {
-            Range rangeOfNull = new Range();
-            rangeOfNull.setDbTableName(dbTableName);
-            rangeOfNull.setQuery("(1=1)");
-            rangeList.add(rangeOfNull);
-        }
-
-        return rangeList;
+    @Override
+    public Map<String, Object> getIntMaxDifference(String intColumnName, String dbTableName) {
+        return null;
     }
 
-    public Map<String, Object> getMaxDifference(String intColumnName, String dbTableName) {
-
+    public Map<String, Object> getDecimalMaxDifference(String decimalColumnName, String dbTableName) {
         String tableName = dbTableName.split("\\.", 2)[1];
-        long difference = 0;
-        int min = 0;
-        int max = 0;
+        BigDecimal difference = new BigDecimal(0);
+        BigDecimal min = new BigDecimal(0);
+        BigDecimal max = new BigDecimal(0);
+        String sql = "select max(" + decimalColumnName + ") max ,min(" + decimalColumnName + ") min from " + tableName;
         try {
-            min = jdbcTemplate.queryForObject("select min(" + intColumnName + ") from " + tableName + "", Integer.class);
-            max = jdbcTemplate.queryForObject("select max(" + intColumnName + ") from " + tableName + "", Integer.class);
+            List<Map<String, Object>> mapList = jdbcTemplate.queryForList(sql);
+            if (mapList.size() != 0) {
+                max = (BigDecimal) mapList.get(0).get("max");
+                min = (BigDecimal) mapList.get(0).get("min");
+            }
         } catch (Exception e) {
-            Log.error("切分表失败" + e.getMessage());
+            //e.printStackTrace();
+            Log.error(e.getMessage());
+            min = new BigDecimal(0);
+            max = new BigDecimal(0);
         }
-        difference = (max - min);
+        difference = max.subtract(min);
         Map<String, Object> infoMap = new HashMap<>();
         infoMap.put("min", min);
         infoMap.put("max", max);
@@ -92,37 +64,153 @@ public class OracleSourceSplitRange {
         return infoMap;
     }
 
-    public static List<Range> getRangeList(Range range, int splitNum) {
-        int min = (Integer) range.getMinId();
-        int max = (Integer) range.getMaxId();
-        long rangeNum = (max - min + 1) / splitNum;
-        String columnName = range.getColumnName();
-        int minTemp = min;
+    @Override
+    public Map<String, Object> getStringLengthMaxDifference(String stringColumnName, String dbTableName) {
+        String tableName = dbTableName.split("\\.", 2)[1];
+        BigDecimal difference = new BigDecimal(0);
+        BigDecimal min = new BigDecimal(0);
+        BigDecimal max = new BigDecimal(0);
+        String sql = "select max(length(" + stringColumnName + ")) max,min(length(" + stringColumnName + ")) min from  " + tableName + "";
+        try {
+            List<Map<String, Object>> mapList = jdbcTemplate.queryForList(sql);
+            if (mapList.size() != 0) {
+                max = (BigDecimal) mapList.get(0).get("max");
+                min = (BigDecimal) mapList.get(0).get("min");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            Log.error(e.getMessage());
+            min = new BigDecimal(0);
+            max = new BigDecimal(0);
+        }
+        difference = max.subtract(min);
+        Map<String, Object> infoMap = new HashMap<>();
+        infoMap.put("min", min);
+        infoMap.put("max", max);
+        infoMap.put("difference", difference);
+        return infoMap;
+    }
+
+    @Override
+    public List<Range> getRangeList(String dbTableName, String sql) {
         List<Range> rangeList = new ArrayList<>();
-        if (rangeNum == 0 || (max - min == 0)) {
+        String[] split = dbTableName.split("\\.", 2);
+        String dbName = split[0];
+        String tableName = split[1];
+        List<Map<String, Object>> tableMeteColumn = jdbcTemplate.queryForList(sql, tableName);
+        Set<String> decimalColumnSet = new HashSet<>();
+        Set<String> stringColumnSet = new HashSet<>();
+        for (Map<String, Object> columnMap : tableMeteColumn) {
+            if (columnMap.get("DATA_TYPE").toString().toUpperCase().contains("NUMBER")) {
+                decimalColumnSet.add(columnMap.get("COLUMN_NAME").toString());
+            }
+            if (columnMap.get("DATA_TYPE").toString().toUpperCase().contains("CHAR")) {
+                stringColumnSet.add(columnMap.get("COLUMN_NAME").toString());
+            }
+        }
+        //先decimal
+        if (decimalColumnSet.size() != 0) {
+            rangeList = generateRangeListByDecimalColumn(decimalColumnSet, dbTableName);
+        }
+        //第二为String类型长度
+        if (rangeList.size() == 0) {
+            rangeList = generateRangeListByStringColumn(stringColumnSet, dbTableName);
+        }
+        return rangeList;
+    }
+
+    @Override
+    public List<Range> getRangeList(String dbTableName) {
+        List<Range> rangeList = new ArrayList<>();
+        try {
+
+            String sql = "select a.*  from user_tab_columns A where TABLE_NAME=? ";
+            rangeList = getRangeList(dbTableName, sql);
+        } catch (Exception e) {
+
+        }
+        if (rangeList.size() == 0) {
+            Range range = new Range();
+            range.setDbTableName(dbTableName);
+            range.setQuery("(1=1)");
+            rangeList.add(range);
+        }
+        return rangeList;
+    }
+
+    @Override
+    public List<Range> generateRangeListByIntColumn(Set<String> stringColumnSet, String dbTableName) {
+        return null;
+    }
+
+
+    public List<Range> generateRangeListByDecimalColumn(Set<String> decimalColumnSet, String dbTableName) {
+        List<Range> rangeList = new ArrayList<>();
+        Range range = new Range();
+        range.setDbTableName(dbTableName);
+        BigDecimal maxDiffTemp = new BigDecimal(0);
+        for (String decimalColumnName : decimalColumnSet) {
+            Map<String, Object> infoMap = getDecimalMaxDifference(decimalColumnName, dbTableName);
+            BigDecimal difference = (BigDecimal) infoMap.get("difference");
+            BigDecimal min = (BigDecimal) infoMap.get("min");
+            BigDecimal max = (BigDecimal) infoMap.get("max");
+            if (difference.compareTo(maxDiffTemp) > 0) {
+                range.setColumnName(decimalColumnName);
+                range.setMaxId(max);
+                range.setMinId(min);
+                maxDiffTemp = difference;
+            }
+        }
+        System.out.println(range);
+        if (range.getColumnName() == null || range.getColumnName().equals("")) {
             return rangeList;
         }
-        do {
-            Range rangeTemp = new Range();
-            String query = "(  " + columnName + ">=";
-            rangeTemp.setMinId(minTemp);
-            query += minTemp;
-            minTemp += rangeNum;
-            rangeTemp.setMaxId(minTemp);
-            if (minTemp > max) {
-                query += " and " + columnName + "<=" + minTemp + ")";
-                rangeTemp.setQuery(query);
-                rangeTemp.setMax(true);
-                rangeList.add(rangeTemp);
-                break;
-            }
-            query += " and " + columnName + "<" + minTemp + ")";
-            rangeTemp.setQuery(query);
-            rangeList.add(rangeTemp);
+        rangeList = RangeSplitUtil.getRangeListByLongType(((BigDecimal) range.getMinId()).longValue(), ((BigDecimal) range.getMaxId()).longValue(), 3, range.getColumnName());
+        for (Range rangeIndex : rangeList) {
+            rangeIndex.setDbTableName(dbTableName);
+        }
+        System.out.println(range);
+        return rangeList;
+    }
 
-        } while (minTemp < max);
+    @Override
+    public List<Range> generateRangeListByStringColumn(Set<String> stringColumnSet, String dbTableName) {
+        List<Range> rangeList = new ArrayList<>();
+        Range range = new Range();
+        range.setDbTableName(dbTableName);
+        BigDecimal maxDiffTemp = new BigDecimal(0);
+        for (String stringColumnName : stringColumnSet) {
+            Map<String, Object> infoMap = getStringLengthMaxDifference(stringColumnName, dbTableName);
+            BigDecimal difference = (BigDecimal) infoMap.get("difference");
+            BigDecimal min = (BigDecimal) infoMap.get("min");
+            BigDecimal max = (BigDecimal) infoMap.get("max");
+            if (difference.compareTo(maxDiffTemp) > 0) {
+                range.setColumnName(stringColumnName);
+                range.setMaxId(max);
+                range.setMinId(min);
+                maxDiffTemp = difference;
+            }
+        }
+        if (range.getColumnName() == null || range.getColumnName().equals("")) {
+            return rangeList;
+        }
+        rangeList = RangeSplitUtil.getRangeListByStringLengthType(
+                ((BigDecimal) range.getMinId()).longValue(),
+                ((BigDecimal) range.getMaxId()).longValue(), 3, range.getColumnName());
+        for (Range rangeIndex : rangeList) {
+            rangeIndex.setDbTableName(dbTableName);
+        }
         return rangeList;
     }
 
 
+    public static void main(String[] args) {
+        Datasource oracle = DataSourceUtil.getDataSourceByDsName("oracle3");
+        OracleConnection.createConnection(oracle.getName(), oracle);
+        PgServerConnection.getConnection("oracle3");
+        OracleSourceSplitRange oracleSourceSplitRangeByLhp = new OracleSourceSplitRange("oracle3");
+        oracleSourceSplitRangeByLhp.getRangeList("public.TEST_P_2").forEach(range -> System.out.println(range.getQuery()));
+        // oracleSourceSplitRangeByLhp.getStringLengthMaxDifference("T_NAME", "cs.TTYPE");
+
+    }
 }

@@ -42,22 +42,19 @@ public class PgSourceSplitRange implements SplitRangeOfRdbInterface {
             if (mapList.size() != 0) {
                 Object minTemp = mapList.get(0).get("min");
                 Object maxTemp = mapList.get(0).get("max");
-                System.out.println(maxTemp.getClass().getSimpleName());
-                if (maxTemp.getClass().getSimpleName().toUpperCase().equalsIgnoreCase("Integer")) {
+                if (maxTemp.getClass().getSimpleName().equalsIgnoreCase("Integer")) {
                     max = (Integer) maxTemp;
                 } else {
                     max = (Long) maxTemp;
                 }
-
-                if (minTemp.getClass().getSimpleName().toUpperCase().equalsIgnoreCase("Integer")) {
+                if (minTemp.getClass().getSimpleName().equalsIgnoreCase("Integer")) {
                     min = (Integer) minTemp;
                 } else {
                     min = (Long) minTemp;
                 }
-
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            //e.printStackTrace();
             Log.error(e.getMessage());
             min = 0L;
             max = 0L;
@@ -79,22 +76,19 @@ public class PgSourceSplitRange implements SplitRangeOfRdbInterface {
         try {
             List<Map<String, Object>> mapList = jdbcTemplate.queryForList(sql);
             if (mapList.size() != 0) {
-
                 Object minTemp = mapList.get(0).get("min");
                 Object maxTemp = mapList.get(0).get("max");
                 System.out.println(maxTemp.getClass().getSimpleName());
-                if (maxTemp.getClass().getSimpleName().toUpperCase().equalsIgnoreCase("Integer")) {
+                if (maxTemp.getClass().getSimpleName().equalsIgnoreCase("Integer")) {
                     max = (Integer) maxTemp;
                 } else {
                     max = (Long) maxTemp;
                 }
-
-                if (minTemp.getClass().getSimpleName().toUpperCase().equalsIgnoreCase("Integer")) {
+                if (minTemp.getClass().getSimpleName().equalsIgnoreCase("Integer")) {
                     min = (Integer) minTemp;
                 } else {
                     min = (Long) minTemp;
                 }
-
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -116,7 +110,6 @@ public class PgSourceSplitRange implements SplitRangeOfRdbInterface {
         String[] split = dbTableName.split("\\.", 2);
         String dbName = split[0];
         String tableName = split[1];
-        //  String sql = "SELECT column_name,data_type FROM information_schema.columns t WHERE t.table_schema=? AND table_name =? order by ordinal_position ";
         List<Map<String, Object>> tableMeteColumn = jdbcTemplate.queryForList(sql, dbName, tableName);
         Set<String> intColumnSet = new HashSet<>();
         Set<String> stringColumnSet = new HashSet<>();
@@ -128,7 +121,6 @@ public class PgSourceSplitRange implements SplitRangeOfRdbInterface {
                 stringColumnSet.add(columnMap.get("column_name").toString());
             }
         }
-
         //先int
         if (intColumnSet.size() != 0) {
             rangeList = generateRangeListByIntColumn(intColumnSet, dbTableName);
@@ -137,7 +129,6 @@ public class PgSourceSplitRange implements SplitRangeOfRdbInterface {
         if (rangeList.size() == 0) {
             rangeList = generateRangeListByStringColumn(stringColumnSet, dbTableName);
         }
-
         return rangeList;
     }
 
@@ -181,7 +172,6 @@ public class PgSourceSplitRange implements SplitRangeOfRdbInterface {
             rangeIndex.setDbTableName(dbTableName);
         }
         System.out.println(range);
-
         return rangeList;
     }
 
@@ -219,7 +209,6 @@ public class PgSourceSplitRange implements SplitRangeOfRdbInterface {
         PgServerConnection.createConnection(pg.getName(), pg);
         Connection pgConnection = PgServerConnection.getConnection("pg");
         PgSourceSplitRange pgSourceSplitRange = new PgSourceSplitRange("pg");
-
-        pgSourceSplitRange.getRangeList("public.nettb").forEach(range -> System.out.println(range.getQuery()));
+        pgSourceSplitRange.getRangeList("public.primary").forEach(range -> System.out.println(range.getQuery()));
     }
 }

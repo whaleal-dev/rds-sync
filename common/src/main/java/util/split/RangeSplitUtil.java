@@ -117,6 +117,7 @@ public final class RangeSplitUtil {
         rangeList.add(range);
         return rangeList;
     }
+
     public static long[] doLongSplit(long left, long right, int expectSliceNumber) {
         BigInteger[] result = doBigIntegerSplit(BigInteger.valueOf(left),
                 BigInteger.valueOf(right), expectSliceNumber);

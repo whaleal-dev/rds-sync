@@ -41,21 +41,20 @@ public class MysqlSourceSplitRangeOfLHP implements SplitRangeOfRdbInterface {
             if (mapList.size() != 0) {
                 Object minTemp = mapList.get(0).get("min");
                 Object maxTemp = mapList.get(0).get("max");
-                System.out.println(maxTemp.getClass().getSimpleName());
-                if (maxTemp.getClass().getSimpleName().toUpperCase().equalsIgnoreCase("Integer")) {
+                if (maxTemp.getClass().getSimpleName().equalsIgnoreCase("Integer")) {
                     max = (Integer) maxTemp;
                 } else {
                     max = (Long) maxTemp;
                 }
 
-                if (minTemp.getClass().getSimpleName().toUpperCase().equalsIgnoreCase("Integer")) {
+                if (minTemp.getClass().getSimpleName().equalsIgnoreCase("Integer")) {
                     min = (Integer) minTemp;
                 } else {
                     min = (Long) minTemp;
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+           // e.printStackTrace();
             Log.error(e.getMessage());
             min = 0;
             max = 0;
@@ -92,7 +91,7 @@ public class MysqlSourceSplitRangeOfLHP implements SplitRangeOfRdbInterface {
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+          //  e.printStackTrace();
             Log.error(e.getMessage());
             min = 0L;
             max = 0L;
