@@ -1,5 +1,6 @@
 package dbconnection;
 
+import conf.Property;
 import org.apache.commons.dbcp.BasicDataSource;
 import org.springframework.jdbc.core.JdbcTemplate;
 
@@ -20,9 +21,9 @@ public class MetadataConnection {
      */
     static {
         BasicDataSource basicDataSource = new BasicDataSource();
-        basicDataSource.setUrl("jdbc:mysql://192.168.3.19:3306/photon?useUnicode=true&characterEncoding=utf-8");
-        basicDataSource.setUsername("root");
-        basicDataSource.setPassword("123456");
+        basicDataSource.setUrl(Property.getPropertiesByKey("url"));
+        basicDataSource.setUsername(Property.getPropertiesByKey("userName"));
+        basicDataSource.setPassword(Property.getPropertiesByKey("password"));
         jdbcTemplate = new JdbcTemplate(basicDataSource);
         try {
             connection = basicDataSource.getConnection();

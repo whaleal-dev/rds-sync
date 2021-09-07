@@ -17,7 +17,7 @@ public class Property {
     /**
      * 配置文件路径
      */
-    private static String fileName = "src/main/resources/mongodbT.properties";
+    private static String fileName = "src/main/resources/photonT.properties";
     /**
      * 配置信息K-V
      */
@@ -25,10 +25,10 @@ public class Property {
 
     static {
         // 读取src下的配置文件
-        setFileName("../mongodbT.properties");
-        setFileName("mongodbT.properties");
+        setFileName("../photonT.properties");
+        setFileName("photonT.properties");
         // 读取./下的配置文件
-        setFileName("common/src/main/resources/mongodbT.properties");
+        setFileName("core/src/main/resources/photonT.properties");
     }
 
     public static void setFileName(String fileNameTemp) {

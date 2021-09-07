@@ -29,10 +29,8 @@ import util.StringUtil;
  */
 public class TestMainLhp {
     public static void main(String[] args) throws InterruptedException {
-
         //创建pro
         ProgramInfo programInfo = ProgramInfoUtil.getProgramInfo("proc6");
-
         //获取数据源对象
         Datasource dataSourceDb = DataSourceUtil.getDataSourceByDsName(programInfo.getSourceDsName());
         Datasource dataTargetDb = DataSourceUtil.getDataSourceByDsName(programInfo.getTargetDsName());
