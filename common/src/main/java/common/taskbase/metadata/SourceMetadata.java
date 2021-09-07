@@ -37,6 +37,10 @@ public abstract class SourceMetadata {
      */
     protected String proName;
     /**
+     * 批次号
+     */
+    protected long batchNo;
+    /**
      * 表名过滤的策略
      */
     protected String dbTableWhite;
@@ -69,6 +73,7 @@ public abstract class SourceMetadata {
         this.dbTableWhite = programInfo.getDbTableWhite();
         this.memoryCache = memoryCache;
     }
+
     /**
      * 库表和对应的MongoNamespace
      */

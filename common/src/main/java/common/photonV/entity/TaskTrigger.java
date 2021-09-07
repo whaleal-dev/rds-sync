@@ -39,6 +39,7 @@ public class TaskTrigger {
      * 执行主机ip
      */
     private String brokerIp;
+
     private Date createDt;
     /**
      * 任务开始执行时间
@@ -49,7 +50,7 @@ public class TaskTrigger {
      */
     private Date completeDt;
 
-    private Date lastupd;
+    private Date lastUpd;
     /**
      * 执行信息
      */

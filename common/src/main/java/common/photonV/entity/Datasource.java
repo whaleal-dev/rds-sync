@@ -114,8 +114,6 @@ public class Datasource {
 
     private String dsOption;
 
-
     private String jdbcDriverClass;
-
 
 }

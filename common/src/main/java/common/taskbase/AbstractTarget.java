@@ -14,6 +14,17 @@ public abstract class AbstractTarget {
     protected ProgramInfo programInfo;
     protected MemoryCache memoryCache;
     protected String procName;
+    /**
+     * 批次号
+     */
+    protected long batchNo;
+
+    public AbstractTarget(ProgramInfo programInfo, MemoryCache memoryCache, String procName) {
+        this.programInfo = programInfo;
+        this.memoryCache = memoryCache;
+        this.procName = procName;
+    }
+
 
     /**
      * 开始启动任务

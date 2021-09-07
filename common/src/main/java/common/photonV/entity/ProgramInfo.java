@@ -100,4 +100,9 @@ public class ProgramInfo {
      * 切分数
      */
     private Integer adviceNumber = 2;
+    /**
+     * 查询条件
+     * 仅使用于查询。不可应用于库表同步中
+     */
+    private String query;
 }

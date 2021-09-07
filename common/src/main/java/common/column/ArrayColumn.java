@@ -1,5 +1,8 @@
 package common.column;
 
+import com.google.gson.Gson;
+import util.Log;
+
 import java.util.List;
 
 /**
@@ -8,6 +11,7 @@ import java.util.List;
  * @time: 2021/8/24 7:37 下午
  */
 public class ArrayColumn extends AbstractColumn {
+    private static Gson gson = new Gson();
     private List<Object> data;
 
     public ArrayColumn(String columnName, List<Object> object) {
@@ -22,10 +26,16 @@ public class ArrayColumn extends AbstractColumn {
 
     @Override
     public String toString() {
-        // 防止出现[@的数据
+        // 防止出现[@的数据。
         StringBuilder stringBuilder = new StringBuilder();
-        for (Object object : data) {
-            stringBuilder.append(object.toString());
+        try {
+            stringBuilder.append(gson.toJson(this.data));
+        } catch (Exception e) {
+            Log.error(e.getMessage());
+            stringBuilder = new StringBuilder();
+            for (Object object : data) {
+                stringBuilder.append(object.toString());
+            }
         }
         return stringBuilder.toString();
     }

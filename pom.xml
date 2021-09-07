@@ -19,6 +19,7 @@
         <module>realTimeOfMongoDb</module>
         <module>pgSource</module>
         <module>oracleSource</module>
+        <module>realTimeOfMysql</module>
     </modules>
     <properties>
         <maven.compiler.source>8</maven.compiler.source>

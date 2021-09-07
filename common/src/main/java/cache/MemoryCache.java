@@ -65,6 +65,7 @@ public class MemoryCache {
         this.cacheNum = cacheNum;
         this.cacheList = new MemoryCache[cacheNum];
         this.isUseState = new AtomicBoolean[cacheNum];
+        // 避免出现较多的对象创建
         for (int i = 0; (i < cacheNum) && isFirst; i++) {
             cacheList[i] = new MemoryCache(taskName, procName, cacheNum, cacheSize, false);
             isUseState[i] = new AtomicBoolean();
