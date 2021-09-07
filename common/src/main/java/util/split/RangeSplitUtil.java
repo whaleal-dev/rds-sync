@@ -27,9 +27,11 @@ public final class RangeSplitUtil {
     }
 
     public static void main(String[] args) {
-        getRangeListByLongType(1, 2, 5, "col").forEach(range -> System.out.println(range));
-        System.out.println("");
-        getRangeListByStringType("asdfghj", "zxcfghjhg", 3, "col").forEach(range -> System.out.println(range));
+//        getRangeListByLongType(1, 2, 5, "col").forEach(range -> System.out.println(range));
+//        System.out.println("");
+//        getRangeListByStringType("asdfghj", "zxcfghjhg", 3, "col").forEach(range -> System.out.println(range));
+        getRangeListByStringLengthType(2, 5, 3, "col").forEach(range -> System.out.println(range));
+
     }
 
     public static List<Range> getRangeListByLongType(long left, long right, int expectSliceNumber, String columnName) {
@@ -88,6 +90,33 @@ public final class RangeSplitUtil {
         return rangeList;
     }
 
+    public static List<Range> getRangeListByStringLengthType(long left, long right, int expectSliceNumber, String columnName) {
+        List<Range> rangeList = new ArrayList<>();
+        long[] longs = doLongSplit(left, right, expectSliceNumber);
+        int length = longs.length;
+        for (int index = 0; index < length; index++) {
+
+            Range range = new Range();
+            range.setColumnName(columnName);
+            String query = "(  length(" + columnName + ")>=" + longs[index];
+
+            if ((index + 2) >= length) {
+                query += " and length(" + columnName + ")<=" + right + ")";
+                range.setQuery(query);
+                rangeList.add(range);
+                break;
+            }
+
+            query += " and  length(" + columnName + ")<" + longs[index+1] + ")";
+            range.setQuery(query);
+            rangeList.add(range);
+        }
+        Range range = new Range();
+        range.setColumnName(columnName);
+        range.setQuery("( "+ columnName+" is null )");
+        rangeList.add(range);
+        return rangeList;
+    }
     public static long[] doLongSplit(long left, long right, int expectSliceNumber) {
         BigInteger[] result = doBigIntegerSplit(BigInteger.valueOf(left),
                 BigInteger.valueOf(right), expectSliceNumber);
