@@ -24,7 +24,7 @@ public class TaskTrigger {
     /**
      * 批次号
      */
-    private String batchNo;
+    private long batchNo;
     /**
      * 批次类型
      */

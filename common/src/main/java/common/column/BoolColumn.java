@@ -1,9 +1,5 @@
 package common.column;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
 
 /**
  * @description:布尔字段类

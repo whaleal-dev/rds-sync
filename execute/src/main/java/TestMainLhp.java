@@ -28,22 +28,28 @@ import util.StringUtil;
  * @time: 2021/8/31 2:04 下午
  */
 public class TestMainLhp {
+
     public static void main(String[] args) {
-        long batchNo = System.currentTimeMillis();
-        String procName = "proc10";
-        try {
-            exe(procName, batchNo);
-        } catch (Exception e) {
-            e.printStackTrace();
-            Log.error(e.getMessage());
+
+        String[] procNameArray = new String[]{"proc10"};
+
+
+        for (String procName : procNameArray) {
+            try {
+                long batchNo = System.currentTimeMillis();
+                exe(procName, "taskName", batchNo);
+            } catch (Exception e) {
+                e.printStackTrace();
+                Log.error(e.getMessage());
+            }
         }
     }
 
-    public static void exe(String procName, long batchNo) throws InterruptedException {
+    public static void exe(String procName, String taskName, long batchNo) throws InterruptedException {
         String procNameAndBatchNo = procName + batchNo;
         //创建pro
         ProgramInfo programInfo = ProgramInfoUtil.getProgramInfo(procName);
-        if (programInfo==null||programInfo.getProName().length() == 0) {
+        if (programInfo == null || programInfo.getProName().length() == 0) {
             return;
         }
         programInfo.setBatchNO(batchNo);
@@ -53,7 +59,8 @@ public class TestMainLhp {
         //创建数据源链接
         createDataSourceConnection(procNameAndBatchNo, dataSourceDb, dataTargetDb);
         //创建触发对象实例
-        TaskTrigger taskTrigger = generateTaskTriggerInfo(programInfo.getTaskName(), programInfo.getProName());
+        TaskTrigger taskTrigger = generateTaskTriggerInfo(taskName, programInfo.getProName(), batchNo);
+
         TriggerUtil.insertTriggerInfo(taskTrigger);
         //创建线程池
         createThreadPoolManager(programInfo);
@@ -64,6 +71,7 @@ public class TestMainLhp {
         generateTranT(dataSourceDb, dataTargetDb, programInfo, taskTrigger, memoryCache);
         disDataSourceConnection(procNameAndBatchNo, dataSourceDb, dataTargetDb);
         destroy(procName, batchNo, memoryCache);
+        TriggerUtil.updateTriggerInfo(taskTrigger);
     }
 
     public static void createDataSourceConnection(String procNameAndBatchNo, Datasource... dataSourceList) {
@@ -117,7 +125,7 @@ public class TestMainLhp {
 
     }
 
-    public static void getProExeInfo(ProgramInfo programInfo, SourceMetadata sourceMetadata, MemoryCache memoryCache) {
+    public static void getProExeInfo(ProgramInfo programInfo, SourceMetadata sourceMetadata, MemoryCache memoryCache, TaskTrigger taskTrigger) {
         String procNameAndBatchNo = programInfo.getProName() + programInfo.getBatchNO();
         while (true) {
             try {
@@ -128,19 +136,27 @@ public class TestMainLhp {
                 int setSysActiveThreadNum = SysPoolManager.setSysActiveThreadNum(procNameAndBatchNo, 0);
                 int targetActiveThreadNum = TargetTaskPoolManager.setTargetActiveThreadNum(procNameAndBatchNo, 0);
                 int allDataCacheNum = memoryCache.getAllDataCacheNum();
-                Log.info(setSysActiveThreadNum + "");
-                Log.info("sum:" + (sourceThread + sourceTaskQueueSize + allDataCacheNum + setSysActiveThreadNum));
-                Log.info("sourceThread:" + sourceThread);
-                Log.info("sourceTaskQueueSize:" + sourceTaskQueueSize);
-                Log.info("setSysActiveThreadNum:" + setSysActiveThreadNum);
-                Log.info("targetActiveThreadNum:" + targetActiveThreadNum);
-                Log.info("allDataCacheNum:" + allDataCacheNum);
-                Log.info("getAllDbTable:" + getAllDbTable);
+                Log.info(procNameAndBatchNo + ",读取线程数:" + sourceThread);
+                Log.info(procNameAndBatchNo + ",剩余读取线程队列:" + sourceTaskQueueSize);
+                Log.info(procNameAndBatchNo + ",写入线程数:" + targetActiveThreadNum);
+                Log.info(procNameAndBatchNo + ",剩余缓存数:" + allDataCacheNum);
+                taskTrigger.setState("run");
+                TriggerUtil.updateTriggerInfo(taskTrigger);
                 if ((sourceThread + sourceTaskQueueSize + allDataCacheNum + setSysActiveThreadNum + targetActiveThreadNum) == 0 && getAllDbTable) {
                     Thread.sleep(10000);
+                    taskTrigger.setState("success");
                     break;
                 } else if ((sourceThread + sourceTaskQueueSize + sourceTaskQueueSize + allDataCacheNum + setSysActiveThreadNum) == 0 && getAllDbTable) {
                     AbstractTargetTask.setIsStopFlagOfTarget(procNameAndBatchNo, true);
+                } else {
+                    String state = TriggerUtil.getTriggerTateInfo(taskTrigger.getId());
+                    Log.error(procNameAndBatchNo + ",状态" + state);
+                    if (state == null || state.equals("") || state.equals("stop")) {
+                        AbstractTargetTask.setIsStopFlagOfTarget(procNameAndBatchNo, true);
+                        taskTrigger.setState("stop");
+                        Thread.sleep(10000);
+                        break;
+                    }
                 }
             } catch (InterruptedException e) {
                 e.printStackTrace();
@@ -210,7 +226,7 @@ public class TestMainLhp {
 
     }
 
-    public static void testMongoDbToMysql(ProgramInfo programInfo, MemoryCache memoryCache, TaskTrigger taskTrigge) {
+    public static void testMongoDbToMysql(ProgramInfo programInfo, MemoryCache memoryCache, TaskTrigger taskTrigger) {
 
 
         MongodbSource mongodbSource = new MongodbSource(programInfo, memoryCache);
@@ -219,10 +235,10 @@ public class TestMainLhp {
         MysqlTarget mysqlTarget = new MysqlTarget(programInfo, memoryCache, programInfo.getProName());
         mysqlTarget.startToTarget();
 
-        getProExeInfo(programInfo, mongodbSource, memoryCache);
+        getProExeInfo(programInfo, mongodbSource, memoryCache, taskTrigger);
     }
 
-    public static void testPgToMysql(ProgramInfo programInfo, MemoryCache memoryCache, TaskTrigger taskTrigge) {
+    public static void testPgToMysql(ProgramInfo programInfo, MemoryCache memoryCache, TaskTrigger taskTrigger) {
 
 
         PgSource pgSource = new PgSource(programInfo, memoryCache);
@@ -231,12 +247,13 @@ public class TestMainLhp {
         MysqlTarget mysqlTarget = new MysqlTarget(programInfo, memoryCache, programInfo.getProName());
         mysqlTarget.startToTarget();
 
-        getProExeInfo(programInfo, pgSource, memoryCache);
+        getProExeInfo(programInfo, pgSource, memoryCache, taskTrigger);
     }
 
-    public static TaskTrigger generateTaskTriggerInfo(String taskName, String procName) {
+    public static TaskTrigger generateTaskTriggerInfo(String taskName, String procName, long batchNo) {
         TaskTrigger taskTrigger = new TaskTrigger();
         taskTrigger.setId(StringUtil.generateUUID());
+        taskTrigger.setBatchNo(batchNo);
         taskTrigger.setTaskName(taskName);
         taskTrigger.setProcName(procName);
         return taskTrigger;
@@ -251,7 +268,7 @@ public class TestMainLhp {
         MongodbSource mongodbSource = new MongodbSource(programInfo, memoryCache);
         mongodbSource.createTask();
 
-        getProExeInfo(programInfo, mongodbSource, memoryCache);
+        getProExeInfo(programInfo, mongodbSource, memoryCache, taskTrigger);
     }
 
     public static void testMysqlToMongoDb(ProgramInfo programInfo, MemoryCache memoryCache, TaskTrigger taskTrigger) {
@@ -262,7 +279,7 @@ public class TestMainLhp {
         MysqlSource mysqlSource = new MysqlSource(programInfo, memoryCache);
         mysqlSource.createTask();
 
-        getProExeInfo(programInfo, mysqlSource, memoryCache);
+        getProExeInfo(programInfo, mysqlSource, memoryCache, taskTrigger);
     }
 
     public static void testPgToMongoDb(ProgramInfo programInfo, MemoryCache memoryCache, TaskTrigger taskTrigger) {
@@ -274,7 +291,7 @@ public class TestMainLhp {
         PgSource pgSource = new PgSource(programInfo, memoryCache);
         pgSource.createTask();
 
-        getProExeInfo(programInfo, pgSource, memoryCache);
+        getProExeInfo(programInfo, pgSource, memoryCache, taskTrigger);
     }
 
     public static void testOracleToMongoDb(ProgramInfo programInfo, MemoryCache memoryCache, TaskTrigger taskTrigger) {
@@ -285,7 +302,7 @@ public class TestMainLhp {
 
         OracleSource oracleSource = new OracleSource(programInfo, memoryCache);
         oracleSource.createTask();
-        getProExeInfo(programInfo, oracleSource, memoryCache);
+        getProExeInfo(programInfo, oracleSource, memoryCache, taskTrigger);
     }
 
     public static void testMysqlToMysql(ProgramInfo programInfo, MemoryCache memoryCache, TaskTrigger taskTrigger) {
@@ -296,7 +313,7 @@ public class TestMainLhp {
 
         MysqlSource mysqlSource = new MysqlSource(programInfo, memoryCache);
         mysqlSource.createTask();
-        getProExeInfo(programInfo, mysqlSource, memoryCache);
+        getProExeInfo(programInfo, mysqlSource, memoryCache, taskTrigger);
     }
 
     public static void testOracleToMysql(ProgramInfo programInfo, MemoryCache memoryCache, TaskTrigger taskTrigger) {
@@ -307,7 +324,7 @@ public class TestMainLhp {
 
         OracleSource oracleSource = new OracleSource(programInfo, memoryCache);
         oracleSource.createTask();
-        getProExeInfo(programInfo, oracleSource, memoryCache);
+        getProExeInfo(programInfo, oracleSource, memoryCache, taskTrigger);
     }
 
 
