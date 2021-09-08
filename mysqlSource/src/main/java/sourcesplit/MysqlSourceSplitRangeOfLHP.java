@@ -25,9 +25,10 @@ public class MysqlSourceSplitRangeOfLHP implements SplitRangeOfRdbInterface {
      */
     private String sourceDsName;
 
-    public MysqlSourceSplitRangeOfLHP(String sourceDsName) {
+    public MysqlSourceSplitRangeOfLHP(String sourceDsName, String procName, long batchNo) {
         this.sourceDsName = sourceDsName;
-        this.jdbcTemplate = MySqlConnection.getJdbcTemplate(sourceDsName);
+        String procNameAndBatchNoAndSourceDsName = procName + batchNo+sourceDsName;
+        this.jdbcTemplate = MySqlConnection.getJdbcTemplate(procNameAndBatchNoAndSourceDsName);
     }
 
     @Override
@@ -216,7 +217,7 @@ public class MysqlSourceSplitRangeOfLHP implements SplitRangeOfRdbInterface {
     public static void main(String[] args) {
         Datasource mysqltestDb = DataSourceUtil.getDataSourceByDsName("mysqltest");
         MySqlConnection.createConnection(mysqltestDb.getName(), mysqltestDb);
-        MysqlSourceSplitRangeOfLHP mysqlSourceSplitRangeOfLHP = new MysqlSourceSplitRangeOfLHP("mysqltest");
+        MysqlSourceSplitRangeOfLHP mysqlSourceSplitRangeOfLHP = new MysqlSourceSplitRangeOfLHP("mysqltest","",1);
 
         List<Map<String, Object>> mapList = mysqlSourceSplitRangeOfLHP.jdbcTemplate.queryForList("show tables");
 //         //       forEach(stringObjectMap -> System.out.println(stringObjectMap.get("Tables_in_community")));
