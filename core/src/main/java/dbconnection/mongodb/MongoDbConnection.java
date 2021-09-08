@@ -63,7 +63,7 @@ public class MongoDbConnection {
             Log.error(e.getMessage());
         } finally {
             mongoClientMap.remove(procNameAndBatchNoAndDsName);
-            Log.info(procNameAndBatchNoAndDsName+"链接已关闭");
+            Log.info(procNameAndBatchNoAndDsName+",Mongodb链接已关闭");
         }
     }
 }

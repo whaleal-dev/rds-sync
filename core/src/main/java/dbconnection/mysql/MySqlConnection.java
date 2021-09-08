@@ -95,14 +95,14 @@ public class MySqlConnection {
         }
         try {
             connectionMysqlMap.get(procNameAndBatchNoAndDsName).close();
-            System.out.println(procNameAndBatchNoAndDsName + "数据源关闭");
+
         } catch (SQLException exception) {
             Log.error(exception.getMessage());
             exception.printStackTrace();
         } finally {
             connectionMysqlMap.remove(procNameAndBatchNoAndDsName);
             jdbcTemplateMysqlMap.remove(procNameAndBatchNoAndDsName);
-            Log.info(procNameAndBatchNoAndDsName+"链接已关闭");
+            Log.info(procNameAndBatchNoAndDsName+",Mysql链接已关闭");
         }
     }
 }

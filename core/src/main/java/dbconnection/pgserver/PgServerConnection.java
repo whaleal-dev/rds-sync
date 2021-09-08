@@ -101,7 +101,7 @@ public final class PgServerConnection {
         } finally {
             pgConnectionMap.remove(procNameAndBatchNoAndDsName);
             jdbcTemplatePgMap.remove(procNameAndBatchNoAndDsName);
-            Log.info(procNameAndBatchNoAndDsName + "链接已关闭");
+            Log.info(procNameAndBatchNoAndDsName + ",pg链接已关闭");
         }
     }
 

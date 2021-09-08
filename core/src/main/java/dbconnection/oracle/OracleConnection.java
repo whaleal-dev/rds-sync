@@ -90,14 +90,13 @@ public final class OracleConnection {
         }
         try {
             oracleConnectionMap.get(procNameAndBatchNoAndDsName).close();
-            System.out.println(procNameAndBatchNoAndDsName + "数据源关闭");
         } catch (Exception exception) {
             Log.error(exception.getMessage());
             exception.printStackTrace();
         } finally {
             oracleConnectionMap.remove(procNameAndBatchNoAndDsName);
             jdbcTemplateOracleMap.remove(procNameAndBatchNoAndDsName);
-            Log.info(procNameAndBatchNoAndDsName+"链接已关闭");
+            Log.info(procNameAndBatchNoAndDsName+",oracle链接已关闭");
         }
 
     }
