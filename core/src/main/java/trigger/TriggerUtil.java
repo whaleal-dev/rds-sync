@@ -25,7 +25,7 @@ public class TriggerUtil {
 
     public static void updateTriggerInfo(TaskTrigger taskTrigger) {
         try {
-            String sql = "update  photon.task_trigger set state=? where id=?";
+            String sql = "update  photon.task_trigger set state=? where id=? and state!='stop' ";
             jdbcTemplate.update(sql, taskTrigger.getState(), taskTrigger.getId());
         } catch (Exception e) {
             Log.error(e.getMessage());
@@ -36,7 +36,7 @@ public class TriggerUtil {
         String state = "";
         try {
             String sql = "select `state`  from photon.task_trigger where id='" + id + "'";
-           // System.out.println(sql);
+            // System.out.println(sql);
             state = jdbcTemplate.queryForObject(sql, String.class);
         } catch (Exception e) {
             Log.error(e.getMessage());
