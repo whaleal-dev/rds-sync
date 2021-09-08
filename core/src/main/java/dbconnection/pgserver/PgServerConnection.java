@@ -106,11 +106,6 @@ public final class PgServerConnection {
     }
 
     public static void main(String[] args) {
-
         createConnection("pg", DataSourceUtil.getDataSourceByDsName("pg"));
-
-
     }
-
-
 }
