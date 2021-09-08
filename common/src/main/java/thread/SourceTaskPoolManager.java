@@ -52,6 +52,7 @@ public class SourceTaskPoolManager extends ThreadPoolManager {
     public static void deleteSourceTaskPoolManager(String procNameAndBatchNo) {
         sourceThreadPoolManager.remove(procNameAndBatchNo);
         sourceActiveThreadNum.remove(procNameAndBatchNo);
+        Log.info(procNameAndBatchNo+"线程池已关闭");
     }
 
 

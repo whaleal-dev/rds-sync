@@ -29,53 +29,21 @@ import util.StringUtil;
  */
 public class TestMainLhp {
     public static void main(String[] args) {
-//        for (int i = 4; i < 11; i++) {
-//            try {
-//                String procName = "proc" + i;
-//                System.out.println(procName);
-//                exe(procName, 0L);
-//            } catch (Exception e) {
-//                e.printStackTrace();
-//                Log.error(e.getMessage());
-//            }
-//        }
-//        for (int i = 0; i < 11; i++) {
-//            try {
-//
-//
-//            } catch (Exception e) {
-//                Log.error(e.getMessage());
-//            }
-//        }
-        String procName="proc1";
+        long batchNo = System.currentTimeMillis();
+        String procName = "proc10";
         try {
-            exe(procName, 0L);
+            exe(procName, batchNo);
         } catch (Exception e) {
-
+            e.printStackTrace();
+            Log.error(e.getMessage());
         }
-
-
-//        try {
-//            exe("proc5", 0L);
-//            exe("proc5", 1L);
-//            exe("proc5", 3L);
-//            exe("proc5", 4L);
-//            exe("proc5", 0L);
-//            exe("proc5", 1L);
-//            exe("proc5", 3L);
-//            exe("proc5", 4L);
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//            Log.error(e.getMessage());
-//        }
     }
-
 
     public static void exe(String procName, long batchNo) throws InterruptedException {
         String procNameAndBatchNo = procName + batchNo;
         //创建pro
         ProgramInfo programInfo = ProgramInfoUtil.getProgramInfo(procName);
-        if (programInfo == null || programInfo.getProName().length() == 0) {
+        if (programInfo==null||programInfo.getProName().length() == 0) {
             return;
         }
         programInfo.setBatchNO(batchNo);
@@ -93,6 +61,33 @@ public class TestMainLhp {
         MemoryCache memoryCache = new MemoryCache(programInfo.getTaskName(), programInfo.getProName(), programInfo.getCacheNum(), programInfo.getCacheSize(), true);
         programInfo.setMemoryCache(memoryCache);
         // 开始传输数据
+        generateTranT(dataSourceDb, dataTargetDb, programInfo, taskTrigger, memoryCache);
+        disDataSourceConnection(procNameAndBatchNo, dataSourceDb, dataTargetDb);
+        destroy(procName, batchNo, memoryCache);
+    }
+
+    public static void createDataSourceConnection(String procNameAndBatchNo, Datasource... dataSourceList) {
+
+        for (Datasource dataSourceDb : dataSourceList) {
+            String procNameAndBatchNoAndDsName = procNameAndBatchNo + dataSourceDb.getName();
+            try {
+                if (dataSourceDb.getType().equalsIgnoreCase(DbTypeFlag.MONGODB)) {
+                    MongoDbConnection.createMonoDbClient(procNameAndBatchNoAndDsName, dataSourceDb);
+                } else if (dataSourceDb.getType().equalsIgnoreCase(DbTypeFlag.MYSQL)) {
+                    MySqlConnection.createConnection(procNameAndBatchNoAndDsName, dataSourceDb);
+                } else if (dataSourceDb.getType().equalsIgnoreCase(DbTypeFlag.PG)) {
+                    PgServerConnection.createConnection(procNameAndBatchNoAndDsName, dataSourceDb);
+                } else if (dataSourceDb.getType().equalsIgnoreCase(DbTypeFlag.ORACLE)) {
+                    OracleConnection.createConnection(procNameAndBatchNoAndDsName, dataSourceDb);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+                Log.error(e.getMessage());
+            }
+        }
+    }
+
+    public static void generateTranT(Datasource dataSourceDb, Datasource dataTargetDb, ProgramInfo programInfo, TaskTrigger taskTrigger, MemoryCache memoryCache) {
         if (dataSourceDb.getType().equalsIgnoreCase(DbTypeFlag.MONGODB) && dataTargetDb.getType().equalsIgnoreCase(DbTypeFlag.MONGODB)) {
             testMongoDbToMongoDb(programInfo, memoryCache, taskTrigger);
         } else if (dataSourceDb.getType().equalsIgnoreCase(DbTypeFlag.MYSQL) && dataTargetDb.getType().equalsIgnoreCase(DbTypeFlag.MONGODB)) {
@@ -109,25 +104,6 @@ public class TestMainLhp {
             testPgToMysql(programInfo, memoryCache, taskTrigger);
         } else if (dataSourceDb.getType().equalsIgnoreCase(DbTypeFlag.MYSQL) && dataTargetDb.getType().equalsIgnoreCase(DbTypeFlag.MYSQL)) {
             testMysqlToMysql(programInfo, memoryCache, taskTrigger);
-        }
-    }
-
-    public static void createDataSourceConnection(String procNameAndBatchNo, Datasource... dataSourceList) {
-        for (Datasource dataSourceDb : dataSourceList) {
-            try {
-                if (dataSourceDb.getType().equalsIgnoreCase(DbTypeFlag.MONGODB)) {
-                    MongoDbConnection.createMonoDbClient(procNameAndBatchNo, dataSourceDb);
-                } else if (dataSourceDb.getType().equalsIgnoreCase(DbTypeFlag.MYSQL)) {
-                    MySqlConnection.createConnection(procNameAndBatchNo, dataSourceDb);
-                } else if (dataSourceDb.getType().equalsIgnoreCase(DbTypeFlag.PG)) {
-                    PgServerConnection.createConnection(procNameAndBatchNo, dataSourceDb);
-                } else if (dataSourceDb.getType().equalsIgnoreCase(DbTypeFlag.ORACLE)) {
-                    OracleConnection.createConnection(procNameAndBatchNo, dataSourceDb);
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-                Log.error(e.getMessage());
-            }
         }
     }
 
@@ -162,27 +138,45 @@ public class TestMainLhp {
                 Log.info("getAllDbTable:" + getAllDbTable);
                 if ((sourceThread + sourceTaskQueueSize + allDataCacheNum + setSysActiveThreadNum + targetActiveThreadNum) == 0 && getAllDbTable) {
                     Thread.sleep(10000);
-                    TargetTaskPoolManager.destroy(procNameAndBatchNo);
-                    SourceTaskPoolManager.destroy(procNameAndBatchNo);
-                    SysPoolManager.destroy(procNameAndBatchNo);
-
-
-                    AbstractTargetTask.setIsStopFlagOfTarget(procNameAndBatchNo, false);
-                    memoryCache.gcMemoryCache();
-
-
-                    PgServerConnection.close(procNameAndBatchNo);
-                    MySqlConnection.close(procNameAndBatchNo);
-                    OracleConnection.close(procNameAndBatchNo);
-                    MongoDbConnection.close(procNameAndBatchNo);
-
-                    Log.error("procName:" + procNameAndBatchNo + "关闭成功");
                     break;
                 } else if ((sourceThread + sourceTaskQueueSize + sourceTaskQueueSize + allDataCacheNum + setSysActiveThreadNum) == 0 && getAllDbTable) {
                     AbstractTargetTask.setIsStopFlagOfTarget(procNameAndBatchNo, true);
                 }
             } catch (InterruptedException e) {
                 e.printStackTrace();
+            }
+        }
+    }
+
+    public static void destroy(String procName, long batchNo, MemoryCache memoryCache) {
+        String procNameAndBatchNo = procName + batchNo;
+
+        TargetTaskPoolManager.destroy(procNameAndBatchNo);
+        SourceTaskPoolManager.destroy(procNameAndBatchNo);
+        SysPoolManager.destroy(procNameAndBatchNo);
+
+        AbstractTargetTask.removeIsStopFlagOfTarget(procNameAndBatchNo);
+
+        memoryCache.gcMemoryCache();
+        Log.error("procName:" + procNameAndBatchNo + "关闭成功");
+    }
+
+    public static void disDataSourceConnection(String procNameAndBatchNo, Datasource... dataSourceList) {
+        for (Datasource dataSourceDb : dataSourceList) {
+            String procNameAndBatchNoAndDsName = procNameAndBatchNo + dataSourceDb.getName();
+            try {
+                if (dataSourceDb.getType().equalsIgnoreCase(DbTypeFlag.MONGODB)) {
+                    MongoDbConnection.close(procNameAndBatchNoAndDsName);
+                } else if (dataSourceDb.getType().equalsIgnoreCase(DbTypeFlag.MYSQL)) {
+                    MySqlConnection.close(procNameAndBatchNoAndDsName);
+                } else if (dataSourceDb.getType().equalsIgnoreCase(DbTypeFlag.PG)) {
+                    PgServerConnection.close(procNameAndBatchNoAndDsName);
+                } else if (dataSourceDb.getType().equalsIgnoreCase(DbTypeFlag.ORACLE)) {
+                    OracleConnection.close(procNameAndBatchNoAndDsName);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+                Log.error(e.getMessage());
             }
         }
     }

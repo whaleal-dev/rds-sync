@@ -229,7 +229,7 @@ public class MysqlTargetTask extends AbstractTargetTask {
         }
         createSql.deleteCharAt(createSql.length() - 1);
         createSql.append(" ) ");
-        MySqlConnection.getJdbcTemplate(targetDsName).execute(createSql.toString());
+        MySqlConnection.getJdbcTemplate(procNameAndBatchNoAndTargetDsName).execute(createSql.toString());
         getTableInfoByTableName(dbTable, targetDsName, procNameAndBatchNoAndTargetDsName);
         Log.info("dbTableName:" + dbTable + ",createSql: " + createSql);
     }
@@ -249,7 +249,7 @@ public class MysqlTargetTask extends AbstractTargetTask {
                 }
                 String columnName = columnValue.getColumnName();
                 if (columnTypeMap.containsKey((dsName + ":" + dbTable + ":" + columnName).toUpperCase())) {
-                    detectionType(dbTable, columnName, columnValue, dsName, procNameAndBatchNoAndTargetDsName);
+                   // detectionType(dbTable, columnName, columnValue, dsName, procNameAndBatchNoAndTargetDsName);
                     detectionLength(dbTable, columnName, columnValue, dsName, procNameAndBatchNoAndTargetDsName);
                 } else {
                     //修改表结构增加字段

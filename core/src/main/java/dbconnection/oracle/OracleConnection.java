@@ -97,6 +97,7 @@ public final class OracleConnection {
         } finally {
             oracleConnectionMap.remove(procNameAndBatchNoAndDsName);
             jdbcTemplateOracleMap.remove(procNameAndBatchNoAndDsName);
+            Log.info(procNameAndBatchNoAndDsName+"链接已关闭");
         }
 
     }

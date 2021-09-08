@@ -31,7 +31,7 @@ public final class PgServerConnection {
      * 根据数据库的名字或者数据源来获取连接
      *
      * @param procNameAndBatchNoAndDsName ds的名字
-     * @param datasource         数据源
+     * @param datasource                  数据源
      * @return {@link Connection}
      */
     public static void createConnection(String procNameAndBatchNoAndDsName, Datasource datasource) {
@@ -101,6 +101,7 @@ public final class PgServerConnection {
         } finally {
             pgConnectionMap.remove(procNameAndBatchNoAndDsName);
             jdbcTemplatePgMap.remove(procNameAndBatchNoAndDsName);
+            Log.info(procNameAndBatchNoAndDsName + "链接已关闭");
         }
     }
 

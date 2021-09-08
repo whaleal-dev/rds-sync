@@ -66,6 +66,9 @@ public abstract class AbstractTargetTask implements Runnable {
     public static void setIsStopFlagOfTarget(String procNameAndBatchNo, boolean value) {
         isStop.get(procNameAndBatchNo).set(value);
     }
+    public static void removeIsStopFlagOfTarget(String procNameAndBatchNo) {
+        isStop.remove(procNameAndBatchNo);
+    }
 
     public static boolean getIsStopFlagOfTarget(String procNameAndBatchNo) {
         return isStop.get(procNameAndBatchNo).get();

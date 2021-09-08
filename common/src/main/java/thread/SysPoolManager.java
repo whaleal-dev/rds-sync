@@ -38,6 +38,7 @@ public class SysPoolManager extends ThreadPoolManager {
     public static void deleteSysPoolManager(String procNameAndBatchNo) {
         sysThreadPoolManager.remove(procNameAndBatchNo);
         sysActiveThreadNum.remove(procNameAndBatchNo);
+        Log.info(procNameAndBatchNo+"线程池已关闭");
     }
 
     /**

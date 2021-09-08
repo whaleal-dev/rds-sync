@@ -36,6 +36,7 @@ public class PgSource extends SourceMetadata {
     public PgSource(ProgramInfo programInfo, MemoryCache memoryCache) {
         super(programInfo, memoryCache);
         procSourceTask.put(procNameAndBatchNo, taskMetadataQueue);
+        this.jdbcTemplate=PgServerConnection.getJdbcTemplate(procNameAndBatchNoAndSourceDsName);
     }
 
     @Override

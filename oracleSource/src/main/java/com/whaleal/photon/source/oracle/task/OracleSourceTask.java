@@ -38,7 +38,7 @@ public class OracleSourceTask extends AbstractSourceTask {
 
     public OracleSourceTask(SourceTaskInfo taskMetadata, String procName, MemoryCache memoryCache, int dataBatchSize, long batchNo) {
         super(taskMetadata, procName, memoryCache, dataBatchSize,batchNo);
-        this.connection = OracleConnection.getConnection(procNameAndBatchNo);
+        this.connection = OracleConnection.getConnection(procNameAndBatchNoAndSourceDsName);
     }
 
     @Override

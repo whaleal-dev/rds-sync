@@ -23,7 +23,7 @@ public class ProgramInfo {
     /**
      * 批次号
      */
-    private long batchNO;
+    private long batchNO = 0L;
     /**
      * 程序名称
      */

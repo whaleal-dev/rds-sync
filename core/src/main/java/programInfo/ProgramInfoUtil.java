@@ -15,9 +15,10 @@ public class ProgramInfoUtil {
     private static JdbcTemplate jdbcTemplate = MetadataConnection.getJdbcTemplate();
 
     public static ProgramInfo getProgramInfo(String procName) {
-        ProgramInfo programInfo = new ProgramInfo();
+        ProgramInfo programInfo = null;
         try {
             Map<String, Object> map = jdbcTemplate.queryForMap("select * from photon.program where proc_name='" + procName + "' ");
+            programInfo = new ProgramInfo();
             programInfo.setProName(procName);
             Object taskName = map.get("task_name");
             if (taskName != null) {

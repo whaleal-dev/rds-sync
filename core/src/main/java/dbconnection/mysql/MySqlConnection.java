@@ -102,6 +102,7 @@ public class MySqlConnection {
         } finally {
             connectionMysqlMap.remove(procNameAndBatchNoAndDsName);
             jdbcTemplateMysqlMap.remove(procNameAndBatchNoAndDsName);
+            Log.info(procNameAndBatchNoAndDsName+"链接已关闭");
         }
     }
 }

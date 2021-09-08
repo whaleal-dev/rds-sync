@@ -40,9 +40,8 @@ public class MongodbSourceTask extends AbstractSourceTask {
 
 
     public MongodbSourceTask(SourceTaskInfo taskMetadata, String procName, MemoryCache memoryCache, int dataBatchSize,long batchNo) {
-        super(taskMetadata, procName, memoryCache, dataBatchSize);
-        String proNameAndBatchNo=procName+batchNo;
-        this.mongoClient = MongoDbConnection.getMongoClient(proNameAndBatchNo);
+        super(taskMetadata, procName, memoryCache, dataBatchSize,batchNo);
+        this.mongoClient = MongoDbConnection.getMongoClient(procNameAndBatchNoAndSourceDsName);
     }
 
 
@@ -54,7 +53,7 @@ public class MongodbSourceTask extends AbstractSourceTask {
             getDataFromCollection();
         } finally {
             // source线程数-1
-            SourceTaskPoolManager.setSourceActiveThreadNum(procName, -1);
+            SourceTaskPoolManager.setSourceActiveThreadNum(procNameAndBatchNo, -1);
         }
     }
 
@@ -103,7 +102,7 @@ public class MongodbSourceTask extends AbstractSourceTask {
             rangeTem.setMax(range.isMax());
             // 出现意外时，再次启动该任务实例
             SourceTaskInfo taskMetadata = new SourceTaskInfo(rangeTem, this.taskMetadata.getDbTableName(), this.taskMetadata.getSourceDsName());
-            MongodbSource.pushTaskMeta(procName, taskMetadata);
+            MongodbSource.pushTaskMeta(procNameAndBatchNo, taskMetadata);
         } finally {
             // 设置range的结束时间。设置range的开始结束时间，后期会使用到该参数
             range.setEndTime(System.currentTimeMillis());
@@ -128,7 +127,6 @@ public class MongodbSourceTask extends AbstractSourceTask {
         this.dataList.add(abstractColumns);
     }
 
-    private static AtomicInteger atomicInteger = new AtomicInteger();
 
     /**
      * putDataToCache 推送数据到缓存区中

@@ -37,6 +37,7 @@ public class TargetTaskPoolManager extends ThreadPoolManager {
     public static void deleteSTargetTaskPoolManager(String procNameAndBatchNo) {
         targetThreadPoolManager.remove(procNameAndBatchNo);
         targetActiveThreadNum.remove(procNameAndBatchNo);
+        Log.info(procNameAndBatchNo+"线程池已关闭");
     }
 
     /**
