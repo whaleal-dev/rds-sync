@@ -35,18 +35,18 @@ public class MongodbSource extends SourceMetadata {
 
     public MongodbSource(ProgramInfo programInfo, MemoryCache memoryCache) {
         super(programInfo, memoryCache);
-        procSourceTask.put(proName, taskMetadataQueue);
-        mongoClient = MongoDbConnection.getMongoClient(sourceName);
+        procSourceTask.put(procNameAndBatchNo, taskMetadataQueue);
+        mongoClient = MongoDbConnection.getMongoClient(procNameAndBatchNoAndSourceDsName);
     }
 
     @Override
     public void createTask() {
         // 获取数据源的全部库表
-        getAllDbCollections(sourceName);
+        getAllDbCollections(sourceDsName);
         // 启动获取提交Task任务的线程
         submitSourceTask();
         // 开始遍历抽取该数据源的所有库表
-        startFromSource(sourceName, false);
+        startFromSource(sourceDsName, false);
     }
 
     @Override
@@ -61,7 +61,7 @@ public class MongodbSource extends SourceMetadata {
                 Log.info(dbName + "库数据不进行同步");
                 continue;
             }
-            MongoIterable<String> mongoIterableOfTable = MongoDbConnection.getMongoClient(sourceName).getDatabase(dbName).listCollectionNames();
+            MongoIterable<String> mongoIterableOfTable =mongoClient.getDatabase(dbName).listCollectionNames();
             MongoCursor<String> mongoCursorOfTable = mongoIterableOfTable.iterator();
             // 遍历表列表
             while (mongoCursorOfTable.hasNext()) {
@@ -77,11 +77,11 @@ public class MongodbSource extends SourceMetadata {
     }
 
     @Override
-    public void startFromSource(String sourceName, boolean isParallel) {
+    public void startFromSource(String sourceDsName, boolean isParallel) {
         Iterator<Map.Entry<String, String>> mapIterator = dbTables.entrySet().iterator();
         while (mapIterator.hasNext()) {
             Map.Entry<String, String> next = mapIterator.next();
-            createSourceEntity(sourceName, next.getValue());
+            createSourceEntity(sourceDsName, next.getValue());
             dbTables.remove(next.getKey());
         }
         // 所有表均已推送到分析队列中
@@ -89,29 +89,29 @@ public class MongodbSource extends SourceMetadata {
     }
 
     @Override
-    public void createSourceEntity(String sourceName, String dbTableName) {
+    public void createSourceEntity(String sourceDsName, String dbTableName) {
         Runnable runnable = new Runnable() {
             @Override
             public void run() {
-                MongodbSourceSplitRange mongodbSourceSplitRange = new MongodbSourceSplitRange(sourceName);
+                MongodbSourceSplitRange mongodbSourceSplitRange = new MongodbSourceSplitRange(sourceDsName,proName,batchNo);
                 Map<Integer, Range> map = mongodbSourceSplitRange.getIdTypes(dbTableName);
                 Iterator<Map.Entry<Integer, Range>> rangeMap = map.entrySet().iterator();
                 while (rangeMap.hasNext()) {
                     // sys线程加一
-                    SysPoolManager.setSysActiveThreadNum(proName, 1);
+                    SysPoolManager.setSysActiveThreadNum(procNameAndBatchNo, 1);
                     Map.Entry<Integer, Range> next = rangeMap.next();
                     Range rangeOfTable = next.getValue();
                     while (rangeOfTable.getMinId() != null) {
                         Range range = mongodbSourceSplitRange.splitRange(dbTableName, rangeOfTable, next.getKey());
-                        SourceTaskInfo taskMetadata = new SourceTaskInfo(range, dbTableName, sourceName);
-                        pushTaskMeta(proName, taskMetadata);
+                        SourceTaskInfo taskMetadata = new SourceTaskInfo(range, dbTableName, sourceDsName);
+                        pushTaskMeta(procNameAndBatchNo, taskMetadata);
                     }
                     // sys线程减一
-                    SysPoolManager.setSysActiveThreadNum(proName, -1);
+                    SysPoolManager.setSysActiveThreadNum(procNameAndBatchNo, -1);
                 }
             }
         };
-        SysPoolManager.submit(proName, runnable);
+        SysPoolManager.submit(procNameAndBatchNo, runnable);
     }
 
     @Override
@@ -123,10 +123,10 @@ public class MongodbSource extends SourceMetadata {
                     try {
                         SourceTaskInfo taskMetadata = taskMetadataQueue.poll();
                         if (taskMetadata != null) {
-                            SourceTaskPoolManager.setSourceActiveThreadNum(proName, 1);
-                            SourceTaskPoolManager.submit(proName, new MongodbSourceTask(taskMetadata, proName, memoryCache, 128));
+                            SourceTaskPoolManager.setSourceActiveThreadNum(procNameAndBatchNo, 1);
+                            SourceTaskPoolManager.submit(procNameAndBatchNo, new MongodbSourceTask(taskMetadata, proName, memoryCache, 128,batchNo));
                         } else {
-                            boolean isOver = taskMetadataQueue.size() == 0 && SourceTaskPoolManager.setSourceActiveThreadNum(proName, 0) == 0 && isGetAllDbTable && dbTables.size() == 0 && SysPoolManager.setSysActiveThreadNum(proName, 0) == 0;
+                            boolean isOver = taskMetadataQueue.size() == 0 && SourceTaskPoolManager.setSourceActiveThreadNum(procNameAndBatchNo, 0) == 0 && isGetAllDbTable && dbTables.size() == 0 && SysPoolManager.setSysActiveThreadNum(procNameAndBatchNo, 0) == 0;
                             if (isOver) {
                                 break;
                             }
@@ -140,11 +140,11 @@ public class MongodbSource extends SourceMetadata {
                 }
             }
         };
-        SysPoolManager.submit(proName, runnable);
+        SysPoolManager.submit(procNameAndBatchNo, runnable);
     }
 
 
-    public static void pushTaskMeta(String procName, SourceTaskInfo taskMetadata) {
-        procSourceTask.get(procName).add(taskMetadata);
+    public static void pushTaskMeta(String procNameAndBatchNo, SourceTaskInfo taskMetadata) {
+        procSourceTask.get(procNameAndBatchNo).add(taskMetadata);
     }
 }

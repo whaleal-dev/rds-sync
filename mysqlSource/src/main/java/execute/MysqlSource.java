@@ -29,34 +29,35 @@ public class MysqlSource extends SourceMetadata {
     private Connection connection;
     private JdbcTemplate jdbcTemplate;
 
+
     public MysqlSource(ProgramInfo programInfo, MemoryCache memoryCache) {
         super(programInfo, memoryCache);
         this.programInfo = programInfo;
-        procSourceTask.put(proName, taskMetadataQueue);
-        connection = MySqlConnection.getConnection(programInfo.getSourceDsName());
-        jdbcTemplate = MySqlConnection.getJdbcTemplate(sourceName);
+        procSourceTask.put(procNameAndBatchNo, taskMetadataQueue);
+        connection = MySqlConnection.getConnection(procNameAndBatchNoAndSourceDsName);
+        jdbcTemplate = MySqlConnection.getJdbcTemplate(procNameAndBatchNoAndSourceDsName);
     }
 
     @Override
     public void createTask() {
         // 获取数据源的全部库表
-        getAllDbCollections(sourceName);
+        getAllDbCollections(sourceDsName);
         // 启动获取提交Task任务的线程
         submitSourceTask();
         // 开始遍历抽取该数据源的所有库表
-        startFromSource(sourceName, false);
+        startFromSource(sourceDsName, false);
     }
 
 
     @Override
-    public void startFromSource(String sourceName, boolean isParallel) {
-        createSourceEntity(sourceName, "");
+    public void startFromSource(String sourceDsName, boolean isParallel) {
+        createSourceEntity(sourceDsName, "");
         dbTables = new ConcurrentHashMap<>();
         isGetAllDbTable = true;
     }
 
     @Override
-    public void createSourceEntity(String sourceName, String dbTableName) {
+    public void createSourceEntity(String sourceDsName, String dbTableName) {
         List<Range> list = new ArrayList<>();
         try {
             list = MysqlSourceSplitRange.doSplit(programInfo);
@@ -65,18 +66,18 @@ public class MysqlSource extends SourceMetadata {
             Log.error(e.getMessage());
         }
         for (Range splitRange : list) {
-            SysPoolManager.setSysActiveThreadNum(proName, 1);
-            SourceTaskInfo taskMetadata = new SourceTaskInfo(splitRange, splitRange.getDbTableName(), sourceName);
+            SysPoolManager.setSysActiveThreadNum(procNameAndBatchNo, 1);
+            SourceTaskInfo taskMetadata = new SourceTaskInfo(splitRange, splitRange.getDbTableName(), sourceDsName);
             Log.error("taskMetadata" + taskMetadata);
-            pushTaskMeta(proName, taskMetadata);
-            SysPoolManager.setSysActiveThreadNum(proName, -1);
+            pushTaskMeta(procNameAndBatchNo, taskMetadata);
+            SysPoolManager.setSysActiveThreadNum(procNameAndBatchNo, -1);
         }
         Log.info("  切分数     =   " + list.size());
 
     }
 
     @Override
-    public void getAllDbCollections(String sourceName) {
+    public void getAllDbCollections(String sourceDsName) {
         List<Map<String, Object>> dbTableList = jdbcTemplate.queryForList("select * from information_schema.TABLES");
         for (Map dbTableMap : dbTableList) {
             String dbName = dbTableMap.get("TABLE_SCHEMA").toString();
@@ -92,7 +93,7 @@ public class MysqlSource extends SourceMetadata {
                 dbTables.put(dbTable, dbTable);
             }
         }
-        Log.info("sourceName:" + sourceName + ",全量同步的表列表:" + dbTables);
+        Log.info("sourceDsName:" + sourceDsName + ",全量同步的表列表:" + dbTables);
     }
 
     @Override
@@ -104,10 +105,10 @@ public class MysqlSource extends SourceMetadata {
                     try {
                         SourceTaskInfo taskMetadata = taskMetadataQueue.poll();
                         if (taskMetadata != null) {
-                            SourceTaskPoolManager.setSourceActiveThreadNum(proName, 1);
-                            SourceTaskPoolManager.submit(proName, new MysqlSourceTask(taskMetadata, proName, memoryCache, 128));
+                            SourceTaskPoolManager.setSourceActiveThreadNum(procNameAndBatchNo, 1);
+                            SourceTaskPoolManager.submit(procNameAndBatchNo, new MysqlSourceTask(taskMetadata, proName, memoryCache, 128,batchNo));
                         } else {
-                            boolean isOver = taskMetadataQueue.size() == 0 && SourceTaskPoolManager.setSourceActiveThreadNum(proName, 0) == 0 && isGetAllDbTable && dbTables.size() == 0 && SysPoolManager.setSysActiveThreadNum(proName, 0) == 0;
+                            boolean isOver = taskMetadataQueue.size() == 0 && SourceTaskPoolManager.setSourceActiveThreadNum(procNameAndBatchNo, 0) == 0 && isGetAllDbTable && dbTables.size() == 0 && SysPoolManager.setSysActiveThreadNum(procNameAndBatchNo, 0) == 0;
                             if (isOver) {
                                 break;
                             }
@@ -119,13 +120,13 @@ public class MysqlSource extends SourceMetadata {
                 }
             }
         };
-        SysPoolManager.submit(proName, runnable);
+        SysPoolManager.submit(procNameAndBatchNo, runnable);
     }
 
     protected static Map<String, Queue<SourceTaskInfo>> procSourceTask = new ConcurrentHashMap<>();
 
-    public static void pushTaskMeta(String procName, SourceTaskInfo taskMetadata) {
-        procSourceTask.get(procName).add(taskMetadata);
+    public static void pushTaskMeta(String procNameAndBatchNo, SourceTaskInfo taskMetadata) {
+        procSourceTask.get(procNameAndBatchNo).add(taskMetadata);
     }
 
 }

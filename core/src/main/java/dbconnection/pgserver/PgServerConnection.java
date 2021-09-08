@@ -30,34 +30,34 @@ public final class PgServerConnection {
     /**
      * 根据数据库的名字或者数据源来获取连接
      *
-     * @param dsName     ds的名字
-     * @param datasource 数据源
+     * @param procNameAndBatchNoAndDsName ds的名字
+     * @param datasource         数据源
      * @return {@link Connection}
      */
-    public static void createConnection(String dsName, Datasource datasource) {
-        if (!jdbcTemplatePgMap.containsKey(dsName)) {
+    public static void createConnection(String procNameAndBatchNoAndDsName, Datasource datasource) {
+        if (!jdbcTemplatePgMap.containsKey(procNameAndBatchNoAndDsName)) {
             synchronized (PgServerConnection.class) {
-                if (!jdbcTemplatePgMap.containsKey(dsName)) {
-                    getBasicDataSource(dsName, datasource);
+                if (!jdbcTemplatePgMap.containsKey(procNameAndBatchNoAndDsName)) {
+                    getBasicDataSource(procNameAndBatchNoAndDsName, datasource);
                 }
             }
         }
     }
 
-    public static JdbcTemplate getJdbcTemplate(String dsName) {
-        return jdbcTemplatePgMap.get(dsName);
+    public static JdbcTemplate getJdbcTemplate(String procNameAndBatchNoAndDsName) {
+        return jdbcTemplatePgMap.get(procNameAndBatchNoAndDsName);
     }
 
 
     /**
      * getJdbcTemplate 获取mysql的Jdbc
      *
-     * @param dsName
+     * @param procNameAndBatchNoAndDsName
      * @return JdbcTemplate
      * @desc 获取mysql的Jdbc
      */
-    public static Connection getConnection(String dsName) {
-        return pgConnectionMap.get(dsName);
+    public static Connection getConnection(String procNameAndBatchNoAndDsName) {
+        return pgConnectionMap.get(procNameAndBatchNoAndDsName);
     }
 
     /**
@@ -66,16 +66,16 @@ public final class PgServerConnection {
      * @param datasource 数据源
      * @return {@link Connection}
      */
-    public static void getBasicDataSource(String dsName, Datasource datasource) {
+    public static void getBasicDataSource(String procNameAndBatchNoAndDsName, Datasource datasource) {
         try {
             BasicDataSource basicDataSource = new BasicDataSource();
             basicDataSource.setDriverClassName("org.postgresql.Driver");
-            basicDataSource.setUrl(datasource.getUrl()+"?useCursorFetch=true");
+            basicDataSource.setUrl(datasource.getUrl() + "?useCursorFetch=true");
             basicDataSource.setUsername(datasource.getUsername());
             basicDataSource.setPassword(datasource.getPassword());
             System.out.println("成功连接数据库");
-            jdbcTemplatePgMap.put(dsName, new JdbcTemplate(basicDataSource));
-            pgConnectionMap.put(dsName, basicDataSource.getConnection());
+            jdbcTemplatePgMap.put(procNameAndBatchNoAndDsName, new JdbcTemplate(basicDataSource));
+            pgConnectionMap.put(procNameAndBatchNoAndDsName, basicDataSource.getConnection());
         } catch (Exception exception) {
             Log.error(exception.getMessage());
             exception.printStackTrace();
@@ -85,19 +85,22 @@ public final class PgServerConnection {
     /**
      * close 关闭jdbc链接
      *
-     * @param dsName
+     * @param procNameAndBatchNoAndDsName
      * @desc 关闭jdbc链接
      */
-    public static void close(String dsName) {
+    public static void close(String procNameAndBatchNoAndDsName) {
+        if (!pgConnectionMap.containsKey(procNameAndBatchNoAndDsName)) {
+            return;
+        }
         try {
-            pgConnectionMap.get(dsName).close();
-            System.out.println(dsName + "数据源关闭");
+            pgConnectionMap.get(procNameAndBatchNoAndDsName).close();
+            System.out.println(procNameAndBatchNoAndDsName + "数据源关闭");
         } catch (Exception exception) {
             Log.error(exception.getMessage());
             exception.printStackTrace();
         } finally {
-            pgConnectionMap.remove(dsName);
-            jdbcTemplatePgMap.remove(dsName);
+            pgConnectionMap.remove(procNameAndBatchNoAndDsName);
+            jdbcTemplatePgMap.remove(procNameAndBatchNoAndDsName);
         }
     }
 

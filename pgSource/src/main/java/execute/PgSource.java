@@ -35,22 +35,21 @@ public class PgSource extends SourceMetadata {
 
     public PgSource(ProgramInfo programInfo, MemoryCache memoryCache) {
         super(programInfo, memoryCache);
-        jdbcTemplate = PgServerConnection.getJdbcTemplate(sourceName);
-        procSourceTask.put(proName, taskMetadataQueue);
+        procSourceTask.put(procNameAndBatchNo, taskMetadataQueue);
     }
 
     @Override
     public void createTask() {
         // 获取数据源的全部库表
-        getAllDbCollections(sourceName);
+        getAllDbCollections(sourceDsName);
         // 启动获取提交Task任务的线程
         submitSourceTask();
         // 开始遍历抽取该数据源的所有库表
-        startFromSource(sourceName, false);
+        startFromSource(sourceDsName, false);
     }
 
     @Override
-    public void getAllDbCollections(String sourceName) {
+    public void getAllDbCollections(String sourceDsName) {
         String sql = "select  * from information_schema.TABLES where table_type='BASE TABLE' and concat(table_schema,'.',table_name)  ~ ? ";
         List<Map<String, Object>> dbTableMapList = jdbcTemplate.queryForList(sql, dbTableWhite);
         for (Map<String, Object> dbTableNameMap : dbTableMapList) {
@@ -59,30 +58,30 @@ public class PgSource extends SourceMetadata {
             String dbTable = dbSchemaName + "." + tableName;
             dbTables.put(dbTable, dbTable);
         }
-        Log.info("sourceName:" + sourceName + ",全量同步的表列表:" + dbTables);
+        Log.info("sourceName:" + sourceDsName + ",全量同步的表列表:" + dbTables);
     }
 
     @Override
-    public void startFromSource(String sourceName, boolean isParallel) {
+    public void startFromSource(String sourceDsName, boolean isParallel) {
         Iterator<Map.Entry<String, String>> mapIterator = dbTables.entrySet().iterator();
         while (mapIterator.hasNext()) {
             Map.Entry<String, String> next = mapIterator.next();
-            createSourceEntity(sourceName, next.getValue());
+            createSourceEntity(sourceDsName, next.getValue());
             dbTables.remove(next.getKey());
         }
         isGetAllDbTable = true;
     }
 
     @Override
-    public void createSourceEntity(String sourceName, String dbTableName) {
-        PgSourceSplitRange source = new PgSourceSplitRange(sourceName);
+    public void createSourceEntity(String sourceDsName, String dbTableName) {
+        PgSourceSplitRange source = new PgSourceSplitRange(sourceDsName,proName,batchNo);
         List<Range> rangeList = source.getRangeList(dbTableName);
         for (Range range : rangeList) {
             SourceTaskInfo sourceTaskInfo = new SourceTaskInfo();
-            sourceTaskInfo.setSourceDsName(sourceName);
+            sourceTaskInfo.setSourceDsName(sourceDsName);
             sourceTaskInfo.setDbTableName(dbTableName);
             sourceTaskInfo.setRange(range);
-            pushTaskMeta(proName, sourceTaskInfo);
+            pushTaskMeta(procNameAndBatchNo, sourceTaskInfo);
         }
     }
 
@@ -95,10 +94,10 @@ public class PgSource extends SourceMetadata {
                     try {
                         SourceTaskInfo taskMetadata = taskMetadataQueue.poll();
                         if (taskMetadata != null) {
-                            SourceTaskPoolManager.setSourceActiveThreadNum(proName, 1);
-                            SourceTaskPoolManager.submit(proName, new PgSourceTask(taskMetadata, proName, memoryCache, 128));
+                            SourceTaskPoolManager.setSourceActiveThreadNum(procNameAndBatchNo, 1);
+                            SourceTaskPoolManager.submit(procNameAndBatchNo, new PgSourceTask(taskMetadata, proName, memoryCache, 128,batchNo));
                         } else {
-                            boolean isOver = taskMetadataQueue.size() == 0 && SourceTaskPoolManager.setSourceActiveThreadNum(proName, 0) == 0 && isGetAllDbTable && dbTables.size() == 0 && SysPoolManager.setSysActiveThreadNum(proName, 0) == 0;
+                            boolean isOver = taskMetadataQueue.size() == 0 && SourceTaskPoolManager.setSourceActiveThreadNum(procNameAndBatchNo, 0) == 0 && isGetAllDbTable && dbTables.size() == 0 && SysPoolManager.setSysActiveThreadNum(procNameAndBatchNo, 0) == 0;
                             if (isOver) {
                                 break;
                             }
@@ -112,16 +111,16 @@ public class PgSource extends SourceMetadata {
                 }
             }
         };
-        SysPoolManager.submit(proName, runnable);
+        SysPoolManager.submit(procNameAndBatchNo, runnable);
     }
 
     /**
      * 提交TaskInfo到任务队列中
      *
-     * @param procName
+     * @param procNameAndBatchNo
      * @param taskMetadata
      */
-    public static void pushTaskMeta(String procName, SourceTaskInfo taskMetadata) {
-        procSourceTask.get(procName).add(taskMetadata);
+    public static void pushTaskMeta(String procNameAndBatchNo, SourceTaskInfo taskMetadata) {
+        procSourceTask.get(procNameAndBatchNo).add(taskMetadata);
     }
 }

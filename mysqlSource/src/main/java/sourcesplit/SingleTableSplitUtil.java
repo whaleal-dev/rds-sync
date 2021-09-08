@@ -147,7 +147,8 @@ public class SingleTableSplitUtil {
         //取配置中的 fetchSize
         int fetchSize = programInfo.getFetchSize();
         //获取连接
-        Connection conn = MySqlConnection.getConnection(programInfo.getSourceDsName());
+        String procNameAndBatchNoAndSourceDsName = programInfo.getProName() + programInfo.getBatchNO()+programInfo.getSourceDsName();
+        Connection conn = MySqlConnection.getConnection(procNameAndBatchNoAndSourceDsName);
         //字段构建的范围 sql pkRangeSQL
         Pair<Object, Object> minMaxPK = checkSplitPk(conn, pkRangeSQL, fetchSize, programInfo);
 
@@ -161,7 +162,8 @@ public class SingleTableSplitUtil {
         //取配置中的 fetchSize
         int fetchSize = programInfo.getFetchSize();
         //获取连接
-        Connection conn = MySqlConnection.getConnection(programInfo.getSourceDsName());
+        String procNameAndBatchNoAndSourceDsName = programInfo.getProName() + programInfo.getBatchNO()+programInfo.getSourceDsName();
+        Connection conn = MySqlConnection.getConnection(procNameAndBatchNoAndSourceDsName);
         //字段构建的范围 sql pkRangeSQL
         Pair<Object, Object> minMaxPK = checkSplitPk(conn, pkRangeSQL, fetchSize, programInfo);
 
@@ -261,7 +263,8 @@ public class SingleTableSplitUtil {
             return getPK1(table, programInfo);
         }else{
             //智能取切分字段
-            JdbcTemplate jdbcTemplate = MySqlConnection.getJdbcTemplate(programInfo.getSourceDsName());
+            String proNameAndBatchNo=programInfo.getProName()+programInfo.getBatchNO();
+            JdbcTemplate jdbcTemplate = MySqlConnection.getJdbcTemplate(proNameAndBatchNo);
             String baseSql = "select * from "+ table;
             SqlRowSet sqlRowSet = jdbcTemplate.queryForRowSet(baseSql);
             SqlRowSetMetaData sqlRsmd = sqlRowSet.getMetaData();
@@ -354,7 +357,8 @@ public class SingleTableSplitUtil {
 
 
     private static Map<String, Object> getLengthRange(ProgramInfo programInfo, String table) {
-        JdbcTemplate jdbcTemplate = MySqlConnection.getJdbcTemplate(programInfo.getSourceDsName());
+        String proNameAndBatchNo=programInfo.getProName()+programInfo.getBatchNO();
+        JdbcTemplate jdbcTemplate = MySqlConnection.getJdbcTemplate(proNameAndBatchNo);
         //获取列名和列类型
         String baseSql = "select * from "+ table;
         SqlRowSet sqlRowSet = jdbcTemplate.queryForRowSet(baseSql);
@@ -492,7 +496,8 @@ public class SingleTableSplitUtil {
      */
     //TODO
     public static String getPK(String table, ProgramInfo programInfo) {
-        JdbcTemplate jdbcTemplate = MySqlConnection.getJdbcTemplate(programInfo.getSourceDsName());
+        String proNameAndBatchNo=programInfo.getProName()+programInfo.getBatchNO();
+        JdbcTemplate jdbcTemplate = MySqlConnection.getJdbcTemplate(proNameAndBatchNo);
         String PKName = null;
         String baseSql = "select * from "+ table;
         SqlRowSet sqlRowSet = jdbcTemplate.queryForRowSet(baseSql);
@@ -516,7 +521,8 @@ public class SingleTableSplitUtil {
 
     public static String getPK1(String table, ProgramInfo programInfo) {
         //TODO get
-        Connection conn = MySqlConnection.getConnection(programInfo.getSourceDsName());
+        String procNameAndBatchNoAndSourceDsName = programInfo.getProName() + programInfo.getBatchNO()+programInfo.getSourceDsName();
+        Connection conn = MySqlConnection.getConnection(procNameAndBatchNoAndSourceDsName);
         String PKName = null;
         try {
             DatabaseMetaData dmd = conn.getMetaData();

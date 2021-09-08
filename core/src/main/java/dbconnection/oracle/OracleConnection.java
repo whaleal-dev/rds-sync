@@ -27,33 +27,33 @@ public final class OracleConnection {
     /**
      * 根据数据库的名字或者数据源来获取连接
      *
-     * @param dsName     ds的名字
+     * @param procNameAndBatchNoAndDsName     ds的名字
      * @param datasource 数据源
      */
-    public static void createConnection(String dsName, Datasource datasource) {
-        if (!jdbcTemplateOracleMap.containsKey(dsName)) {
+    public static void createConnection(String procNameAndBatchNoAndDsName, Datasource datasource) {
+        if (!jdbcTemplateOracleMap.containsKey(procNameAndBatchNoAndDsName)) {
             synchronized (OracleConnection.class) {
-                if (!jdbcTemplateOracleMap.containsKey(dsName)) {
-                    getBasicDataSource(dsName, datasource);
+                if (!jdbcTemplateOracleMap.containsKey(procNameAndBatchNoAndDsName)) {
+                    getBasicDataSource(procNameAndBatchNoAndDsName, datasource);
                 }
             }
         }
     }
 
-    public static JdbcTemplate getJdbcTemplate(String dsName) {
-        return jdbcTemplateOracleMap.get(dsName);
+    public static JdbcTemplate getJdbcTemplate(String procNameAndBatchNoAndDsName) {
+        return jdbcTemplateOracleMap.get(procNameAndBatchNoAndDsName);
     }
 
 
     /**
      * getJdbcTemplate 获取oracle的Jdbc
      *
-     * @param dsName
+     * @param procNameAndBatchNoAndDsName
      * @return JdbcTemplate
      * @desc 获取mysql的Jdbc
      */
-    public static Connection getConnection(String dsName) {
-        return oracleConnectionMap.get(dsName);
+    public static Connection getConnection(String procNameAndBatchNoAndDsName) {
+        return oracleConnectionMap.get(procNameAndBatchNoAndDsName);
     }
 
     /**
@@ -61,16 +61,16 @@ public final class OracleConnection {
      *
      * @param datasource 数据源
      */
-    public static void getBasicDataSource(String dsName, Datasource datasource) {
+    public static void getBasicDataSource(String procNameAndBatchNoAndDsName, Datasource datasource) {
         try {
             BasicDataSource basicDataSource = new BasicDataSource();
             basicDataSource.setDriverClassName("oracle.jdbc.driver.OracleDriver");
             basicDataSource.setUrl(datasource.getUrl());
             basicDataSource.setUsername(datasource.getUsername());
             basicDataSource.setPassword(datasource.getPassword());
-            jdbcTemplateOracleMap.put(dsName, new JdbcTemplate(basicDataSource));
-            oracleConnectionMap.put(dsName, basicDataSource.getConnection());
-            System.out.println("成功连接数据库"+dsName);
+            jdbcTemplateOracleMap.put(procNameAndBatchNoAndDsName, new JdbcTemplate(basicDataSource));
+            oracleConnectionMap.put(procNameAndBatchNoAndDsName, basicDataSource.getConnection());
+            System.out.println("成功连接数据库"+procNameAndBatchNoAndDsName);
         } catch (Exception exception) {
             exception.printStackTrace();
             Log.error(exception.getMessage());
@@ -81,19 +81,22 @@ public final class OracleConnection {
     /**
      * close 关闭jdbc链接
      *
-     * @param dsName
+     * @param procNameAndBatchNoAndDsName
      * @desc 关闭jdbc链接
      */
-    public static void close(String dsName) {
+    public static void close(String procNameAndBatchNoAndDsName) {
+        if (!oracleConnectionMap.containsKey(procNameAndBatchNoAndDsName)) {
+            return;
+        }
         try {
-            oracleConnectionMap.get(dsName).close();
-            System.out.println(dsName + "数据源关闭");
+            oracleConnectionMap.get(procNameAndBatchNoAndDsName).close();
+            System.out.println(procNameAndBatchNoAndDsName + "数据源关闭");
         } catch (Exception exception) {
             Log.error(exception.getMessage());
             exception.printStackTrace();
         } finally {
-            oracleConnectionMap.remove(dsName);
-            jdbcTemplateOracleMap.remove(dsName);
+            oracleConnectionMap.remove(procNameAndBatchNoAndDsName);
+            jdbcTemplateOracleMap.remove(procNameAndBatchNoAndDsName);
         }
 
     }

@@ -28,9 +28,10 @@ public class OracleSourceSplitRange implements SplitRangeOfRdbInterface {
      */
     private String sourceDsName;
 
-    public OracleSourceSplitRange(String sourceDsName) {
+    public OracleSourceSplitRange(String sourceDsName, String procName, long batchNo) {
         this.sourceDsName = sourceDsName;
-        this.jdbcTemplate = OracleConnection.getJdbcTemplate(sourceDsName);
+         String procNameAndBatchNoAndSourceDsName=procName+batchNo+sourceDsName;
+        this.jdbcTemplate = OracleConnection.getJdbcTemplate(procNameAndBatchNoAndSourceDsName);
     }
 
     @Override
@@ -208,7 +209,7 @@ public class OracleSourceSplitRange implements SplitRangeOfRdbInterface {
         Datasource oracle = DataSourceUtil.getDataSourceByDsName("oracle3");
         OracleConnection.createConnection(oracle.getName(), oracle);
         PgServerConnection.getConnection("oracle3");
-        OracleSourceSplitRange oracleSourceSplitRangeByLhp = new OracleSourceSplitRange("oracle3");
+        OracleSourceSplitRange oracleSourceSplitRangeByLhp = new OracleSourceSplitRange("oracle3","pr",0);
         oracleSourceSplitRangeByLhp.getRangeList("public.TEST_P_2").forEach(range -> System.out.println(range.getQuery()));
         // oracleSourceSplitRangeByLhp.getStringLengthMaxDifference("T_NAME", "cs.TTYPE");
 

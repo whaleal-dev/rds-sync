@@ -25,7 +25,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class OracleSourceTask extends AbstractSourceTask {
 
-    private static AtomicInteger atomicInteger = new AtomicInteger();
+
     /**
      * connection
      */
@@ -36,9 +36,9 @@ public class OracleSourceTask extends AbstractSourceTask {
      */
     private List<List<AbstractColumn>> dataList = new ArrayList<>();
 
-    public OracleSourceTask(SourceTaskInfo taskMetadata, String procName, MemoryCache memoryCache, int dataBatchSize) {
-        super(taskMetadata, procName, memoryCache, dataBatchSize);
-        this.connection = OracleConnection.getConnection(sourceDsName);
+    public OracleSourceTask(SourceTaskInfo taskMetadata, String procName, MemoryCache memoryCache, int dataBatchSize, long batchNo) {
+        super(taskMetadata, procName, memoryCache, dataBatchSize,batchNo);
+        this.connection = OracleConnection.getConnection(procNameAndBatchNo);
     }
 
     @Override
@@ -46,7 +46,7 @@ public class OracleSourceTask extends AbstractSourceTask {
         Log.info("启动source任务:" + this.taskMetadata.toString());
         // 读取数据
         getDataFromCollection();
-        SourceTaskPoolManager.setSourceActiveThreadNum(procName, -1);
+        SourceTaskPoolManager.setSourceActiveThreadNum(procNameAndBatchNo, -1);
     }
 
     @Override
@@ -137,7 +137,7 @@ public class OracleSourceTask extends AbstractSourceTask {
         batchDataEntity.setBatchNo(System.currentTimeMillis());
         // 推送数据到缓存区中
         memoryCache.putData(batchDataEntity);
-       // Log.info("sourceNum:" + atomicInteger.addAndGet(batchDataEntity.getDataList().size()));
+        // Log.info("sourceNum:" + atomicInteger.addAndGet(batchDataEntity.getDataList().size()));
         this.dataList = new ArrayList<>();
         this.cache = 0;
     }

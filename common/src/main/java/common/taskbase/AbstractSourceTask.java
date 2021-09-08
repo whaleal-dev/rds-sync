@@ -5,6 +5,7 @@ import common.column.AbstractColumn;
 import common.dataclass.BatchDataEntity;
 import common.photonV.entity.ProgramInfo;
 
+import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,6 +27,9 @@ public abstract class AbstractSourceTask implements Runnable {
      * 程序名
      */
     protected String procName;
+
+    protected long batchNo;
+
     /**
      * 任务配置信息
      */
@@ -43,13 +47,18 @@ public abstract class AbstractSourceTask implements Runnable {
      */
     protected List<List<AbstractColumn>> dataList = new ArrayList<>();
 
+    protected String procNameAndBatchNoAndSourceDsName;
+    protected String procNameAndBatchNo;
 
-    public AbstractSourceTask(SourceTaskInfo taskMetadata, String procName, MemoryCache memoryCache, int dataBatchSize) {
-        this.sourceDsName=taskMetadata.getSourceDsName();
+    public AbstractSourceTask(SourceTaskInfo taskMetadata, String procName, MemoryCache memoryCache, int dataBatchSize,long batchNo) {
+        this.sourceDsName = taskMetadata.getSourceDsName();
         this.procName = procName;
+        this.batchNo = batchNo;
         this.memoryCache = memoryCache;
         this.dataBatchSize = dataBatchSize;
         this.taskMetadata = taskMetadata;
+        this.procNameAndBatchNoAndSourceDsName = procName + batchNo + sourceDsName;
+        this.procNameAndBatchNo = procName + batchNo;
     }
 
     /**

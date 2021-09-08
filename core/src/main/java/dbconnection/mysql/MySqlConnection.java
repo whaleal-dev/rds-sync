@@ -26,8 +26,8 @@ public class MySqlConnection {
     private static Map<String, Connection> connectionMysqlMap = new ConcurrentHashMap<>();
 
 
-    private static synchronized void getBasicDataSource(String dsName, Datasource datasource) {
-        if (jdbcTemplateMysqlMap.containsKey(dsName)) {
+    private static synchronized void getBasicDataSource(String procNameAndBatchNoAndDsName, Datasource datasource) {
+        if (jdbcTemplateMysqlMap.containsKey(procNameAndBatchNoAndDsName)) {
             return;
         }
         try {
@@ -36,8 +36,8 @@ public class MySqlConnection {
             basicDataSource.setUsername(datasource.getUsername());
             basicDataSource.setPassword(datasource.getPassword());
             JdbcTemplate jdbcTemplate = new JdbcTemplate(basicDataSource);
-            jdbcTemplateMysqlMap.put(dsName, jdbcTemplate);
-            connectionMysqlMap.put(dsName, basicDataSource.getConnection());
+            jdbcTemplateMysqlMap.put(procNameAndBatchNoAndDsName, jdbcTemplate);
+            connectionMysqlMap.put(procNameAndBatchNoAndDsName, basicDataSource.getConnection());
         } catch (SQLException exception) {
             Log.error(exception.getMessage());
             exception.printStackTrace();
@@ -47,15 +47,15 @@ public class MySqlConnection {
     /**
      * getJdbcTemplate 获取mysql的connection
      *
-     * @param dsName
+     * @param procNameAndBatchNoAndDsName
      * @return JdbcTemplate
      * @desc 获取mysql的Jdbc
      */
-    public static void createConnection(String dsName, Datasource datasource) {
-        if (!jdbcTemplateMysqlMap.containsKey(dsName)) {
+    public static void createConnection(String procNameAndBatchNoAndDsName, Datasource datasource) {
+        if (!jdbcTemplateMysqlMap.containsKey(procNameAndBatchNoAndDsName)) {
             synchronized (MySqlConnection.class) {
-                if (!jdbcTemplateMysqlMap.containsKey(dsName)) {
-                    getBasicDataSource(dsName, datasource);
+                if (!jdbcTemplateMysqlMap.containsKey(procNameAndBatchNoAndDsName)) {
+                    getBasicDataSource(procNameAndBatchNoAndDsName, datasource);
                 }
             }
         }
@@ -64,41 +64,44 @@ public class MySqlConnection {
     /**
      * getJdbcTemplate 获取mysql的Jdbc
      *
-     * @param dsName
+     * @param procNameAndBatchNoAndDsName
      * @return JdbcTemplate
      * @desc 获取mysql的Jdbc
      */
-    public static JdbcTemplate getJdbcTemplate(String dsName) {
-        return jdbcTemplateMysqlMap.get(dsName);
+    public static JdbcTemplate getJdbcTemplate(String procNameAndBatchNoAndDsName) {
+        return jdbcTemplateMysqlMap.get(procNameAndBatchNoAndDsName);
     }
 
     /**
      * getJdbcTemplate 获取mysql的Jdbc
      *
-     * @param dsName
+     * @param procNameAndBatchNoAndDsName
      * @return JdbcTemplate
      * @desc 获取mysql的Jdbc
      */
-    public static Connection getConnection(String dsName) {
-        return connectionMysqlMap.get(dsName);
+    public static Connection getConnection(String procNameAndBatchNoAndDsName) {
+        return connectionMysqlMap.get(procNameAndBatchNoAndDsName);
     }
 
     /**
      * close 关闭jdbc链接
      *
-     * @param dsName
+     * @param procNameAndBatchNoAndDsName
      * @desc 关闭jdbc链接
      */
-    public static void close(String dsName) {
+    public static void close(String procNameAndBatchNoAndDsName) {
+        if (!connectionMysqlMap.containsKey(procNameAndBatchNoAndDsName)) {
+            return;
+        }
         try {
-            connectionMysqlMap.get(dsName).close();
-            System.out.println(dsName + "数据源关闭");
+            connectionMysqlMap.get(procNameAndBatchNoAndDsName).close();
+            System.out.println(procNameAndBatchNoAndDsName + "数据源关闭");
         } catch (SQLException exception) {
             Log.error(exception.getMessage());
             exception.printStackTrace();
         } finally {
-            connectionMysqlMap.remove(dsName);
-            jdbcTemplateMysqlMap.remove(dsName);
+            connectionMysqlMap.remove(procNameAndBatchNoAndDsName);
+            jdbcTemplateMysqlMap.remove(procNameAndBatchNoAndDsName);
         }
     }
 }

@@ -25,41 +25,44 @@ public class MongoDbConnection {
     /**
      * createMonoDbDataBase 创造mongodb客户端
      *
-     * @param dsName
+     * @param procNameAndBatchNoAndDsName
      * @desc 创造mongodb客户端。dcl检查
      */
-    public static void createMonoDbClient(String dsName, Datasource datasource) {
-        if (mongoClientMap.containsKey(dsName)) {
+    public static void createMonoDbClient(String procNameAndBatchNoAndDsName, Datasource datasource) {
+        if (mongoClientMap.containsKey(procNameAndBatchNoAndDsName)) {
             return;
         }
         MongoClient mongoClient = MongoClients.create(datasource.getUrl());
-        mongoClientMap.put(dsName, mongoClient);
+        mongoClientMap.put(procNameAndBatchNoAndDsName, mongoClient);
     }
 
     /**
      * getMongoClient 获取mongodb客户端
      *
-     * @param dsName
+     * @param procNameAndBatchNoAndDsName
      * @return MongoClient
      * @desc 获取mongodb客户端
      */
-    public static MongoClient getMongoClient(String dsName) {
-        return mongoClientMap.get(dsName);
+    public static MongoClient getMongoClient(String procNameAndBatchNoAndDsName) {
+        return mongoClientMap.get(procNameAndBatchNoAndDsName);
     }
 
     /**
      * close 关闭mongodb客户端
      *
-     * @param dsName
+     * @param procNameAndBatchNoAndDsName
      * @desc 关闭mongodb客户端
      */
-    public static void close(String dsName) {
+    public static void close(String procNameAndBatchNoAndDsName) {
+        if (!mongoClientMap.containsKey(procNameAndBatchNoAndDsName)) {
+            return;
+        }
         try {
-            mongoClientMap.get(dsName).close();
+            mongoClientMap.get(procNameAndBatchNoAndDsName).close();
         } catch (Exception e) {
             Log.error(e.getMessage());
         } finally {
-            mongoClientMap.remove(dsName);
+            mongoClientMap.remove(procNameAndBatchNoAndDsName);
         }
     }
 }

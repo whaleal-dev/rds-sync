@@ -27,9 +27,9 @@ public class MysqlSourceTask extends AbstractSourceTask {
 
     static AtomicInteger atomicInteger = new AtomicInteger();
 
-    public MysqlSourceTask(SourceTaskInfo taskMetadata, String procName, MemoryCache memoryCache, int dataBatchSize) {
-        super(taskMetadata, procName, memoryCache, dataBatchSize);
-        this.connection = MySqlConnection.getConnection(this.taskMetadata.getSourceDsName());
+    public MysqlSourceTask(SourceTaskInfo taskMetadata, String procName, MemoryCache memoryCache, int dataBatchSize,long batchNo) {
+        super(taskMetadata, procName, memoryCache, dataBatchSize,batchNo);
+        this.connection = MySqlConnection.getConnection(procNameAndBatchNoAndSourceDsName);
     }
 
     @Override
@@ -38,7 +38,7 @@ public class MysqlSourceTask extends AbstractSourceTask {
         try {
             getDataFromCollection();
         } finally {
-            SourceTaskPoolManager.setSourceActiveThreadNum(procName, -1);
+            SourceTaskPoolManager.setSourceActiveThreadNum(procNameAndBatchNo, -1);
         }
     }
 

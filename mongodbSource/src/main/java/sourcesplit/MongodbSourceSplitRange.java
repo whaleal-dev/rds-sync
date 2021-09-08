@@ -27,9 +27,10 @@ public class MongodbSourceSplitRange {
      */
     private String sourceDsName;
 
-    public MongodbSourceSplitRange(String sourceDsName) {
+    public MongodbSourceSplitRange(String sourceDsName, String procName, long batchNo) {
         this.sourceDsName = sourceDsName;
-        this.mongoClient = MongoDbConnection.getMongoClient(sourceDsName);
+        String procNameAndBatchNoAndSourceDsName = procName + batchNo+sourceDsName;
+        this.mongoClient = MongoDbConnection.getMongoClient(procNameAndBatchNoAndSourceDsName);
     }
 
     /**
@@ -98,9 +99,9 @@ public class MongodbSourceSplitRange {
     /**
      * splitRange 切分数据，每分数据最大长度为50w
      *
-     * @param dbTableName 库表名
-     * @param rangeOfTable   表范围range
-     * @param type           数据类型
+     * @param dbTableName  库表名
+     * @param rangeOfTable 表范围range
+     * @param type         数据类型
      * @return Range  某个区间的range
      * @desc 切分数据，每分数据最大长度为50w
      */

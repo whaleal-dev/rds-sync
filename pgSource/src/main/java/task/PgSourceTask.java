@@ -33,11 +33,13 @@ public class PgSourceTask extends AbstractSourceTask {
      * connection
      */
     private Connection connection;
+    private String procNameAndBatchNo;
 
-    public PgSourceTask(SourceTaskInfo taskMetadata, String procName, MemoryCache memoryCache, int dataBatchSize) {
+    public PgSourceTask(SourceTaskInfo taskMetadata, String procName, MemoryCache memoryCache, int dataBatchSize, long batchNo) {
         super(taskMetadata, procName, memoryCache, dataBatchSize);
-        this.jdbcTemplate = PgServerConnection.getJdbcTemplate(this.taskMetadata.getSourceDsName());
-        this.connection = PgServerConnection.getConnection(this.taskMetadata.getSourceDsName());
+        procNameAndBatchNo = procName + batchNo;
+        this.jdbcTemplate = PgServerConnection.getJdbcTemplate(procNameAndBatchNo);
+        this.connection = PgServerConnection.getConnection(procNameAndBatchNo);
     }
 
 
@@ -144,7 +146,7 @@ public class PgSourceTask extends AbstractSourceTask {
         batchDataEntity.setBatchNo(System.currentTimeMillis());
         // 推送数据到缓存区中
         memoryCache.putData(batchDataEntity);
-       // System.out.println("sourceNum:" + atomicInteger.addAndGet(batchDataEntity.getDataList().size()));
+        // System.out.println("sourceNum:" + atomicInteger.addAndGet(batchDataEntity.getDataList().size()));
         this.dataList = new ArrayList<>();
         this.cache = 0;
     }

@@ -52,12 +52,13 @@ public class MysqlSourceSplitRange {
     public static List<String> getDbTables(ProgramInfo programInfo) throws SQLException {
         //获取连接
 //        MySqlConnection.createConnection(programInfo.getSourceDsName(), DataSourceUtil.getDataSourceByDsName(programInfo.getSourceDsName()));
-        Connection conn = MySqlConnection.getConnection(programInfo.getSourceDsName());
+        String procNameAndBatchNoAndSourceDsName = programInfo.getProName() + programInfo.getBatchNO()+programInfo.getSourceDsName();
+        Connection conn = MySqlConnection.getConnection(procNameAndBatchNoAndSourceDsName);
         DatabaseMetaData metaData = conn.getMetaData();
         String[] types = {"TABLE"};
         ResultSet rs = metaData.getTables(null, null, "%", types);
         List<String> dbTables = new ArrayList<>();
-        while(rs.next()){
+        while (rs.next()) {
             //1 TABLE_CAT String => table catalog (may be null)
             //2 TABLE_SCHEM String => table schema (may be null)
             //3 TABLE_NAME String => table name

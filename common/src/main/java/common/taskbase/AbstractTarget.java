@@ -19,10 +19,16 @@ public abstract class AbstractTarget {
      */
     protected long batchNo;
 
+    protected String procNameAndBatchNo;
+    protected String procNameAndBatchNoAndTargetDsName;
+
     public AbstractTarget(ProgramInfo programInfo, MemoryCache memoryCache, String procName) {
         this.programInfo = programInfo;
         this.memoryCache = memoryCache;
         this.procName = procName;
+        this.batchNo = programInfo.getBatchNO();
+        this.procNameAndBatchNo = procName + batchNo;
+        this.procNameAndBatchNoAndTargetDsName = procName + batchNo + programInfo.getTargetDsName();
     }
 
 

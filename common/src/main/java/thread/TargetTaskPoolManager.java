@@ -14,41 +14,41 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class TargetTaskPoolManager extends ThreadPoolManager {
     /**
      * 所有target数据源的线程池
-     * k为 程序名
+     * k为 程序名+批次号
      * v为线程池对象
      */
     private static Map<String, TargetTaskPoolManager> targetThreadPoolManager = new ConcurrentHashMap<>();
     /**
      * 某target的线程池使用情况
-     * k为 程序名
+     * k为 程序名+批次号
      * v活跃的线程数
      */
     private static Map<String, AtomicInteger> targetActiveThreadNum = new ConcurrentHashMap<>();
 
-    public TargetTaskPoolManager(String procName, int corePoolSize, int maximumPoolSize) {
-        super(procName, corePoolSize, maximumPoolSize);
-        targetActiveThreadNum.put(procName, new AtomicInteger(0));
-        targetThreadPoolManager.put(procName, this);
+    public TargetTaskPoolManager(String procNameAndBatchNo, int corePoolSize, int maximumPoolSize) {
+        super(procNameAndBatchNo, corePoolSize, maximumPoolSize);
+        targetActiveThreadNum.put(procNameAndBatchNo, new AtomicInteger(0));
+        targetThreadPoolManager.put(procNameAndBatchNo, this);
     }
 
     /**
      * 删除对象信息
      */
-    public static void deleteSTargetTaskPoolManager(String procName) {
-        targetThreadPoolManager.remove(procName);
-        targetActiveThreadNum.remove(procName);
+    public static void deleteSTargetTaskPoolManager(String procNameAndBatchNo) {
+        targetThreadPoolManager.remove(procNameAndBatchNo);
+        targetActiveThreadNum.remove(procNameAndBatchNo);
     }
 
     /**
      * 操作某线程池使用数的个数
      */
-    public static int setTargetActiveThreadNum(String procName, int num) {
+    public static int setTargetActiveThreadNum(String procNameAndBatchNo, int num) {
         if (num > 0) {
-            targetActiveThreadNum.get(procName).incrementAndGet();
+            targetActiveThreadNum.get(procNameAndBatchNo).incrementAndGet();
         } else if (num < 0) {
-            targetActiveThreadNum.get(procName).decrementAndGet();
+            targetActiveThreadNum.get(procNameAndBatchNo).decrementAndGet();
         }
-        return targetActiveThreadNum.get(procName).get();
+        return targetActiveThreadNum.get(procNameAndBatchNo).get();
     }
 
 
@@ -58,9 +58,9 @@ public class TargetTaskPoolManager extends ThreadPoolManager {
      * @param runnable
      * @desc 提交任务
      */
-    public static String submit(String procName, Runnable runnable) {
+    public static String submit(String procNameAndBatchNo, Runnable runnable) {
         try {
-            targetThreadPoolManager.get(procName).executorService.submit(runnable);
+            targetThreadPoolManager.get(procNameAndBatchNo).executorService.submit(runnable);
         } catch (Exception e) {
             e.printStackTrace();
             return "启动失败:" + e.getMessage();
@@ -71,16 +71,16 @@ public class TargetTaskPoolManager extends ThreadPoolManager {
     /**
      * 销毁线程池
      *
-     * @param procName
+     * @param procNameAndBatchNo
      * @desc 销毁线程池
      */
-    public static void destroy(String procName) {
+    public static void destroy(String procNameAndBatchNo) {
         try {
-            targetThreadPoolManager.get(procName).executorService.shutdownNow();
+            targetThreadPoolManager.get(procNameAndBatchNo).executorService.shutdownNow();
         } catch (Exception e) {
             Log.error(e.getMessage());
         }
-        deleteSTargetTaskPoolManager(procName);
+        deleteSTargetTaskPoolManager(procNameAndBatchNo);
     }
 }
 

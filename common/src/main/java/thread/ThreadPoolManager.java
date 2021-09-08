@@ -14,7 +14,7 @@ public class ThreadPoolManager {
     /**
      * 程序名称
      */
-    protected String procName;
+    protected String procNameAndBatchNo;
     /**
      * 核心线程数
      */
@@ -32,8 +32,8 @@ public class ThreadPoolManager {
      */
     protected ExecutorService executorService;
 
-    public ThreadPoolManager(String procName, int corePoolSize, int maximumPoolSize) {
-        this.procName = procName;
+    public ThreadPoolManager(String procNameAndBatchNo, int corePoolSize, int maximumPoolSize) {
+        this.procNameAndBatchNo = procNameAndBatchNo;
         this.corePoolSize = corePoolSize;
         this.maximumPoolSize = maximumPoolSize;
         executorService = new ThreadPoolExecutor(corePoolSize, maximumPoolSize, 0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>(blockSize), new ThreadPoolExecutor.CallerRunsPolicy());

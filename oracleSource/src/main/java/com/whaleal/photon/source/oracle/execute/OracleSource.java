@@ -37,22 +37,22 @@ public class OracleSource extends SourceMetadata {
 
     public OracleSource(ProgramInfo programInfo, MemoryCache memoryCache) {
         super(programInfo, memoryCache);
-        procSourceTask.put(proName, taskMetadataQueue);
-        jdbcTemplate = OracleConnection.getJdbcTemplate(sourceName);
+        procSourceTask.put(procNameAndBatchNo, taskMetadataQueue);
+        jdbcTemplate = OracleConnection.getJdbcTemplate(procNameAndBatchNoAndSourceDsName);
     }
 
     @Override
     public void createTask() {
         // 获取数据源的全部库表
-        getAllDbCollections(sourceName);
+        getAllDbCollections(sourceDsName);
         // 启动获取提交Task任务的线程
         submitSourceTask();
         // 开始遍历抽取该数据源的所有库表
-        startFromSource(sourceName, false);
+        startFromSource(sourceDsName, false);
     }
 
     @Override
-    public void getAllDbCollections(String sourceName) {
+    public void getAllDbCollections(String sourceDsName) {
         String sql = "select * from USER_TABLES";
         List<Map<String, Object>> dbTableMapList = jdbcTemplate.queryForList(sql);
         for (Map<String, Object> dbTableNameMap : dbTableMapList) {
@@ -63,30 +63,30 @@ public class OracleSource extends SourceMetadata {
                 dbTables.put(dbTable, dbTable);
             }
         }
-        Log.info("sourceName:" + sourceName + ",全量同步的表列表:" + dbTables);
+        Log.info("sourceName:" + sourceDsName + ",全量同步的表列表:" + dbTables);
     }
 
     @Override
-    public void startFromSource(String sourceName, boolean isParallel) {
+    public void startFromSource(String sourceDsName, boolean isParallel) {
         Iterator<Map.Entry<String, String>> mapIterator = dbTables.entrySet().iterator();
         while (mapIterator.hasNext()) {
             Map.Entry<String, String> next = mapIterator.next();
-            createSourceEntity(sourceName, next.getValue());
+            createSourceEntity(sourceDsName, next.getValue());
             dbTables.remove(next.getKey());
         }
         isGetAllDbTable = true;
     }
 
     @Override
-    public void createSourceEntity(String sourceName, String dbTableName) {
-        OracleSourceSplitRange sourceSplitRange = new OracleSourceSplitRange(sourceName);
+    public void createSourceEntity(String sourceDsName, String dbTableName) {
+        OracleSourceSplitRange sourceSplitRange = new OracleSourceSplitRange(sourceDsName,proName,batchNo);
         List<Range> rangeList = sourceSplitRange.getRangeList(dbTableName);
         for (Range range : rangeList) {
             SourceTaskInfo sourceTaskInfo = new SourceTaskInfo();
-            sourceTaskInfo.setSourceDsName(sourceName);
+            sourceTaskInfo.setSourceDsName(sourceDsName);
             sourceTaskInfo.setDbTableName(dbTableName);
             sourceTaskInfo.setRange(range);
-            procSourceTask.get(proName).add(sourceTaskInfo);
+            procSourceTask.get(procNameAndBatchNo).add(sourceTaskInfo);
         }
     }
 
@@ -95,15 +95,15 @@ public class OracleSource extends SourceMetadata {
         Runnable runnable = () -> {
             while (true) {
                 try {
-                    if (SourceTaskPoolManager.setSourceActiveThreadNum(proName, 0) > 10) {
+                    if (SourceTaskPoolManager.setSourceActiveThreadNum(procNameAndBatchNo, 0) > 10) {
                         TimeUnit.SECONDS.sleep(10);
                     }
                     SourceTaskInfo taskMetadata = taskMetadataQueue.poll();
                     if (taskMetadata != null) {
-                        SourceTaskPoolManager.setSourceActiveThreadNum(proName, 1);
-                        SourceTaskPoolManager.submit(proName, new OracleSourceTask(taskMetadata, proName, memoryCache, 128));
+                        SourceTaskPoolManager.setSourceActiveThreadNum(procNameAndBatchNo, 1);
+                        SourceTaskPoolManager.submit(procNameAndBatchNo, new OracleSourceTask(taskMetadata, proName, memoryCache, 128,batchNo));
                     } else {
-                        boolean isOver = taskMetadataQueue.size() == 0 && SourceTaskPoolManager.setSourceActiveThreadNum(proName, 0) == 0 && isGetAllDbTable && dbTables.size() == 0 && SysPoolManager.setSysActiveThreadNum(proName, 0) == 0;
+                        boolean isOver = taskMetadataQueue.size() == 0 && SourceTaskPoolManager.setSourceActiveThreadNum(procNameAndBatchNo, 0) == 0 && isGetAllDbTable && dbTables.size() == 0 && SysPoolManager.setSysActiveThreadNum(procNameAndBatchNo, 0) == 0;
                         if (isOver) {
                             break;
                         }
@@ -115,6 +115,6 @@ public class OracleSource extends SourceMetadata {
                 }
             }
         };
-        SysPoolManager.submit(proName, runnable);
+        SysPoolManager.submit(procNameAndBatchNo, runnable);
     }
 }

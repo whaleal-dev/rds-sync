@@ -29,29 +29,61 @@ import util.StringUtil;
  */
 public class TestMainLhp {
     public static void main(String[] args) {
-        for (int i = 10; i < 11; i++) {
-            try {
-                String procName = "proc" + i;
-                System.out.println(procName);
-                exe(procName);
-            } catch (Exception e) {
-                Log.error(e.getMessage());
-            }
+//        for (int i = 4; i < 11; i++) {
+//            try {
+//                String procName = "proc" + i;
+//                System.out.println(procName);
+//                exe(procName, 0L);
+//            } catch (Exception e) {
+//                e.printStackTrace();
+//                Log.error(e.getMessage());
+//            }
+//        }
+//        for (int i = 0; i < 11; i++) {
+//            try {
+//
+//
+//            } catch (Exception e) {
+//                Log.error(e.getMessage());
+//            }
+//        }
+        String procName="proc1";
+        try {
+            exe(procName, 0L);
+        } catch (Exception e) {
+
         }
+
+
+//        try {
+//            exe("proc5", 0L);
+//            exe("proc5", 1L);
+//            exe("proc5", 3L);
+//            exe("proc5", 4L);
+//            exe("proc5", 0L);
+//            exe("proc5", 1L);
+//            exe("proc5", 3L);
+//            exe("proc5", 4L);
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//            Log.error(e.getMessage());
+//        }
     }
 
 
-    public static void exe(String procName) throws InterruptedException {
+    public static void exe(String procName, long batchNo) throws InterruptedException {
+        String procNameAndBatchNo = procName + batchNo;
         //创建pro
         ProgramInfo programInfo = ProgramInfoUtil.getProgramInfo(procName);
         if (programInfo == null || programInfo.getProName().length() == 0) {
             return;
         }
+        programInfo.setBatchNO(batchNo);
         //获取数据源对象
         Datasource dataSourceDb = DataSourceUtil.getDataSourceByDsName(programInfo.getSourceDsName());
         Datasource dataTargetDb = DataSourceUtil.getDataSourceByDsName(programInfo.getTargetDsName());
         //创建数据源链接
-        createDataSourceConnection(dataSourceDb, dataTargetDb);
+        createDataSourceConnection(procNameAndBatchNo, dataSourceDb, dataTargetDb);
         //创建触发对象实例
         TaskTrigger taskTrigger = generateTaskTriggerInfo(programInfo.getTaskName(), programInfo.getProName());
         TriggerUtil.insertTriggerInfo(taskTrigger);
@@ -80,17 +112,17 @@ public class TestMainLhp {
         }
     }
 
-    public static void createDataSourceConnection(Datasource... dataSourceList) {
+    public static void createDataSourceConnection(String procNameAndBatchNo, Datasource... dataSourceList) {
         for (Datasource dataSourceDb : dataSourceList) {
             try {
                 if (dataSourceDb.getType().equalsIgnoreCase(DbTypeFlag.MONGODB)) {
-                    MongoDbConnection.createMonoDbClient(dataSourceDb.getName(), dataSourceDb);
+                    MongoDbConnection.createMonoDbClient(procNameAndBatchNo, dataSourceDb);
                 } else if (dataSourceDb.getType().equalsIgnoreCase(DbTypeFlag.MYSQL)) {
-                    MySqlConnection.createConnection(dataSourceDb.getName(), dataSourceDb);
+                    MySqlConnection.createConnection(procNameAndBatchNo, dataSourceDb);
                 } else if (dataSourceDb.getType().equalsIgnoreCase(DbTypeFlag.PG)) {
-                    PgServerConnection.createConnection(dataSourceDb.getName(), dataSourceDb);
+                    PgServerConnection.createConnection(procNameAndBatchNo, dataSourceDb);
                 } else if (dataSourceDb.getType().equalsIgnoreCase(DbTypeFlag.ORACLE)) {
-                    OracleConnection.createConnection(dataSourceDb.getName(), dataSourceDb);
+                    OracleConnection.createConnection(procNameAndBatchNo, dataSourceDb);
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -100,23 +132,25 @@ public class TestMainLhp {
     }
 
     public static void createThreadPoolManager(ProgramInfo programInfo) {
-        SourceTaskPoolManager sourceTaskPoolManager = new SourceTaskPoolManager(programInfo.getProName(), programInfo.getSourceThreadNum(), programInfo.getSourceThreadNum());
+        String procNameAndBatchNo = programInfo.getProName() + programInfo.getBatchNO();
+        SourceTaskPoolManager sourceTaskPoolManager = new SourceTaskPoolManager(procNameAndBatchNo, programInfo.getSourceThreadNum(), programInfo.getSourceThreadNum());
 
-        SysPoolManager sysPoolManager = new SysPoolManager(programInfo.getProName(), 2, 3);
+        SysPoolManager sysPoolManager = new SysPoolManager(procNameAndBatchNo, 2, 3);
 
-        TargetTaskPoolManager targetTaskPoolManager = new TargetTaskPoolManager(programInfo.getProName(), programInfo.getTargetThreadNum(), programInfo.getTargetThreadNum());
+        TargetTaskPoolManager targetTaskPoolManager = new TargetTaskPoolManager(procNameAndBatchNo, programInfo.getTargetThreadNum(), programInfo.getTargetThreadNum());
 
     }
 
     public static void getProExeInfo(ProgramInfo programInfo, SourceMetadata sourceMetadata, MemoryCache memoryCache) {
+        String procNameAndBatchNo = programInfo.getProName() + programInfo.getBatchNO();
         while (true) {
             try {
                 Thread.sleep(10000);
-                int sourceThread = SourceTaskPoolManager.setSourceActiveThreadNum(programInfo.getProName(), 0);
+                int sourceThread = SourceTaskPoolManager.setSourceActiveThreadNum(procNameAndBatchNo, 0);
                 boolean getAllDbTable = sourceMetadata.isGetAllDbTable();
                 int sourceTaskQueueSize = sourceMetadata.getTaskMetadataQueueSize();
-                int setSysActiveThreadNum = SysPoolManager.setSysActiveThreadNum(programInfo.getProName(), 0);
-                int targetActiveThreadNum = TargetTaskPoolManager.setTargetActiveThreadNum(programInfo.getProName(), 0);
+                int setSysActiveThreadNum = SysPoolManager.setSysActiveThreadNum(procNameAndBatchNo, 0);
+                int targetActiveThreadNum = TargetTaskPoolManager.setTargetActiveThreadNum(procNameAndBatchNo, 0);
                 int allDataCacheNum = memoryCache.getAllDataCacheNum();
                 Log.info(setSysActiveThreadNum + "");
                 Log.info("sum:" + (sourceThread + sourceTaskQueueSize + allDataCacheNum + setSysActiveThreadNum));
@@ -128,17 +162,24 @@ public class TestMainLhp {
                 Log.info("getAllDbTable:" + getAllDbTable);
                 if ((sourceThread + sourceTaskQueueSize + allDataCacheNum + setSysActiveThreadNum + targetActiveThreadNum) == 0 && getAllDbTable) {
                     Thread.sleep(10000);
-                    TargetTaskPoolManager.destroy(programInfo.getProName());
-                    SourceTaskPoolManager.destroy(programInfo.getProName());
-                    SysPoolManager.destroy(programInfo.getProName());
+                    TargetTaskPoolManager.destroy(procNameAndBatchNo);
+                    SourceTaskPoolManager.destroy(procNameAndBatchNo);
+                    SysPoolManager.destroy(procNameAndBatchNo);
 
-                    AbstractTargetTask.setIsStopFlagOfTarget(programInfo.getProName(), false);
+
+                    AbstractTargetTask.setIsStopFlagOfTarget(procNameAndBatchNo, false);
                     memoryCache.gcMemoryCache();
 
-                    Log.info("procName:" + programInfo.getProName() + "关闭成功");
+
+                    PgServerConnection.close(procNameAndBatchNo);
+                    MySqlConnection.close(procNameAndBatchNo);
+                    OracleConnection.close(procNameAndBatchNo);
+                    MongoDbConnection.close(procNameAndBatchNo);
+
+                    Log.error("procName:" + procNameAndBatchNo + "关闭成功");
                     break;
                 } else if ((sourceThread + sourceTaskQueueSize + sourceTaskQueueSize + allDataCacheNum + setSysActiveThreadNum) == 0 && getAllDbTable) {
-                    AbstractTargetTask.setIsStopFlagOfTarget(programInfo.getProName(), true);
+                    AbstractTargetTask.setIsStopFlagOfTarget(procNameAndBatchNo, true);
                 }
             } catch (InterruptedException e) {
                 e.printStackTrace();
@@ -263,6 +304,7 @@ public class TestMainLhp {
         mysqlSource.createTask();
         getProExeInfo(programInfo, mysqlSource, memoryCache);
     }
+
     public static void testOracleToMysql(ProgramInfo programInfo, MemoryCache memoryCache, TaskTrigger taskTrigger) {
 
 

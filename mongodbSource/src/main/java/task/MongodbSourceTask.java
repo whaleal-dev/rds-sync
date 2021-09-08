@@ -39,9 +39,10 @@ public class MongodbSourceTask extends AbstractSourceTask {
     private List<List<AbstractColumn>> dataList = new ArrayList<>();
 
 
-    public MongodbSourceTask(SourceTaskInfo taskMetadata, String procName, MemoryCache memoryCache, int dataBatchSize) {
+    public MongodbSourceTask(SourceTaskInfo taskMetadata, String procName, MemoryCache memoryCache, int dataBatchSize,long batchNo) {
         super(taskMetadata, procName, memoryCache, dataBatchSize);
-        this.mongoClient = MongoDbConnection.getMongoClient(this.taskMetadata.getSourceDsName());
+        String proNameAndBatchNo=procName+batchNo;
+        this.mongoClient = MongoDbConnection.getMongoClient(proNameAndBatchNo);
     }
 
 

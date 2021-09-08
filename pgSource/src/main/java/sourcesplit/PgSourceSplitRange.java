@@ -26,9 +26,10 @@ public class PgSourceSplitRange implements SplitRangeOfRdbInterface {
      */
     private String sourceDsName;
 
-    public PgSourceSplitRange(String sourceDsName) {
+    public PgSourceSplitRange(String sourceDsName, String procName, long batchNo) {
         this.sourceDsName = sourceDsName;
-        this.jdbcTemplate = PgServerConnection.getJdbcTemplate(sourceDsName);
+        String procNameAndBatchNoAndSourceDsName = procName + batchNo + sourceDsName;
+        this.jdbcTemplate = PgServerConnection.getJdbcTemplate(procNameAndBatchNoAndSourceDsName);
     }
 
     @Override
@@ -208,7 +209,7 @@ public class PgSourceSplitRange implements SplitRangeOfRdbInterface {
         Datasource pg = DataSourceUtil.getDataSourceByDsName("pg");
         PgServerConnection.createConnection(pg.getName(), pg);
         Connection pgConnection = PgServerConnection.getConnection("pg");
-        PgSourceSplitRange pgSourceSplitRange = new PgSourceSplitRange("pg");
+        PgSourceSplitRange pgSourceSplitRange = new PgSourceSplitRange("pg", "", 0);
         pgSourceSplitRange.getRangeList("public.primary").forEach(range -> System.out.println(range.getQuery()));
     }
 }

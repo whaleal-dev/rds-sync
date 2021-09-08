@@ -19,11 +19,15 @@ public class ProgramInfo {
     /**
      * 任务名称
      */
-    protected String taskName;
+    private String taskName;
+    /**
+     * 批次号
+     */
+    private long batchNO;
     /**
      * 程序名称
      */
-    protected String proName;
+    private String proName;
     /**
      * 源端数据源名称
      */
@@ -31,7 +35,7 @@ public class ProgramInfo {
     /**
      * 目标数据源名称
      */
-    protected String targetDsName;
+    private String targetDsName;
     /**
      * 同步模式
      */

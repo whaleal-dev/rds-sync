@@ -17,11 +17,13 @@ public class MongodbTarget extends AbstractTarget {
     public MongodbTarget(ProgramInfo programInfo, MemoryCache memoryCache, String procName) {
         super(programInfo, memoryCache, procName);
     }
+
     @Override
     public void startToTarget() {
+
         for (int i = 0; i < programInfo.getTargetThreadNum(); i++) {
-            TargetTaskPoolManager.setTargetActiveThreadNum(procName, 1);
-            TargetTaskPoolManager.submit(procName, new MongodbTargetTask(programInfo, memoryCache));
+            TargetTaskPoolManager.setTargetActiveThreadNum(procNameAndBatchNo, 1);
+            TargetTaskPoolManager.submit(procNameAndBatchNo, new MongodbTargetTask(programInfo, memoryCache));
         }
     }
 

@@ -57,7 +57,7 @@ public class MysqlTargetTask extends AbstractTargetTask {
 
     public MysqlTargetTask(ProgramInfo programInfo, MemoryCache memoryCache) {
         super(programInfo, memoryCache);
-        this.connection = MySqlConnection.getConnection(this.targetDsName);
+        this.connection = MySqlConnection.getConnection(procNameAndBatchNoAndTargetDsName);
 
     }
 
@@ -66,8 +66,10 @@ public class MysqlTargetTask extends AbstractTargetTask {
         Log.info("启动target任务:" + this.targetDsName);
         try {
             applyData();
+        } catch (Exception e) {
+            Log.error(e.getMessage());
         } finally {
-            TargetTaskPoolManager.setTargetActiveThreadNum(proName, -1);
+            TargetTaskPoolManager.setTargetActiveThreadNum(procNameAndBatchNo, -1);
         }
     }
 
@@ -81,7 +83,7 @@ public class MysqlTargetTask extends AbstractTargetTask {
     public void applyData() {
         while (true) {
             try {
-                if (AbstractTargetTask.getIsStopFlagOfTarget(proName)) {
+                if (AbstractTargetTask.getIsStopFlagOfTarget(procNameAndBatchNo)) {
                     break;
                 }
                 BatchDataEntity batchDataEntity = memoryCache.getData();
@@ -90,7 +92,7 @@ public class MysqlTargetTask extends AbstractTargetTask {
                     // 当前任务拉取的mongoNamespace
                     this.dbTableName = batchDataEntity.getDbTableName();
                     if (!dbTableSet.contains(batchDataEntity.getDbTableName().toUpperCase())) {
-                        createTableByCommonDataEntity(batchDataEntity.getDbTableName(), batchDataEntity.getDataList().get(0), targetDsName);
+                        createTableByCommonDataEntity(batchDataEntity.getDbTableName(), batchDataEntity.getDataList().get(0), targetDsName, procNameAndBatchNoAndTargetDsName);
                     }
                     parseColumnDataToTargetData(batchDataEntity);
                     bulkExecute(dbTableName, -1);
@@ -108,7 +110,7 @@ public class MysqlTargetTask extends AbstractTargetTask {
         List<List<AbstractColumn>> dataList = batchDataEntity.getDataList();
 
         for (List<AbstractColumn> columnList : dataList) {
-            checkDataIsCorrect(columnList, targetDsName, dbTableName);
+            checkDataIsCorrect(columnList, targetDsName, dbTableName, procNameAndBatchNoAndTargetDsName);
             String insertSql = "insert into " + batchDataEntity.getDbTableName();
             String columns = "(";
             String values = "values(";
@@ -130,11 +132,9 @@ public class MysqlTargetTask extends AbstractTargetTask {
         }
     }
 
-    static AtomicInteger atomicInteger = new AtomicInteger();
 
     @Override
     public void bulkExecute(String dbTable, long batchNo) {
-        //  System.out.println("targetNum:" + atomicInteger.addAndGet(sqlList.size()));
         try {
             Statement statement = connection.createStatement();
             connection.setAutoCommit(false);
@@ -170,12 +170,12 @@ public class MysqlTargetTask extends AbstractTargetTask {
      * @param dbTable
      * @desc 获取表结构
      */
-    public static synchronized int getTableInfoByTableName(String dbTable, String targetDsName) {
+    public static synchronized int getTableInfoByTableName(String dbTable, String targetDsName, String procNameAndBatchNoAndTargetDsName) {
         String[] array = dbTable.split("\\.", 2);
         String dbName = array[0];
         String tableName = array[1];
         String sql = "select *  from information_schema.COLUMNS t where t.TABLE_SCHEMA ='" + dbName + "' and t.TABLE_NAME  ='" + tableName + "' ";
-        List<Map<String, Object>> mysqlColumnMap = MySqlConnection.getJdbcTemplate(targetDsName).queryForList(sql);
+        List<Map<String, Object>> mysqlColumnMap = MySqlConnection.getJdbcTemplate(procNameAndBatchNoAndTargetDsName).queryForList(sql);
         if (mysqlColumnMap.size() == 0 || dbTableSet.contains(dbTable.toUpperCase())) {
             return 0;
         }
@@ -204,7 +204,7 @@ public class MysqlTargetTask extends AbstractTargetTask {
     }
 
 
-    public synchronized static void createTableByCommonDataEntity(String dbTable, List<AbstractColumn> columnDataList, String targetDsName) {
+    public synchronized static void createTableByCommonDataEntity(String dbTable, List<AbstractColumn> columnDataList, String targetDsName, String procNameAndBatchNoAndTargetDsName) {
         if (dbTableSet.contains(dbTable.toUpperCase())) {
             return;
         }
@@ -213,12 +213,12 @@ public class MysqlTargetTask extends AbstractTargetTask {
         String tableName = array[1];
         String sql = "select count(*)  from information_schema.TABLES t where t.TABLE_SCHEMA ='" + dbName + "' and t.TABLE_NAME  ='" + tableName + "' ";
         // 查询源数据源中是否已有该表
-        int count = MySqlConnection.getJdbcTemplate(targetDsName).queryForObject(sql, Integer.class);
+        int count = MySqlConnection.getJdbcTemplate(procNameAndBatchNoAndTargetDsName).queryForObject(sql, Integer.class);
         if (count == 1) {
-            getTableInfoByTableName(dbTable, targetDsName);
+            getTableInfoByTableName(dbTable, targetDsName, procNameAndBatchNoAndTargetDsName);
             return;
         }
-        MySqlConnection.getJdbcTemplate(targetDsName).execute("CREATE DATABASE IF NOT EXISTS " + dbName);
+        MySqlConnection.getJdbcTemplate(procNameAndBatchNoAndTargetDsName).execute("CREATE DATABASE IF NOT EXISTS " + dbName);
         StringBuilder createSql = new StringBuilder("create table if not exists " + dbName + "." + tableName + " ( ");
         for (AbstractColumn columnValue : columnDataList) {
             if (columnValue.getData() != null) {
@@ -230,7 +230,7 @@ public class MysqlTargetTask extends AbstractTargetTask {
         createSql.deleteCharAt(createSql.length() - 1);
         createSql.append(" ) ");
         MySqlConnection.getJdbcTemplate(targetDsName).execute(createSql.toString());
-        getTableInfoByTableName(dbTable, targetDsName);
+        getTableInfoByTableName(dbTable, targetDsName, procNameAndBatchNoAndTargetDsName);
         Log.info("dbTableName:" + dbTable + ",createSql: " + createSql);
     }
 
@@ -241,7 +241,7 @@ public class MysqlTargetTask extends AbstractTargetTask {
      * @param dsName
      * @desc 检查表信息中是否和document字段匹配
      */
-    public static void checkDataIsCorrect(List<AbstractColumn> columnDataList, String dsName, String dbTable) {
+    public static void checkDataIsCorrect(List<AbstractColumn> columnDataList, String dsName, String dbTable, String procNameAndBatchNoAndTargetDsName) {
         try {
             for (AbstractColumn columnValue : columnDataList) {
                 if (columnValue.getData() == null) {
@@ -249,8 +249,8 @@ public class MysqlTargetTask extends AbstractTargetTask {
                 }
                 String columnName = columnValue.getColumnName();
                 if (columnTypeMap.containsKey((dsName + ":" + dbTable + ":" + columnName).toUpperCase())) {
-                   // detectionType(dbTable, columnName, columnValue, dsName);
-                    detectionLength(dbTable, columnName, columnValue, dsName);
+                    detectionType(dbTable, columnName, columnValue, dsName, procNameAndBatchNoAndTargetDsName);
+                    detectionLength(dbTable, columnName, columnValue, dsName, procNameAndBatchNoAndTargetDsName);
                 } else {
                     //修改表结构增加字段
                     String addColumnSql = "alter table " + dbTable + " add column ";
@@ -259,7 +259,7 @@ public class MysqlTargetTask extends AbstractTargetTask {
                     synchronized (MysqlTargetTask.class) {
                         // dcl
                         if (!columnTypeMap.containsKey((dsName + ":" + dbTable + ":" + columnName).toUpperCase())) {
-                            MySqlConnection.getJdbcTemplate(dsName).execute(addColumnSql);
+                            MySqlConnection.getJdbcTemplate(procNameAndBatchNoAndTargetDsName).execute(addColumnSql);
                             Log.info("addColumnSql:" + addColumnSql);
                             columnTypeMap.put((dsName + ":" + dbTable + ":" + columnName).toUpperCase(), columnType);
                         }
@@ -283,7 +283,7 @@ public class MysqlTargetTask extends AbstractTargetTask {
      * @param dsName
      * @desc 探测类型长度是否正确。此代码需要大幅度优化
      */
-    public static void detectionLength(String dbTableName, String columnName, AbstractColumn columnValue, String dsName) {
+    public static void detectionLength(String dbTableName, String columnName, AbstractColumn columnValue, String dsName, String procNameAndBatchNoAndTargetDsName) {
         ColumnType columnType = columnTypeMap.get((dsName + ":" + dbTableName + ":" + columnName).toUpperCase());
         boolean isAlter = ParseTypeFromColumnType.isModifyTypeOrLength(columnValue, columnType);
         if (isAlter) {
@@ -292,7 +292,7 @@ public class MysqlTargetTask extends AbstractTargetTask {
                 if (ParseTypeFromColumnType.isModifyTypeOrLength(columnValue, columnType)) {
                     ColumnType columnTypeTemp = ParseTypeFromColumnType.parseType(columnValue);
                     String alterSql = "alter table " + dbTableName + " modify column" + columnTypeTemp.toString() + " ";
-                    MySqlConnection.getJdbcTemplate(dsName).execute(alterSql);
+                    MySqlConnection.getJdbcTemplate(procNameAndBatchNoAndTargetDsName).execute(alterSql);
                     columnTypeMap.put((dsName + ":" + dbTableName + ":" + columnName).toUpperCase(), columnTypeTemp);
                     Log.info(columnType.getLength() + "." + columnType.getPrecision() + "    =   " + columnValue.getColumnName() + "    =   " + columnValue.getData() + "    =   " + alterSql);
                     Log.info(columnTypeTemp.getLength() + "." + columnTypeTemp.getPrecision() + "    =   " + columnTypeTemp.getColumnName() + "    =   " + columnTypeTemp);
@@ -302,8 +302,7 @@ public class MysqlTargetTask extends AbstractTargetTask {
         }
     }
 
-
-    public static void detectionType(String dbTableName, String columnName, AbstractColumn columnValue, String dsName) {
+    public static void detectionType(String dbTableName, String columnName, AbstractColumn columnValue, String dsName, String procNameAndBatchNoAndTargetDsName) {
         ColumnType columnType = columnTypeMap.get((dsName + ":" + dbTableName + ":" + columnName).toUpperCase());
         ColumnType columnTypeNew = ParseTypeFromColumnType.parseType(columnValue);
         boolean isAlter = ParseTypeFromColumnType.isModifyType(columnType, columnValue);
@@ -320,12 +319,11 @@ public class MysqlTargetTask extends AbstractTargetTask {
                     columnTypeTemp.setDescType(DbTypeFlag.MYSQL);
                     columnTypeTemp.setLength((int) (columnValue.getData().toString().length() * 1.5));
                     String alterSql = "alter table " + dbTableName + " modify column" + columnTypeTemp.toString() + " ";
-                    MySqlConnection.getJdbcTemplate(dsName).execute(alterSql);
+                    MySqlConnection.getJdbcTemplate(procNameAndBatchNoAndTargetDsName).execute(alterSql);
                     columnTypeMap.put((dsName + ":" + dbTableName + ":" + columnName).toUpperCase(), columnTypeTemp);
                 }
             }
         }
-
     }
 
     public static AbstractColumn parseAbstractColumnToStringColumn(AbstractColumn abstractColumn) {

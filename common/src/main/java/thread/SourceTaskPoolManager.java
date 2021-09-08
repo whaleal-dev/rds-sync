@@ -15,13 +15,13 @@ public class SourceTaskPoolManager extends ThreadPoolManager {
 
     /**
      * 所有源数据源的线程池
-     * k为 程序名
+     * k为 程序名+批次号
      * v为线程池对象
      */
     private static Map<String, SourceTaskPoolManager> sourceThreadPoolManager = new ConcurrentHashMap<>();
     /**
      * 某源数据源的线程池使用情况
-     * k为 程序名
+     * k为 程序名+批次号
      * v活跃的线程数
      */
     private static Map<String, AtomicInteger> sourceActiveThreadNum = new ConcurrentHashMap<>();
@@ -29,29 +29,29 @@ public class SourceTaskPoolManager extends ThreadPoolManager {
     /**
      * 操作某线程池使用数的个数
      */
-    public static int setSourceActiveThreadNum(String procName, int num) {
+    public static int setSourceActiveThreadNum(String procNameAndBatchNo, int num) {
         if (num > 0) {
-            sourceActiveThreadNum.get(procName).incrementAndGet();
+            sourceActiveThreadNum.get(procNameAndBatchNo).incrementAndGet();
         } else if (num < 0) {
-            sourceActiveThreadNum.get(procName).decrementAndGet();
+            sourceActiveThreadNum.get(procNameAndBatchNo).decrementAndGet();
         }
-        return sourceActiveThreadNum.get(procName).get();
+        return sourceActiveThreadNum.get(procNameAndBatchNo).get();
     }
 
-    public SourceTaskPoolManager(String procName, int corePoolSize, int maximumPoolSize) {
-        super(procName, corePoolSize, maximumPoolSize);
-        sourceActiveThreadNum.put(procName, new AtomicInteger(0));
+    public SourceTaskPoolManager(String procNameAndBatchNo, int corePoolSize, int maximumPoolSize) {
+        super(procNameAndBatchNo, corePoolSize, maximumPoolSize);
+        sourceActiveThreadNum.put(procNameAndBatchNo, new AtomicInteger(0));
         // 塞入对象到sourceThreadPoolManager
-        sourceThreadPoolManager.put(procName, this);
+        sourceThreadPoolManager.put(procNameAndBatchNo, this);
     }
 
 
     /**
      * 删除对象信息
      */
-    public static void deleteSourceTaskPoolManager(String procName) {
-        sourceThreadPoolManager.remove(procName);
-        sourceActiveThreadNum.remove(procName);
+    public static void deleteSourceTaskPoolManager(String procNameAndBatchNo) {
+        sourceThreadPoolManager.remove(procNameAndBatchNo);
+        sourceActiveThreadNum.remove(procNameAndBatchNo);
     }
 
 
@@ -61,9 +61,9 @@ public class SourceTaskPoolManager extends ThreadPoolManager {
      * @param runnable
      * @desc 提交任务
      */
-    public static String submit(String procName, Runnable runnable) {
+    public static String submit(String procNameAndBatchNo, Runnable runnable) {
         try {
-            sourceThreadPoolManager.get(procName).executorService.submit(runnable);
+            sourceThreadPoolManager.get(procNameAndBatchNo).executorService.submit(runnable);
         } catch (Exception e) {
             e.printStackTrace();
             return "启动失败:" + e.getMessage();
@@ -74,15 +74,15 @@ public class SourceTaskPoolManager extends ThreadPoolManager {
     /**
      * destroy 销毁数据
      *
-     * @param procName
+     * @param procNameAndBatchNo
      * @desc 销毁数据
      */
-    public static void destroy(String procName) {
+    public static void destroy(String procNameAndBatchNo) {
         try {
-            sourceThreadPoolManager.get(procName).executorService.shutdownNow();
+            sourceThreadPoolManager.get(procNameAndBatchNo).executorService.shutdownNow();
         } catch (Exception e) {
             Log.error(e.getMessage());
         }
-        deleteSourceTaskPoolManager(procName);
+        deleteSourceTaskPoolManager(procNameAndBatchNo);
     }
 }

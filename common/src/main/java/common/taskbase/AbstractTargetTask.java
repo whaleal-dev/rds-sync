@@ -31,19 +31,30 @@ public abstract class AbstractTargetTask implements Runnable {
      */
     protected String proName;
     /**
+     *
+     */
+    protected long batchNO;
+    /**
      * 数据缓存类
      */
     protected MemoryCache memoryCache;
+
+    protected String procNameAndBatchNo;
+
+    protected String procNameAndBatchNoAndTargetDsName;
 
     public AbstractTargetTask(ProgramInfo programInfo, MemoryCache memoryCache) {
         this.targetDsName = programInfo.getTargetDsName();
         this.taskName = programInfo.getTaskName();
         this.proName = programInfo.getProName();
         this.memoryCache = memoryCache;
-        if (!isStop.containsKey(proName)) {
+        this.batchNO = programInfo.getBatchNO();
+        this.procNameAndBatchNo = proName + batchNO;
+        this.procNameAndBatchNoAndTargetDsName = proName + batchNO + targetDsName;
+        if (!isStop.containsKey(proName + batchNO)) {
             synchronized (AbstractTargetTask.class) {
-                if (!isStop.containsKey(proName)) {
-                    isStop.put(proName, new AtomicBoolean());
+                if (!isStop.containsKey(proName + batchNO)) {
+                    isStop.put(proName + batchNO, new AtomicBoolean());
                 }
             }
         }
@@ -52,12 +63,12 @@ public abstract class AbstractTargetTask implements Runnable {
     /**
      * 设置某pro的target是否停止
      */
-    public static void setIsStopFlagOfTarget(String procName, boolean value) {
-        isStop.get(procName).set(value);
+    public static void setIsStopFlagOfTarget(String procNameAndBatchNo, boolean value) {
+        isStop.get(procNameAndBatchNo).set(value);
     }
 
-    public static boolean getIsStopFlagOfTarget(String proName) {
-        return isStop.get(proName).get();
+    public static boolean getIsStopFlagOfTarget(String procNameAndBatchNo) {
+        return isStop.get(procNameAndBatchNo).get();
     }
 
     /**

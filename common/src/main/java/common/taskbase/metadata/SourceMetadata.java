@@ -27,7 +27,7 @@ public abstract class SourceMetadata {
     /**
      * 源端数据源名称
      */
-    protected String sourceName;
+    protected String sourceDsName;
     /**
      * 任务名称
      */
@@ -53,6 +53,9 @@ public abstract class SourceMetadata {
         return isGetAllDbTable;
     }
 
+    protected String procNameAndBatchNo;
+    protected String procNameAndBatchNoAndSourceDsName;
+
     /**
      * getTaskMetadataQueueSize 获取未执行TaskInfo的个数
      *
@@ -67,11 +70,14 @@ public abstract class SourceMetadata {
     }
 
     public SourceMetadata(ProgramInfo programInfo, MemoryCache memoryCache) {
-        this.sourceName = programInfo.getSourceDsName();
+        this.sourceDsName = programInfo.getSourceDsName();
         this.taskName = programInfo.getTaskName();
         this.proName = programInfo.getProName();
         this.dbTableWhite = programInfo.getDbTableWhite();
         this.memoryCache = memoryCache;
+        this.batchNo = programInfo.getBatchNO();
+        this.procNameAndBatchNo = proName + batchNo;
+        this.procNameAndBatchNoAndSourceDsName = proName + batchNo + sourceDsName;
     }
 
     /**

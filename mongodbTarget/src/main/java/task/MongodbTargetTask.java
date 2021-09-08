@@ -43,7 +43,7 @@ public class MongodbTargetTask extends AbstractTargetTask {
 
     public MongodbTargetTask(ProgramInfo programInfo, MemoryCache memoryCache) {
         super(programInfo, memoryCache);
-        this.mongoClient = MongoDbConnection.getMongoClient(this.targetDsName);
+        this.mongoClient = MongoDbConnection.getMongoClient(procNameAndBatchNoAndTargetDsName);
     }
 
     @Override
@@ -51,7 +51,7 @@ public class MongodbTargetTask extends AbstractTargetTask {
         try {
             applyData();
         } finally {
-            TargetTaskPoolManager.setTargetActiveThreadNum(proName, -1);
+            TargetTaskPoolManager.setTargetActiveThreadNum(procNameAndBatchNo, -1);
         }
     }
 
@@ -60,7 +60,7 @@ public class MongodbTargetTask extends AbstractTargetTask {
         Log.info("启动target任务:" + this.targetDsName);
         while (true) {
             try {
-                if (AbstractTargetTask.getIsStopFlagOfTarget(proName)) {
+                if (AbstractTargetTask.getIsStopFlagOfTarget(procNameAndBatchNo)) {
                     break;
                 }
                 BatchDataEntity batchDataEntity = memoryCache.getData();
