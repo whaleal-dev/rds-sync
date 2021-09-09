@@ -139,7 +139,7 @@ public class PgSourceTask extends AbstractSourceTask {
     public void putDataToCache() {
         BatchDataEntity batchDataEntity = new BatchDataEntity();
         batchDataEntity.setDataList(this.dataList);
-        batchDataEntity.setDbTableName(this.taskMetadata.getDbTableName().split("\\.")[0] + "bak." + this.taskMetadata.getDbTableName().split("\\.")[1]);
+        batchDataEntity.setDbTableName(this.taskMetadata.getDbTableName().split("\\.")[0]  + this.taskMetadata.getDbTableName().split("\\.")[1]);
         batchDataEntity.setOperation("INSERTMANY");
         batchDataEntity.setSourceDsName(this.taskMetadata.getSourceDsName());
         batchDataEntity.setBatchNo(System.currentTimeMillis());

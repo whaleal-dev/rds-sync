@@ -31,7 +31,7 @@ public class TimestampColumn extends AbstractColumn {
 
     @Override
     public Long getData() {
-        System.out.println((seconds * 1000L) + inc);
+       // System.out.println((seconds * 1000L) + inc);
         if (seconds > 0) {
             return ((long) ((seconds * 1000L) + inc));
         }

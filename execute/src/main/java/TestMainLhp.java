@@ -31,18 +31,24 @@ public class TestMainLhp {
 
     public static void main(String[] args) {
 
-//        String[] procNameArray = new String[]{"proc1"};
-//
-//        for (String procName : procNameArray) {
-//            try {
-//                long batchNo = System.currentTimeMillis();
-//                exe(procName, "taskName", batchNo);
-//            } catch (Exception e) {
-//                e.printStackTrace();
-//                Log.error(e.getMessage());
-//            }
-//        }
-          testRealTimeOfMongodb();
+        // proc1 mongodb-mongodb
+        // proc2 mysql-mongodb
+        // proc5 pg-mongodb   1.7w/s
+        // proc8 oracle-mongodb
+
+
+        String[] procNameArray = new String[]{"proc8"};
+
+        for (String procName : procNameArray) {
+            try {
+                long batchNo = System.currentTimeMillis();
+                exe(procName, "taskName", batchNo);
+            } catch (Exception e) {
+                e.printStackTrace();
+                Log.error(e.getMessage());
+            }
+        }
+        //  testRealTimeOfMongodb();
 
 
     }
@@ -204,7 +210,7 @@ public class TestMainLhp {
         ProgramInfo programInfo = ProgramInfoUtil.getProgramInfo("proc1");
         programInfo.setBatchNO(System.currentTimeMillis());
         programInfo.setDbTableWhite("photon.+");
-System.out.println(1);
+        System.out.println(1);
 
         String procNameAndBatchNo = programInfo.getProName() + programInfo.getBatchNO();
 

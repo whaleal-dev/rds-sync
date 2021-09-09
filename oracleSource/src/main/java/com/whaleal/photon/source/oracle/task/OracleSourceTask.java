@@ -128,7 +128,7 @@ public class OracleSourceTask extends AbstractSourceTask {
         //源数据集合
         batchDataEntity.setDataList(this.dataList);
         //源数据表名
-        batchDataEntity.setDbTableName(this.taskMetadata.getDbTableName() + "BAK");
+        batchDataEntity.setDbTableName(this.taskMetadata.getDbTableName());
         //操作行为
         batchDataEntity.setOperation("INSERTMANY");
         //源数据库名

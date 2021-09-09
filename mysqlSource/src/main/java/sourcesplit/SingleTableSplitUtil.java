@@ -263,8 +263,8 @@ public class SingleTableSplitUtil {
             return getPK1(table, programInfo);
         }else{
             //智能取切分字段
-            String proNameAndBatchNo=programInfo.getProName()+programInfo.getBatchNO();
-            JdbcTemplate jdbcTemplate = MySqlConnection.getJdbcTemplate(proNameAndBatchNo);
+            String proNameAndBatchNoAndSourceDsName=programInfo.getProName()+programInfo.getBatchNO()+programInfo.getSourceDsName();
+            JdbcTemplate jdbcTemplate = MySqlConnection.getJdbcTemplate(proNameAndBatchNoAndSourceDsName);
             String baseSql = "select * from "+ table;
             SqlRowSet sqlRowSet = jdbcTemplate.queryForRowSet(baseSql);
             SqlRowSetMetaData sqlRsmd = sqlRowSet.getMetaData();
@@ -357,8 +357,8 @@ public class SingleTableSplitUtil {
 
 
     private static Map<String, Object> getLengthRange(ProgramInfo programInfo, String table) {
-        String proNameAndBatchNo=programInfo.getProName()+programInfo.getBatchNO();
-        JdbcTemplate jdbcTemplate = MySqlConnection.getJdbcTemplate(proNameAndBatchNo);
+        String proNameAndBatchNoAndSourceDsName=programInfo.getProName()+programInfo.getBatchNO()+programInfo.getSourceDsName();
+        JdbcTemplate jdbcTemplate = MySqlConnection.getJdbcTemplate(proNameAndBatchNoAndSourceDsName);
         //获取列名和列类型
         String baseSql = "select * from "+ table;
         SqlRowSet sqlRowSet = jdbcTemplate.queryForRowSet(baseSql);
@@ -496,8 +496,8 @@ public class SingleTableSplitUtil {
      */
     //TODO
     public static String getPK(String table, ProgramInfo programInfo) {
-        String proNameAndBatchNo=programInfo.getProName()+programInfo.getBatchNO();
-        JdbcTemplate jdbcTemplate = MySqlConnection.getJdbcTemplate(proNameAndBatchNo);
+        String proNameAndBatchNoAndSourceDsName=programInfo.getProName()+programInfo.getBatchNO()+programInfo.getSourceDsName();
+        JdbcTemplate jdbcTemplate = MySqlConnection.getJdbcTemplate(proNameAndBatchNoAndSourceDsName);
         String PKName = null;
         String baseSql = "select * from "+ table;
         SqlRowSet sqlRowSet = jdbcTemplate.queryForRowSet(baseSql);
