@@ -478,11 +478,127 @@ public class PhotonTest {
 
     @Test
     public void testOracle2Mysql() {
+        JdbcTemplate jdbcTemplate = OracleConnection.getJdbcTemplate(sourceByDsName.getName());
+        String sql = "select * from USER_TABLES";
+        List<Map<String, Object>> dbTableMapList = jdbcTemplate.queryForList(sql);
+        for (Map<String, Object> dbTableNameMap : dbTableMapList) {
+            String dbSchemaName = dbTableNameMap.get("TABLESPACE_NAME").toString();
+            String tableName = dbTableNameMap.get("TABLE_NAME").toString();
+            String dbTable = dbSchemaName + "." + tableName;
+            if (dbTable.matches(programInfo.getDbTableWhite())) {
+                sourceTables.add(dbTable);
+                List<Map<String, Object>> mapList = jdbcTemplate.queryForList("select t.COLUMN_NAME,t.DATA_TYPE,t.DATA_LENGTH,t.DATA_PRECISION,t.NULLABLE,t.COLUMN_ID,c.COMMENTS\n" +
+                        "from user_tab_columns t, user_col_comments c where t.table_name = c.table_name and t.column_name = c.column_name and t.table_name = '" + tableName + "' order by t.COLUMN_ID");
+                sourceSchema.put(dbTable,mapList);
+                Map<String, Object> objectMap = jdbcTemplate.queryForMap("select count(1) from " + tableName);
+                Object o = objectMap.get("COUNT(1)");
+                sourceTableCount.put(dbTable, Long.parseLong(o.toString()));
+            }
+        }
+
+        System.out.println("源端数据库"+sourceTables);
+        System.out.println("源端表结构"+sourceSchema);
+        System.out.println("源端表内数据数量"+sourceTableCount);
+
+        //目标源开始进行比对
+        JdbcTemplate targetJdbcTemplate = MySqlConnection.getJdbcTemplate(sourceByTargetName.getName());
+        List<Map<String, Object>> targetTableList = targetJdbcTemplate.queryForList("select * from information_schema.TABLES");
+        //通过语句查询到所有的表名
+        for (Map dbTableMap : targetTableList) {
+            String dbName = dbTableMap.get("TABLE_SCHEMA").toString();
+            //忽略 mysql 系统表
+            if (dbName.equalsIgnoreCase("mysql") ||
+                    dbName.equalsIgnoreCase("information_schema") ||
+                    dbName.equalsIgnoreCase("sys")) {
+                continue;
+            }
+            String tableName = dbTableMap.get("TABLE_NAME").toString();
+
+            String dbTable = dbName + "." + tableName;
+            if (dbTable.matches(programInfo.getDbTableWhite())) {
+                targetTables.add(dbTable);
+            }
+        }
+
+        //将所有的表格的名字打印出来
+        System.out.println(targetTables);
+        targetTables.forEach(item -> {
+            List<Map<String, Object>> tableDesc = targetJdbcTemplate.queryForList("desc " + item);
+            targetSchema.put(item, tableDesc);
+            Map<String, Object> countMap = targetJdbcTemplate.queryForMap("select  count(1) from " + item);
+            targetTableCount.put(item, (Long) countMap.get("count(1)"));
+        });
+        System.out.println("目标数据源表" + targetTables);
+        System.out.println("目标数据源表结构" + targetSchema);
+        System.out.println("目标数据源表中数量" + targetTableCount);
 
     }
 
     @Test
     public void testMongo2Mysql() {
+
+        MongoIterable<String> mongSource = sourceClient.listDatabaseNames();
+        MongoCursor<String> sourceCursorOfDb = mongSource.iterator();
+        // 遍历库列表
+        while (sourceCursorOfDb.hasNext()) {
+            String dbName = sourceCursorOfDb.next();
+            if (dbName.equalsIgnoreCase("admin") || dbName.equalsIgnoreCase("local") ||
+                    dbName.equalsIgnoreCase("config")) {
+                Log.info(dbName + "库数据不进行同步");
+                continue;
+            }
+            MongoIterable<String> mongoIterableOfTable = sourceClient.getDatabase(dbName).listCollectionNames();
+            MongoCursor<String> mongoCursorOfTable = mongoIterableOfTable.iterator();
+            // 遍历表列表
+            while (mongoCursorOfTable.hasNext()) {
+                String tableName = mongoCursorOfTable.next();
+                String dbTable = dbName + "." + tableName;
+                // 顺序不可写法反
+                if (dbTable.matches(programInfo.getDbTableWhite())) {
+                    Long count = targetClient.getDatabase(dbName).getCollection(tableName).countDocuments();
+                    sourceTables.add(dbTable);
+                    sourceTableCount.put(dbTable, count);
+                }
+            }
+        }
+
+        System.out.println("mongo的数据源库内容");
+        System.out.println(sourceTableCount);
+        System.out.println(sourceTables);
+
+
+
+        //目标源开始进行比对
+        JdbcTemplate targetJdbcTemplate = MySqlConnection.getJdbcTemplate(sourceByTargetName.getName());
+        List<Map<String, Object>> targetTableList = targetJdbcTemplate.queryForList("select * from information_schema.TABLES");
+        //通过语句查询到所有的表名
+        for (Map dbTableMap : targetTableList) {
+            String dbName = dbTableMap.get("TABLE_SCHEMA").toString();
+            //忽略 mysql 系统表
+            if (dbName.equalsIgnoreCase("mysql") ||
+                    dbName.equalsIgnoreCase("information_schema") ||
+                    dbName.equalsIgnoreCase("sys")) {
+                continue;
+            }
+            String tableName = dbTableMap.get("TABLE_NAME").toString();
+
+            String dbTable = dbName + "." + tableName;
+            if (dbTable.matches(programInfo.getDbTableWhite())) {
+                targetTables.add(dbTable);
+            }
+        }
+
+        //将所有的表格的名字打印出来
+        System.out.println(targetTables);
+        targetTables.forEach(item -> {
+            List<Map<String, Object>> tableDesc = targetJdbcTemplate.queryForList("desc " + item);
+            targetSchema.put(item, tableDesc);
+            Map<String, Object> countMap = targetJdbcTemplate.queryForMap("select  count(1) from " + item);
+            targetTableCount.put(item, (Long) countMap.get("count(1)"));
+        });
+        System.out.println("目标数据源表" + targetTables);
+        System.out.println("目标数据源表结构" + targetSchema);
+        System.out.println("目标数据源表中数量" + targetTableCount);
 
     }
 
