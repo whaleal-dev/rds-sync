@@ -63,8 +63,9 @@ public class OplogReadTask implements Runnable {
         this.endTimeOfReady = endTimeOfReady;
         this.startTimeOfReady = startTimeOfReady;
         this.inc = inc;
-        this.mongoClient = MongoDbConnection.getMongoClient(this.sourceDsName);
+        this.mongoClient = MongoDbConnection.getMongoClient(oplogMetadata.procNameAndBatchNo + sourceDsName);
         this.oplogMetadata = oplogMetadata;
+        System.out.println("OplogReadTask");
     }
 
     @Override
@@ -144,7 +145,7 @@ public class OplogReadTask implements Runnable {
         } catch (Exception e) {
             Log.error("sourceDsName:" + sourceDsName + ",读取oplog发现异常:" + e.getMessage());
         } finally {
-            SourceTaskPoolManager.submit(procName, new OplogReadTask(programInfo, docTime.getTime(), docTime.getInc(), endTimeOfReady, oplogMetadata));
+            SourceTaskPoolManager.submit(oplogMetadata.procNameAndBatchNo, new OplogReadTask(programInfo, docTime.getTime(), docTime.getInc(), endTimeOfReady, oplogMetadata));
         }
     }
 }

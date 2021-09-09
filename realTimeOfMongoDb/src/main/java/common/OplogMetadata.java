@@ -53,7 +53,12 @@ public final class OplogMetadata {
      */
     public int maxTableBatchNum;
 
+    public long batchNo;
+
+    public String procNameAndBatchNo;
+
     public OplogMetadata(ProgramInfo programInfo) {
+        this.batchNo = programInfo.getBatchNO();
         this.sourceDsName = programInfo.getSourceDsName();
         this.targetDsName = programInfo.getTargetDsName();
         this.dbTableWhite = programInfo.getDbTableWhite();
@@ -62,6 +67,7 @@ public final class OplogMetadata {
         this.maxTableQueueSize = programInfo.getDataBatchSize();
         this.maxTableBatchNum = programInfo.getCacheNum();
         this.procName = programInfo.getProName();
+        this.procNameAndBatchNo = procName + batchNo;
         this.documentQueue = new LinkedBlockingQueue<Document>(maxDocumentQueueSize);
     }
 

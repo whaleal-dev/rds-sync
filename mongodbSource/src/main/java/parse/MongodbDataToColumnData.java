@@ -37,20 +37,22 @@ public class MongodbDataToColumnData {
                 return new BigDecimalColumn(columnName, new BigDecimal(((Decimal128) object).doubleValue()));
             case DATE:
                 return new DateTimeColumn(columnName, (((Date) object).getTime()));
-            case BSONREGULAREXPRESSION:
-                BsonRegularExpression bsonRegularExpression = (BsonRegularExpression) object;
-                String options = bsonRegularExpression.getOptions();
-                String pattern = bsonRegularExpression.getPattern();
-                String value = "options:" + options + ",pattern:" + pattern;
-                return new StringColumn(columnName, value);
-            case CODE:
-                Code code = (Code) object;
-                return new StringColumn(columnName, code.getCode());
+//            case BSONREGULAREXPRESSION:
+//                BsonRegularExpression bsonRegularExpression = (BsonRegularExpression) object;
+//                String options = bsonRegularExpression.getOptions();
+//                String pattern = bsonRegularExpression.getPattern();
+//                String value = "options:" + options + ",pattern:" + pattern;
+//                return new StringColumn(columnName, value);
+//            case CODE:
+//                Code code = (Code) object;
+//                return new StringColumn(columnName, code.getCode());
             case BSONTIMESTAMP:
-                return new TimestampColumn(columnName, ((BsonTimestamp) object).getValue());
-            case SYMBOL:
-                Symbol symbol = (Symbol) object;
-                return new StringColumn(columnName, symbol.getSymbol());
+//                return new TimestampColumn(columnName, ((BsonTimestamp) object).getValue());
+                BsonTimestamp bsonTimestamp = (BsonTimestamp) object;
+                return new TimestampColumn(columnName, bsonTimestamp.getTime(), bsonTimestamp.getInc());
+//            case SYMBOL:
+//                Symbol symbol = (Symbol) object;
+//                return new StringColumn(columnName, symbol.getSymbol());
             case BOOLEAN:
                 return new BoolColumn(columnName, ((Boolean) object).booleanValue());
             case ARRAYLIST:
@@ -66,6 +68,9 @@ public class MongodbDataToColumnData {
             case CODEWITHSCOPE:
             case MAXKEY:
             case MINKEY:
+            case SYMBOL:
+            case CODE:
+            case BSONREGULAREXPRESSION:
             default:
                 return new MongodbObjectColumn(columnName, object);
         }

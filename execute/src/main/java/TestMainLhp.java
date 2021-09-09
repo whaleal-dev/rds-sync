@@ -31,18 +31,18 @@ public class TestMainLhp {
 
     public static void main(String[] args) {
 
-        String[] procNameArray = new String[]{"proc7"};
-
-        for (String procName : procNameArray) {
-            try {
-                long batchNo = System.currentTimeMillis();
-                exe(procName, "taskName", batchNo);
-            } catch (Exception e) {
-                e.printStackTrace();
-                Log.error(e.getMessage());
-            }
-          }
-    //    testRealTimeOfMongodb();
+//        String[] procNameArray = new String[]{"proc1"};
+//
+//        for (String procName : procNameArray) {
+//            try {
+//                long batchNo = System.currentTimeMillis();
+//                exe(procName, "taskName", batchNo);
+//            } catch (Exception e) {
+//                e.printStackTrace();
+//                Log.error(e.getMessage());
+//            }
+//        }
+          testRealTimeOfMongodb();
 
 
     }
@@ -202,38 +202,33 @@ public class TestMainLhp {
 
     public static void testRealTimeOfMongodb() {
         ProgramInfo programInfo = ProgramInfoUtil.getProgramInfo("proc1");
+        programInfo.setBatchNO(System.currentTimeMillis());
         programInfo.setDbTableWhite("photon.+");
-
-
-        programInfo.setIncrementParseThreadNum(5);
-
-        MongoDbConnection.createMonoDbClient(programInfo.getSourceDsName(), DataSourceUtil.getDataSourceByDsName(programInfo.getSourceDsName()));
+System.out.println(1);
 
         String procNameAndBatchNo = programInfo.getProName() + programInfo.getBatchNO();
 
+        programInfo.setIncrementParseThreadNum(5);
 
-        MongoDbConnection.createMonoDbClient(programInfo.getTargetDsName(), DataSourceUtil.getDataSourceByDsName(programInfo.getTargetDsName()));
-
+        MongoDbConnection.createMonoDbClient(procNameAndBatchNo + programInfo.getSourceDsName(), DataSourceUtil.getDataSourceByDsName(programInfo.getSourceDsName()));
+        MongoDbConnection.createMonoDbClient(procNameAndBatchNo + programInfo.getTargetDsName(), DataSourceUtil.getDataSourceByDsName(programInfo.getTargetDsName()));
+        System.out.println(2);
 
         SourceTaskPoolManager sourceTaskPoolManager = new SourceTaskPoolManager(procNameAndBatchNo, programInfo.getSourceThreadNum(), programInfo.getSourceThreadNum());
+        TargetTaskPoolManager targetTaskPoolManager = new TargetTaskPoolManager(procNameAndBatchNo, programInfo.getTargetThreadNum(), programInfo.getTargetThreadNum());
 
-
-        TargetTaskPoolManager targetTaskPoolManager = new
-                TargetTaskPoolManager(procNameAndBatchNo, 10,
-                10);
-
+        System.out.println(3);
         OplogMetadata oplogMetadata = new OplogMetadata(programInfo);
-
+        System.out.println(4);
         TargetTaskPoolManager.submit(procNameAndBatchNo, new OplogWriteTask(oplogMetadata));
         TargetTaskPoolManager.submit(procNameAndBatchNo, new OplogNsBucketTask(oplogMetadata, programInfo.getCacheSize()));
         TargetTaskPoolManager.submit(procNameAndBatchNo, new OplogNsTask(programInfo.getDbTableWhite(), oplogMetadata));
-        TargetTaskPoolManager.submit(procNameAndBatchNo, new OplogReadTask(programInfo, (int) (System.currentTimeMillis() / 1000)
-
-                , 0, 0, oplogMetadata));
-        for (int i = 0; i < 2; i++) {
+        TargetTaskPoolManager.submit(procNameAndBatchNo, new OplogReadTask(programInfo, (int) (System.currentTimeMillis() / 1000), 0, 0, oplogMetadata));
+        for (int i = 0; i < 4; i++) {
             TargetTaskPoolManager.submit(procNameAndBatchNo, new OplogWriteTask(oplogMetadata));
             TargetTaskPoolManager.submit(procNameAndBatchNo, new OplogNsBucketTask(oplogMetadata, programInfo.getCacheSize()));
         }
+        System.out.println(5);
 
     }
 

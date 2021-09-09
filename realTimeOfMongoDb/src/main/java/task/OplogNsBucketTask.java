@@ -63,7 +63,8 @@ public class OplogNsBucketTask implements Runnable {
         this.oplogMetadata = oplogMetadata;
         this.sourceDsName = oplogMetadata.sourceDsName;
         this.targetDsName = oplogMetadata.targetDsName;
-        this.mongoClient = MongoDbConnection.getMongoClient(targetDsName);
+        this.mongoClient = MongoDbConnection.getMongoClient(oplogMetadata.procNameAndBatchNo+targetDsName);
+        System.out.println("OplogNsBucketTask");
     }
 
     @Override

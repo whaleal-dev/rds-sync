@@ -27,6 +27,7 @@ public class OplogNsTask implements Runnable {
     public OplogNsTask(String dbTableWhite, OplogMetadata oplogMetadata) {
         this.dbTableWhite = dbTableWhite;
         this.oplogMetadata = oplogMetadata;
+        System.out.println("OplogNsTask");
     }
 
     @Override

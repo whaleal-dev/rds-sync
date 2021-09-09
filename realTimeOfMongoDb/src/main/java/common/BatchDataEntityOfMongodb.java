@@ -51,6 +51,7 @@ public class BatchDataEntityOfMongodb implements Serializable {
      * 程序名称
      */
     private String procName;
+
     /**
      * 数据集合
      */

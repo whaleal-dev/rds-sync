@@ -39,7 +39,8 @@ public class OplogWriteTask implements Runnable {
     public OplogWriteTask(OplogMetadata oplogMetadata) {
         this.oplogMetadata = oplogMetadata;
         this.targetDsName = oplogMetadata.targetDsName;
-        this.mongoClient = MongoDbConnection.getMongoClient(targetDsName);
+        this.mongoClient = MongoDbConnection.getMongoClient(oplogMetadata.procNameAndBatchNo + targetDsName);
+        System.out.println("OplogWriteTask");
     }
 
     @Override
@@ -122,7 +123,7 @@ public class OplogWriteTask implements Runnable {
             String tableName = dbTableName.split("\\.", 2)[1];
             BulkWriteResult bulkWriteResult = this.mongoClient.getDatabase(dbName).
                     getCollection(tableName).bulkWrite(list, new BulkWriteOptions().ordered(false));
-          //Log.info("当前批次执行情况:"+bulkWriteResult.toString());
+            //Log.info("当前批次执行情况:"+bulkWriteResult.toString());
         } catch (Exception e) {
             Log.error(e.getMessage());
             try {

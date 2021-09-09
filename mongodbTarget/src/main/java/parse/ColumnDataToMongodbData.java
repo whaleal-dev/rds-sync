@@ -1,9 +1,11 @@
 package parse;
 
 
+import com.alibaba.fastjson.JSONObject;
 import com.google.gson.Gson;
 import common.column.*;
 import common.dbtype.java.EnumCommonColumnDataType;
+import jdk.nashorn.internal.parser.JSONParser;
 import org.bson.BsonTimestamp;
 import org.bson.Document;
 
@@ -33,7 +35,8 @@ public class ColumnDataToMongodbData {
             case JSONCOLUMN:
                 return Document.parse(columnData.getData().toString());
             case ARRAYCOLUMN:
-                return gson.fromJson(columnData.getData().toString(), List.class);
+                // return gson.fromJson(columnData.getData().toString(), List.class);
+                return JSONObject.parse(columnData.getData().toString());
             case NULLCOLUMN:
                 return null;
             case INTCOLUMN:
@@ -52,7 +55,11 @@ public class ColumnDataToMongodbData {
     }
 
     public static void main(String[] args) {
-        Date date = new Date();
-
+        List list = gson.fromJson("[12,12,13]", List.class);
+        System.out.println(list);
+        Object parse1 = JSONObject.parse("[12,12,13]");
+        System.out.println(parse1);
+        Document parse = Document.parse("[12,12,13]");
+        System.out.println(parse);
     }
 }
