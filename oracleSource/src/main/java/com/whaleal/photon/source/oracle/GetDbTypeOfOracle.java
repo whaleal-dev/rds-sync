@@ -13,9 +13,9 @@ public class GetDbTypeOfOracle {
     static Gson gson = new Gson();
 
     public static void main(String[] args) {
-        Datasource proc4 = DBUtil.getSourceByProcName("proc4");
-        OracleConnection.createConnection("proc4",proc4);
-        Connection connection = OracleConnection.getConnection("proc4");
+        Datasource proc4 = DBUtil.getSourceByProcName("proc10");
+        OracleConnection.createConnection("proc10",proc4);
+        Connection connection = OracleConnection.getConnection("proc10");
         JdbcTemplate jdbcTemplate = OracleConnection.getJdbcTemplate(proc4.getName());
         Map<String, Object> map = jdbcTemplate.queryForMap("select * from COLUMNTYPE");
         map.entrySet().forEach(item -> {
