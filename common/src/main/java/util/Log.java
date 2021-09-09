@@ -1,6 +1,7 @@
 package util;
 
 import org.apache.log4j.Logger;
+import org.bson.BsonTimestamp;
 
 /**
  * 日志记录类
@@ -36,6 +37,14 @@ public class Log {
                 .append("-" + call.getLineNumber() + "]").append(" ")
                 .append(appendLog != null ? appendLog : "");
         return buffer.toString();
+    }
+
+
+    public static void main(String[] args) {
+        // , 2862945894
+        BsonTimestamp bsonTimestamp=new BsonTimestamp(2862945894L);
+
+
     }
 }
 

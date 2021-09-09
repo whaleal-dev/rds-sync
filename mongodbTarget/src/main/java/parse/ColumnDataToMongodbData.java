@@ -7,6 +7,7 @@ import common.dbtype.java.EnumCommonColumnDataType;
 import org.bson.BsonTimestamp;
 import org.bson.Document;
 
+import java.sql.Timestamp;
 import java.util.Date;
 import java.util.List;
 
@@ -24,7 +25,7 @@ public class ColumnDataToMongodbData {
             case DATETIMECOLUMN:
                 return new Date((long) (columnData.getData()));
             case TIMESTAMPCOLUMN:
-                return new BsonTimestamp((long) (columnData.getData()));
+                return new Timestamp((long) (columnData.getData()));
             case DATECOLUMN:
             case TIMECOLUMN:
             case PGOBJECTCOLUMN:

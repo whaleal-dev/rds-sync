@@ -2,6 +2,7 @@ package task;
 
 import cache.MemoryCache;
 import common.column.AbstractColumn;
+import common.column.BytesColumn;
 import common.column.StringColumn;
 import common.columnclass.ColumnType;
 import common.dataclass.BatchDataEntity;
@@ -249,7 +250,7 @@ public class MysqlTargetTask extends AbstractTargetTask {
                 }
                 String columnName = columnValue.getColumnName();
                 if (columnTypeMap.containsKey((dsName + ":" + dbTable + ":" + columnName).toUpperCase())) {
-                   // detectionType(dbTable, columnName, columnValue, dsName, procNameAndBatchNoAndTargetDsName);
+                    //   detectionType(dbTable, columnName, columnValue, dsName, procNameAndBatchNoAndTargetDsName);
                     detectionLength(dbTable, columnName, columnValue, dsName, procNameAndBatchNoAndTargetDsName);
                 } else {
                     //修改表结构增加字段
@@ -260,7 +261,7 @@ public class MysqlTargetTask extends AbstractTargetTask {
                         // dcl
                         if (!columnTypeMap.containsKey((dsName + ":" + dbTable + ":" + columnName).toUpperCase())) {
                             MySqlConnection.getJdbcTemplate(procNameAndBatchNoAndTargetDsName).execute(addColumnSql);
-                            Log.info("addColumnSql:" + addColumnSql);
+                            Log.error("addColumnSql:" + addColumnSql);
                             columnTypeMap.put((dsName + ":" + dbTable + ":" + columnName).toUpperCase(), columnType);
                         }
                     }
@@ -296,7 +297,7 @@ public class MysqlTargetTask extends AbstractTargetTask {
                     columnTypeMap.put((dsName + ":" + dbTableName + ":" + columnName).toUpperCase(), columnTypeTemp);
                     Log.info(columnType.getLength() + "." + columnType.getPrecision() + "    =   " + columnValue.getColumnName() + "    =   " + columnValue.getData() + "    =   " + alterSql);
                     Log.info(columnTypeTemp.getLength() + "." + columnTypeTemp.getPrecision() + "    =   " + columnTypeTemp.getColumnName() + "    =   " + columnTypeTemp);
-
+                    Log.error(alterSql);
                 }
             }
         }
@@ -305,20 +306,58 @@ public class MysqlTargetTask extends AbstractTargetTask {
     public static void detectionType(String dbTableName, String columnName, AbstractColumn columnValue, String dsName, String procNameAndBatchNoAndTargetDsName) {
         ColumnType columnType = columnTypeMap.get((dsName + ":" + dbTableName + ":" + columnName).toUpperCase());
         ColumnType columnTypeNew = ParseTypeFromColumnType.parseType(columnValue);
-        boolean isAlter = ParseTypeFromColumnType.isModifyType(columnType, columnValue);
-        if (columnType.getColumnType().equals(MySqlType.VARCHAR) && !columnTypeNew.getColumnType().contains("CHAR")) {
-            columnValue = parseAbstractColumnToStringColumn(columnValue);
-        } else if (isAlter) {
+        int isAlter = ParseTypeFromColumnType.isModifyType(columnType, columnValue);
+        if (isAlter == -2) {
+            columnValue = new StringColumn(columnValue.getColumnName(), columnValue.getData().toString());
+        } else if (isAlter != -1) {
             synchronized (MysqlTargetTask.class) {
                 ColumnType columnType2 = columnTypeMap.get((dsName + ":" + dbTableName + ":" + columnName).toUpperCase());
-                if (ParseTypeFromColumnType.isModifyType(columnType2, columnValue)) {
+                int isModifyValue = ParseTypeFromColumnType.isModifyType(columnType2, columnValue);
+                Log.error(isModifyValue + "");
+                if (isModifyValue != -1 && isModifyValue != -2) {
+
                     ColumnType columnTypeTemp = new ColumnType();
-                    columnTypeTemp.setColumnType(MySqlType.VARCHAR);
-                    columnTypeTemp.setDbTableName(dbTableName);
-                    columnTypeTemp.setColumnName(columnName);
-                    columnTypeTemp.setDescType(DbTypeFlag.MYSQL);
-                    columnTypeTemp.setLength((int) (columnValue.getData().toString().length() * 1.5));
+
+                    if (isModifyValue == 0) {
+                        if (columnTypeNew.getColumnType().contains("CHAR")) {
+                            columnTypeTemp.setColumnType(MySqlType.VARCHAR);
+                            columnTypeTemp.setDbTableName(dbTableName);
+                            columnTypeTemp.setColumnName(columnName);
+                            columnTypeTemp.setDescType(DbTypeFlag.MYSQL);
+                            columnTypeTemp.setLength(100 + (int) (columnValue.getData().toString().length() * 1.5));
+                        } else if (columnTypeNew.getColumnType().contains("TEXT")) {
+                            columnTypeTemp.setColumnType(MySqlType.LONGTEXT);
+                            columnTypeTemp.setDbTableName(dbTableName);
+                            columnTypeTemp.setColumnName(columnName);
+                            columnTypeTemp.setDescType(DbTypeFlag.MYSQL);
+                        } else if (columnTypeNew.getColumnType().contains("BLOB")) {
+                            columnTypeTemp.setColumnType(MySqlType.LONGBLOB);
+                            columnTypeTemp.setDbTableName(dbTableName);
+                            columnTypeTemp.setColumnName(columnName);
+                            columnTypeTemp.setDescType(DbTypeFlag.MYSQL);
+                        }
+                    } else if (isModifyValue == 1) {
+                        columnTypeTemp.setColumnType(MySqlType.VARCHAR);
+                        columnTypeTemp.setDbTableName(dbTableName);
+                        columnTypeTemp.setColumnName(columnName);
+                        columnTypeTemp.setDescType(DbTypeFlag.MYSQL);
+                        columnTypeTemp.setLength(100 + (int) (columnValue.getData().toString().length() * 1.5));
+                    } else if (isModifyValue == 2) {
+                        columnTypeTemp.setColumnType(MySqlType.LONGTEXT);
+                        columnTypeTemp.setDbTableName(dbTableName);
+                        columnTypeTemp.setColumnName(columnName);
+                        columnTypeTemp.setDescType(DbTypeFlag.MYSQL);
+                    } else if (isModifyValue == 3) {
+                        columnTypeTemp.setColumnType(MySqlType.LONGBLOB);
+                        columnTypeTemp.setDbTableName(dbTableName);
+                        columnTypeTemp.setColumnName(columnName);
+                        columnTypeTemp.setDescType(DbTypeFlag.MYSQL);
+                    }
+
+
                     String alterSql = "alter table " + dbTableName + " modify column" + columnTypeTemp.toString() + " ";
+                    Log.error(alterSql);
+                    Log.error("columnValue:" + columnValue.getColumnName() + ",value:  " + columnValue.getData() + "        columnTypeTemp:" + columnTypeTemp.toString());
                     MySqlConnection.getJdbcTemplate(procNameAndBatchNoAndTargetDsName).execute(alterSql);
                     columnTypeMap.put((dsName + ":" + dbTableName + ":" + columnName).toUpperCase(), columnTypeTemp);
                 }
@@ -326,7 +365,10 @@ public class MysqlTargetTask extends AbstractTargetTask {
         }
     }
 
+
     public static AbstractColumn parseAbstractColumnToStringColumn(AbstractColumn abstractColumn) {
         return new StringColumn(abstractColumn.getColumnName(), abstractColumn.getData().toString());
     }
+
+
 }

@@ -72,6 +72,10 @@ public class ColumnType implements Serializable {
         this.precision = precision;
     }
 
+    public String getColumnType() {
+        return columnType.toUpperCase();
+    }
+
     @Override
     public String toString() {
         StringBuilder stringBuilder = new StringBuilder();

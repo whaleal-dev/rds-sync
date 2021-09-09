@@ -5,6 +5,7 @@ import common.columnclass.ColumnType;
 import common.dbtype.java.EnumCommonColumnDataType;
 import common.dbtype.db.EnumMySqlDataType;
 import common.dbtype.MySqlType;
+import util.Log;
 
 /**
  * 解析mongodb数据到mysql类型类
@@ -165,30 +166,58 @@ public class ParseTypeFromColumnType {
     }
 
 
-    public static boolean isModifyType(ColumnType columnType, AbstractColumn columnValue) {
+    public static int isModifyType(ColumnType columnTypeOld, AbstractColumn columnValue) {
         ColumnType columnTypeNew = ParseTypeFromColumnType.parseType(columnValue);
-        boolean isAlter = false;
-        if (columnType.getColumnType().equalsIgnoreCase(columnTypeNew.getColumnType())) {
-            if (columnType.getColumnType().contains("INT") && columnTypeNew.getColumnType().contains("INT")) {
-                isAlter = false;
-            } else if (columnType.getColumnType().contains("CHAR") && columnTypeNew.getColumnType().contains("CHAR")) {
-                isAlter = false;
-            } else if (columnType.getColumnType().contains("DOUBLE") && columnTypeNew.getColumnType().contains("FLOAT")) {
-                isAlter = false;
-            } else if (columnType.getColumnType().contains("DOUBLE") && columnTypeNew.getColumnType().contains("DECIMAL")) {
-                isAlter = false;
-            } else if (columnType.getColumnType().contains("FLOAT") && columnTypeNew.getColumnType().contains("DECIMAL")) {
-                isAlter = false;
-            } else if (columnType.getColumnType().contains("FLOAT") && columnTypeNew.getColumnType().contains("DOUBLE")) {
-                isAlter = false;
-            } else if (columnType.getColumnType().contains("DATETIME") && columnTypeNew.getColumnType().contains("TIMESTAMP")) {
-                isAlter = false;
-            } else if (columnType.getColumnType().contains("TIMESTAMP") && columnTypeNew.getColumnType().contains("DATETIME")) {
-                isAlter = false;
-            } else {
-                isAlter = true;
-            }
+        int returnValue = -1;
+
+        // -1为不改变，0为修改修改为类类型 1 varchar 2 text 3 blob  -2为类型转换为String,-3为转换为blob
+        // 类型相同
+        // Log.error("columnTypeNew:" + columnTypeNew.getColumnType() + "        columnTypeOld:" + columnTypeOld.getColumnType());
+        if (columnTypeNew.getColumnType().equals(columnTypeOld.getColumnType())) {
+            return -1;
         }
-        return isAlter;
+        if (columnTypeOld.getColumnType().contains("INT") || columnTypeNew.getColumnType().contains("CHAR")) {
+            return 1;
+        }
+
+        if (columnTypeOld.getColumnType().equals(MySqlType.VARCHAR) || columnTypeOld.getColumnType().contains("TEXT")) {
+            if (columnTypeNew.getColumnType().contains("INT")) {
+                return -2;
+            }
+            if (columnTypeNew.getColumnType().contains("DOUBLE")) {
+                return -2;
+            }
+            if (columnTypeNew.getColumnType().contains("FLOAT")) {
+                return -2;
+            }
+            if (columnTypeNew.getColumnType().contains("TIME")) {
+                return -2;
+            }
+            if (columnTypeNew.getColumnType().contains("DATE")) {
+                return -2;
+            }
+            if (columnTypeNew.getColumnType().contains("DECIMAL")) {
+                return -2;
+            }
+
+        }
+
+        if (columnTypeNew.getColumnType().equals(MySqlType.VARCHAR)) {
+//            if (columnTypeOld.getColumnType().equals("CHAR")) {
+//                return 0;
+//            }
+            return 1;
+        } else if (columnTypeNew.getColumnType().contains("TEXT")) {
+//            if (columnTypeOld.getColumnType().contains("TEXT")) {
+//                return 0;
+            // }
+            return 2;
+        } else if (columnTypeNew.getColumnType().contains("BLOB")) {
+//            if (columnTypeOld.getColumnType().contains("BLOB")) {
+//                return 0;
+//            }
+            return 3;
+        }
+        return returnValue;
     }
 }
