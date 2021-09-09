@@ -36,8 +36,13 @@ public class TestMainLhp {
         // proc5 pg-mongodb   1.7w/s
         // proc8 oracle-mongodb
 
+        // proc9 mysql-mysql
+        // proc7 pg-mysql
+        // proc10  oracle-mysql
+        // proc14 mongodb-mysql
 
-        String[] procNameArray = new String[]{"proc8"};
+
+        String[] procNameArray = new String[]{"proc10"};
 
         for (String procName : procNameArray) {
             try {
@@ -61,7 +66,7 @@ public class TestMainLhp {
             return;
         }
         programInfo.setBatchNO(batchNo);
-        programInfo.setTargetThreadNum(1);
+       // programInfo.setTargetThreadNum(1);
         //获取数据源对象
         Datasource dataSourceDb = DataSourceUtil.getDataSourceByDsName(programInfo.getSourceDsName());
         Datasource dataTargetDb = DataSourceUtil.getDataSourceByDsName(programInfo.getTargetDsName());

@@ -25,28 +25,28 @@ public class GetDbTypeOfMysql {
 
     public static void main(String[] args) throws FileNotFoundException, SQLException, InterruptedException {
 //        InputStream in = new FileInputStream("/Users/liheping/Desktop/project/photonT/common/src/main/java/common/dbtype/DbTypeFlag.java");//生成被插入文件的节点流
-
-        Connection connection = MetadataConnection.getConnection();
-        Statement statement = connection.createStatement();
-        ResultSet resultSet = statement.executeQuery("select * from test.test");
-        ResultSetMetaData md = resultSet.getMetaData();
-        while (resultSet.next()) {
-            List<AbstractColumn> abstractColumns = new ArrayList<>();
-            //获取数据库内容不为空
-            //遍历rs中的属性与值
-            for (int i = 1; i <= md.getColumnCount(); i++) {
-                //属性名下划线改驼峰
-                String columnName = md.getColumnName(i);
-                //值
-                Object values = resultSet.getObject(md.getColumnName(i));
-                if(values!=null){
-                    String type = values.getClass().getSimpleName().toUpperCase();
-                     System.out.print(type + "(\"" + type + "\"),");
-                   // System.out.println(columnName+"       "+values);
-                }
-
-            }
-        }
+//
+//        Connection connection = MetadataConnection.getConnection();
+//        Statement statement = connection.createStatement();
+//        ResultSet resultSet = statement.executeQuery("select * from test.test");
+//        ResultSetMetaData md = resultSet.getMetaData();
+//        while (resultSet.next()) {
+//            List<AbstractColumn> abstractColumns = new ArrayList<>();
+//            //获取数据库内容不为空
+//            //遍历rs中的属性与值
+//            for (int i = 1; i <= md.getColumnCount(); i++) {
+//                //属性名下划线改驼峰
+//                String columnName = md.getColumnName(i);
+//                //值
+//                Object values = resultSet.getObject(md.getColumnName(i));
+//                if(values!=null){
+//                    String type = values.getClass().getSimpleName().toUpperCase();
+//                     System.out.print(type + "(\"" + type + "\"),");
+//                   // System.out.println(columnName+"       "+values);
+//                }
+//
+//            }
+//        }
 
 
 //        Date date=new java.util.Date(1630553229060L);
@@ -59,22 +59,20 @@ public class GetDbTypeOfMysql {
 
 
 
-//        Datasource mysqltest = DataSourceUtil.getDataSourceByDsName("mysqltest");
-//
-//        MySqlConnection.createConnection(mysqltest.getName(), mysqltest);
-//        Connection pgConnection = MySqlConnection.getConnection("mysqltest");
-//        Statement statement = pgConnection.createStatement();
-//        PreparedStatement ps = pgConnection.prepareStatement("select * from test2", ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
-//
-//        //也可以修改jdbc url通过defaultFetchSize参数来设置，这样默认所以的返回结果都是通过流方式读取.
-//        Thread.sleep(10000);
-//        ps.setFetchSize(128);
-//        ResultSet rs = ps.executeQuery();
-//        Thread.sleep(10000);
-//        while (rs.next()) {
-//            System.out.println(rs.getString("id"));
-//        }
-//        Thread.sleep(10000);
+        Datasource mysqltest = DataSourceUtil.getDataSourceByDsName("mysqltest");
+
+        MySqlConnection.createConnection(mysqltest.getName(), mysqltest);
+        Connection pgConnection = MySqlConnection.getConnection("mysqltest");
+        Statement statement = pgConnection.createStatement();
+        PreparedStatement ps = pgConnection.prepareStatement("select * from blog.ms_article");
+
+        ps.setFetchSize(128);
+        ResultSet rs = ps.executeQuery();
+
+        while (rs.next()) {
+            System.out.println(rs.getString(1));
+        }
+
 
     }
 }
