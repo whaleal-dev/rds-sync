@@ -69,6 +69,8 @@ public abstract class SourceMetadata {
         this.taskMetadataQueue = taskMetadataQueue;
     }
 
+    protected boolean isUseDeFaultType = false;
+
     public SourceMetadata(ProgramInfo programInfo, MemoryCache memoryCache) {
         this.sourceDsName = programInfo.getSourceDsName();
         this.taskName = programInfo.getTaskName();
@@ -78,6 +80,7 @@ public abstract class SourceMetadata {
         this.batchNo = programInfo.getBatchNO();
         this.procNameAndBatchNo = proName + batchNo;
         this.procNameAndBatchNoAndSourceDsName = proName + batchNo + sourceDsName;
+        this.isUseDeFaultType = programInfo.isUseDeFaultType();
     }
 
     /**

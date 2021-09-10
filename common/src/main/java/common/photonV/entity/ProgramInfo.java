@@ -109,4 +109,6 @@ public class ProgramInfo {
      * 仅使用于查询。不可应用于库表同步中
      */
     private String query;
+
+    private boolean isUseDeFaultType=false;
 }

@@ -82,7 +82,8 @@ public enum EnumCommonColumnDataType {
     /**
      * pg的对象类型
      */
-    PGOBJECTCOLUMN("PGOBJECTCOLUMN");
+    PGOBJECTCOLUMN("PGOBJECTCOLUMN"),
+    DEFAULTTYPECOLUMN("DEFAULTTYPECOLUMN");
 
 
     private final String upperCase;

@@ -45,7 +45,7 @@ public class PhotonTest {
     /**
      * 程序名字
      */
-    private String procName = "proc8";
+    private String procName = "proc2";
     //程序的信息
     private ProgramInfo programInfo;
     //数据源信息

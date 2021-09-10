@@ -18,7 +18,11 @@ import java.util.List;
 public class MongodbDataToColumnData {
     private static final Gson gson = new Gson();
 
-    public static AbstractColumn parseValue(String columnName, Object object) {
+    public static AbstractColumn parseValue(String columnName, Object object, boolean isDefaultType) {
+
+        if (isDefaultType) {
+            return new DefaultTypeColumn(columnName, object);
+        }
         if (object == null) {
             return new NullColumn(columnName, null);
         }
@@ -56,7 +60,7 @@ public class MongodbDataToColumnData {
             case BOOLEAN:
                 return new BoolColumn(columnName, ((Boolean) object).booleanValue());
             case ARRAYLIST:
-                return new ArrayColumn(columnName, (List<Object>) object);
+                return new ArrayColumn(columnName,  object);
             case DOCUMENT:
                 return new JsonColumn(columnName, gson.toJson(object));
             case OBJECTID:

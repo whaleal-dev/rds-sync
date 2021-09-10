@@ -41,8 +41,8 @@ public class TestMainLhp {
         // proc10  oracle-mysql
         // proc14 mongodb-mysql
 
-
-        String[] procNameArray = new String[]{"proc10"};
+//
+        String[] procNameArray = new String[]{"proc1"};
 
         for (String procName : procNameArray) {
             try {
@@ -53,23 +53,33 @@ public class TestMainLhp {
                 Log.error(e.getMessage());
             }
         }
-        //  testRealTimeOfMongodb();
+        // testRealTimeOfMongodb();
 
 
+    }
+
+    public static void init(ProgramInfo programInfo, Datasource dbSource, Datasource dbTarget) {
+
+        if (dbSource.getType().equals(DbTypeFlag.MONGODB) && dbTarget.getType().equals(DbTypeFlag.MONGODB)) {
+            programInfo.setUseDeFaultType(true);
+        }
     }
 
     public static void exe(String procName, String taskName, long batchNo) throws InterruptedException {
         String procNameAndBatchNo = procName + batchNo;
         //创建pro
         ProgramInfo programInfo = ProgramInfoUtil.getProgramInfo(procName);
+
         if (programInfo == null || programInfo.getProName().length() == 0) {
             return;
         }
         programInfo.setBatchNO(batchNo);
-       // programInfo.setTargetThreadNum(1);
+        // programInfo.setTargetThreadNum(1);
         //获取数据源对象
         Datasource dataSourceDb = DataSourceUtil.getDataSourceByDsName(programInfo.getSourceDsName());
         Datasource dataTargetDb = DataSourceUtil.getDataSourceByDsName(programInfo.getTargetDsName());
+        init(programInfo, dataSourceDb, dataTargetDb);
+        System.out.println(programInfo);
         //创建数据源链接
         createDataSourceConnection(procNameAndBatchNo, dataSourceDb, dataTargetDb);
         //创建触发对象实例
@@ -133,7 +143,7 @@ public class TestMainLhp {
         String procNameAndBatchNo = programInfo.getProName() + programInfo.getBatchNO();
         SourceTaskPoolManager sourceTaskPoolManager = new SourceTaskPoolManager(procNameAndBatchNo, programInfo.getSourceThreadNum(), programInfo.getSourceThreadNum());
 
-        SysPoolManager sysPoolManager = new SysPoolManager(procNameAndBatchNo, 2, 3);
+        SysPoolManager sysPoolManager = new SysPoolManager(procNameAndBatchNo, 3, 3);
 
         TargetTaskPoolManager targetTaskPoolManager = new TargetTaskPoolManager(procNameAndBatchNo, programInfo.getTargetThreadNum(), programInfo.getTargetThreadNum());
 
@@ -154,6 +164,7 @@ public class TestMainLhp {
                 Log.info(procNameAndBatchNo + ",剩余读取线程队列:" + sourceTaskQueueSize);
                 Log.info(procNameAndBatchNo + ",写入线程数:" + targetActiveThreadNum);
                 Log.info(procNameAndBatchNo + ",剩余缓存数:" + allDataCacheNum);
+                Log.info(procNameAndBatchNo + ",Sys线程数:" + setSysActiveThreadNum);
                 taskTrigger.setState("run");
                 TriggerUtil.updateTriggerInfo(taskTrigger);
                 if ((sourceThread + sourceTaskQueueSize + allDataCacheNum + setSysActiveThreadNum + targetActiveThreadNum) == 0 && getAllDbTable) {
@@ -164,7 +175,7 @@ public class TestMainLhp {
                     AbstractTargetTask.setIsStopFlagOfTarget(procNameAndBatchNo, true);
                 } else {
                     String state = TriggerUtil.getTriggerTateInfo(taskTrigger.getId());
-                    Log.error(procNameAndBatchNo + ",状态" + state);
+                    Log.info(procNameAndBatchNo + ",状态" + state);
                     if (state == null || state.equals("") || state.equals("stop")) {
                         AbstractTargetTask.setIsStopFlagOfTarget(procNameAndBatchNo, true);
                         taskTrigger.setState("stop");
@@ -226,7 +237,7 @@ public class TestMainLhp {
         System.out.println(2);
 
         SourceTaskPoolManager sourceTaskPoolManager = new SourceTaskPoolManager(procNameAndBatchNo, programInfo.getSourceThreadNum(), programInfo.getSourceThreadNum());
-        TargetTaskPoolManager targetTaskPoolManager = new TargetTaskPoolManager(procNameAndBatchNo, programInfo.getTargetThreadNum(), programInfo.getTargetThreadNum());
+        TargetTaskPoolManager targetTaskPoolManager = new TargetTaskPoolManager(procNameAndBatchNo, 10, 10);
 
         System.out.println(3);
         OplogMetadata oplogMetadata = new OplogMetadata(programInfo);

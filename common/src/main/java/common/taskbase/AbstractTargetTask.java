@@ -43,6 +43,7 @@ public abstract class AbstractTargetTask implements Runnable {
 
     protected String procNameAndBatchNoAndTargetDsName;
 
+
     public AbstractTargetTask(ProgramInfo programInfo, MemoryCache memoryCache) {
         this.targetDsName = programInfo.getTargetDsName();
         this.taskName = programInfo.getTaskName();

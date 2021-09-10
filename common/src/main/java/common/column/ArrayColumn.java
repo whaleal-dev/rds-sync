@@ -12,15 +12,15 @@ import java.util.List;
  */
 public class ArrayColumn extends AbstractColumn {
     private static Gson gson = new Gson();
-    private List<Object> data;
+    private Object data;
 
-    public ArrayColumn(String columnName, List<Object> object) {
+    public ArrayColumn(String columnName, Object object) {
         this.columnName = columnName;
         this.data = object;
     }
 
     @Override
-    public List<Object> getData() {
+    public Object getData() {
         return this.data;
     }
 
@@ -33,9 +33,9 @@ public class ArrayColumn extends AbstractColumn {
         } catch (Exception e) {
             Log.error(e.getMessage());
             stringBuilder = new StringBuilder();
-            for (Object object : data) {
-                stringBuilder.append(object.toString());
-            }
+//            for (Object object : data) {
+//                stringBuilder.append(object.toString());
+//            }
         }
         return stringBuilder.toString();
     }

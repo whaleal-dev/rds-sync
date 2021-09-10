@@ -49,8 +49,9 @@ public abstract class AbstractSourceTask implements Runnable {
 
     protected String procNameAndBatchNoAndSourceDsName;
     protected String procNameAndBatchNo;
+    protected boolean isUserDeFaultType=false;
 
-    public AbstractSourceTask(SourceTaskInfo taskMetadata, String procName, MemoryCache memoryCache, int dataBatchSize,long batchNo) {
+    public AbstractSourceTask(SourceTaskInfo taskMetadata, String procName, MemoryCache memoryCache, int dataBatchSize, long batchNo, boolean isUserDeFaultType) {
         this.sourceDsName = taskMetadata.getSourceDsName();
         this.procName = procName;
         this.batchNo = batchNo;
@@ -59,6 +60,18 @@ public abstract class AbstractSourceTask implements Runnable {
         this.taskMetadata = taskMetadata;
         this.procNameAndBatchNoAndSourceDsName = procName + batchNo + sourceDsName;
         this.procNameAndBatchNo = procName + batchNo;
+        this.isUserDeFaultType = isUserDeFaultType;
+    }
+    public AbstractSourceTask(SourceTaskInfo taskMetadata, String procName, MemoryCache memoryCache, int dataBatchSize, long batchNo) {
+        this.sourceDsName = taskMetadata.getSourceDsName();
+        this.procName = procName;
+        this.batchNo = batchNo;
+        this.memoryCache = memoryCache;
+        this.dataBatchSize = dataBatchSize;
+        this.taskMetadata = taskMetadata;
+        this.procNameAndBatchNoAndSourceDsName = procName + batchNo + sourceDsName;
+        this.procNameAndBatchNo = procName + batchNo;
+
     }
 
     /**

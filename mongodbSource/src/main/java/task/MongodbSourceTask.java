@@ -39,8 +39,9 @@ public class MongodbSourceTask extends AbstractSourceTask {
     private List<List<AbstractColumn>> dataList = new ArrayList<>();
 
 
-    public MongodbSourceTask(SourceTaskInfo taskMetadata, String procName, MemoryCache memoryCache, int dataBatchSize,long batchNo) {
-        super(taskMetadata, procName, memoryCache, dataBatchSize,batchNo);
+    public MongodbSourceTask(SourceTaskInfo taskMetadata, String procName, MemoryCache memoryCache,
+                             int dataBatchSize,long batchNo,boolean isUserDeFaultType) {
+        super(taskMetadata, procName, memoryCache, dataBatchSize,batchNo,isUserDeFaultType);
         this.mongoClient = MongoDbConnection.getMongoClient(procNameAndBatchNoAndSourceDsName);
     }
 
@@ -48,12 +49,14 @@ public class MongodbSourceTask extends AbstractSourceTask {
     @Override
     public void run() {
         try {
+            SourceTaskPoolManager.setSourceActiveThreadNum(procNameAndBatchNo, 1);
             Log.info("启动source任务:" + this.taskMetadata.toString());
             // 读取数据
             getDataFromCollection();
         } finally {
             // source线程数-1
             SourceTaskPoolManager.setSourceActiveThreadNum(procNameAndBatchNo, -1);
+            Log.info("source任务查询完毕:" + this.taskMetadata.toString());
         }
     }
 
@@ -111,7 +114,7 @@ public class MongodbSourceTask extends AbstractSourceTask {
                 putDataToCache();
                 this.dataList = null;
             }
-            Log.info("source任务查询完毕:" + this.taskMetadata.toString());
+
         }
     }
 
@@ -121,7 +124,7 @@ public class MongodbSourceTask extends AbstractSourceTask {
         Iterator<Map.Entry<String, Object>> iterator = ((Document) document).entrySet().iterator();
         while (iterator.hasNext()) {
             Map.Entry<String, Object> next = iterator.next();
-            AbstractColumn abstractColumn = MongodbDataToColumnData.parseValue(next.getKey(), next.getValue());
+            AbstractColumn abstractColumn = MongodbDataToColumnData.parseValue(next.getKey(), next.getValue(),isUserDeFaultType);
             abstractColumns.add(abstractColumn);
         }
         this.dataList.add(abstractColumns);

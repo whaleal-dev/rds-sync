@@ -32,9 +32,9 @@ public class ColumnDataToMongodbData {
                 return columnData.getData().toString();
             case JSONCOLUMN:
                 return Document.parse(columnData.getData().toString());
-            case ARRAYCOLUMN:
-                // return gson.fromJson(columnData.getData().toString(), List.class);
-                return JSONObject.parse(columnData.getData().toString());
+//            case ARRAYCOLUMN:
+//                // return gson.fromJson(columnData.getData().toString(), List.class);
+//                return JSONObject.parse(columnData.getData());
             case NULLCOLUMN:
                 return null;
             case INTCOLUMN:
@@ -47,6 +47,7 @@ public class ColumnDataToMongodbData {
             case FLOATCOLUMN:
             case MONGODBOBJECTCOLUMN:
             case BOOLCOLUMN:
+            case DEFAULTTYPECOLUMN:
             default:
                 return columnData.getData();
         }
