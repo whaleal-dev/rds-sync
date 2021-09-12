@@ -95,7 +95,7 @@ public class PgSource extends SourceMetadata {
                     try {
                         SourceTaskInfo taskMetadata = taskMetadataQueue.poll();
                         if (taskMetadata != null) {
-                            SourceTaskPoolManager.setSourceActiveThreadNum(procNameAndBatchNo, 1);
+
                             SourceTaskPoolManager.submit(procNameAndBatchNo, new PgSourceTask(taskMetadata, proName, memoryCache, 128,batchNo));
                         } else {
                             boolean isOver = taskMetadataQueue.size() == 0 && SourceTaskPoolManager.setSourceActiveThreadNum(procNameAndBatchNo, 0) == 0 && isGetAllDbTable && dbTables.size() == 0 && SysPoolManager.setSysActiveThreadNum(procNameAndBatchNo, 0) == 0;

@@ -43,6 +43,7 @@ public class OracleSourceTask extends AbstractSourceTask {
 
     @Override
     public void run() {
+        SourceTaskPoolManager.setSourceActiveThreadNum(procNameAndBatchNo, 1);
         Log.info("启动source任务:" + this.taskMetadata.toString());
         // 读取数据
         getDataFromCollection();

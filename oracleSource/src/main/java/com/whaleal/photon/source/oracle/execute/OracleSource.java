@@ -100,7 +100,7 @@ public class OracleSource extends SourceMetadata {
                     }
                     SourceTaskInfo taskMetadata = taskMetadataQueue.poll();
                     if (taskMetadata != null) {
-                        SourceTaskPoolManager.setSourceActiveThreadNum(procNameAndBatchNo, 1);
+
                         SourceTaskPoolManager.submit(procNameAndBatchNo, new OracleSourceTask(taskMetadata, proName, memoryCache, 128,batchNo));
                     } else {
                         boolean isOver = taskMetadataQueue.size() == 0 && SourceTaskPoolManager.setSourceActiveThreadNum(procNameAndBatchNo, 0) == 0 && isGetAllDbTable && dbTables.size() == 0 && SysPoolManager.setSysActiveThreadNum(procNameAndBatchNo, 0) == 0;

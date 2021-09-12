@@ -116,7 +116,6 @@ public class MysqlTargetTask extends AbstractTargetTask {
             String columns = "(";
             String values = "values(";
             for (AbstractColumn columnData : columnList) {
-                //  System.out.println("columnName:         " + columnData.getColumnName() + "           data:   " + columnData.getData());
                 Object value = ColumnDataToMysqlData.parseColumnData(columnData);
                 if (value == null) {
                     continue;

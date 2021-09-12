@@ -31,18 +31,18 @@ public class TestMainLhp {
 
     public static void main(String[] args) {
 
-        // proc1 mongodb-mongodb
-        // proc2 mysql-mongodb
+        // proc1 mongodb-mongodb 2.8w/s
+        // proc2 mysql-mongodb 5w/s
         // proc5 pg-mongodb   1.7w/s
-        // proc8 oracle-mongodb
+        // proc8 oracle-mongodb 3k/s
 
-        // proc9 mysql-mysql
-        // proc7 pg-mysql
-        // proc10  oracle-mysql
-        // proc14 mongodb-mysql
+        // proc9 mysql-mysql      400/s
+        // proc7 pg-mysql         400/s
+        // proc10  oracle-mysql   300/s
+        // proc14 mongodb-mysql   400/s
 
 //
-        String[] procNameArray = new String[]{"proc1"};
+        String[] procNameArray = new String[]{"proc7"};
 
         for (String procName : procNameArray) {
             try {
