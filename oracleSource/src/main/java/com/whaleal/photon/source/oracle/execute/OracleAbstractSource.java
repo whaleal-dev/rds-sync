@@ -5,7 +5,7 @@ import com.whaleal.photon.source.oracle.split.OracleSourceSplitRange;
 import com.whaleal.photon.source.oracle.task.OracleSourceTask;
 import common.dataclass.Range;
 import common.taskbase.SourceTaskInfo;
-import common.taskbase.metadata.SourceMetadata;
+import common.taskbase.AbstractSourceExecute;
 import common.photonV.entity.ProgramInfo;
 import dbconnection.oracle.OracleConnection;
 import lombok.extern.slf4j.Slf4j;
@@ -14,7 +14,6 @@ import thread.SourceTaskPoolManager;
 import thread.SysPoolManager;
 import util.Log;
 
-import java.sql.Connection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -29,13 +28,13 @@ import java.util.concurrent.TimeUnit;
  * @date 2021/08/30
  */
 @Slf4j
-public class OracleSource extends SourceMetadata {
+public class OracleAbstractSource extends AbstractSourceExecute {
 
     private static Map<String, Queue<SourceTaskInfo>> procSourceTask = new ConcurrentHashMap<>();
 
     private JdbcTemplate jdbcTemplate;
 
-    public OracleSource(ProgramInfo programInfo, MemoryCache memoryCache) {
+    public OracleAbstractSource(ProgramInfo programInfo, MemoryCache memoryCache) {
         super(programInfo, memoryCache);
         procSourceTask.put(procNameAndBatchNo, taskMetadataQueue);
         jdbcTemplate = OracleConnection.getJdbcTemplate(procNameAndBatchNoAndSourceDsName);

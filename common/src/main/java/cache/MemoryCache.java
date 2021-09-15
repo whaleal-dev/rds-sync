@@ -1,6 +1,7 @@
 package cache;
 
 import common.dataclass.BatchDataEntity;
+import common.taskbase.PhotonObject;
 import lombok.NoArgsConstructor;
 
 import java.util.Queue;
@@ -14,26 +15,16 @@ import java.util.concurrent.atomic.LongAdder;
  * @time: 2021/7/20 9:53 上午
  * @desc: 数据缓存类
  */
-@NoArgsConstructor
-public class MemoryCache {
+public class MemoryCache extends PhotonObject {
+
     /**
-     * 任务名称
-     */
-    private String taskName;
-    /**
-     * 程序名称
-     */
-    private String proName;
-    /**
-     * 批次号
-     */
-    private long batchNo;
-    /**
-     * 缓存区个数 默认20个
+     * 每个缓存区缓存批次数量
+     * 默认20个
      */
     private int cacheNum = 20;
     /**
-     * 每个缓存区缓存批次数量 默认20个
+     * 缓存区个数
+     * 默认20个
      */
     public int cacheSize = 20;
     /**
@@ -60,8 +51,7 @@ public class MemoryCache {
      * @desc 初始化缓存区类
      */
     public MemoryCache(String taskName, String proName, int cacheNum, int cacheSize, boolean isFirst) {
-        this.proName = proName;
-        this.taskName = taskName;
+        super(taskName, proName);
         this.cacheSize = cacheSize;
         this.cacheNum = cacheNum;
         this.cacheList = new MemoryCache[cacheNum];

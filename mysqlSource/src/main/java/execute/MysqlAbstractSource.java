@@ -3,9 +3,8 @@ package execute;
 import cache.MemoryCache;
 import common.dataclass.Range;
 import common.taskbase.SourceTaskInfo;
-import common.taskbase.metadata.SourceMetadata;
+import common.taskbase.AbstractSourceExecute;
 import common.photonV.entity.ProgramInfo;
-import datasource.DataSourceUtil;
 import dbconnection.mysql.MySqlConnection;
 import org.springframework.jdbc.core.JdbcTemplate;
 import sourcesplit.MysqlSourceSplitRange;
@@ -15,7 +14,6 @@ import thread.SysPoolManager;
 import util.Log;
 
 import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
@@ -24,13 +22,13 @@ import java.util.concurrent.TimeUnit;
  * @author: jy
  * @Date: 2021/08/25
  */
-public class MysqlSource extends SourceMetadata {
+public class MysqlAbstractSource extends AbstractSourceExecute {
 
     private Connection connection;
     private JdbcTemplate jdbcTemplate;
 
 
-    public MysqlSource(ProgramInfo programInfo, MemoryCache memoryCache) {
+    public MysqlAbstractSource(ProgramInfo programInfo, MemoryCache memoryCache) {
         super(programInfo, memoryCache);
         this.programInfo = programInfo;
         procSourceTask.put(procNameAndBatchNo, taskMetadataQueue);

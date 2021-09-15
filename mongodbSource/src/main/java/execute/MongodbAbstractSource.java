@@ -4,10 +4,9 @@ import cache.MemoryCache;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoIterable;
-import common.taskbase.metadata.SourceMetadata;
+import common.taskbase.AbstractSourceExecute;
 import common.taskbase.SourceTaskInfo;
 import common.dataclass.Range;
-import lombok.NoArgsConstructor;
 import thread.SourceTaskPoolManager;
 import thread.SysPoolManager;
 import common.photonV.entity.ProgramInfo;
@@ -28,12 +27,12 @@ import java.util.concurrent.TimeUnit;
  * @desc: MongodbSource类 获取所有的表，切分任务
  */
 
-public class MongodbSource extends SourceMetadata {
+public class MongodbAbstractSource extends AbstractSourceExecute {
     private MongoClient mongoClient;
 
     protected static Map<String, Queue<SourceTaskInfo>> procSourceTask = new ConcurrentHashMap<>();
 
-    public MongodbSource(ProgramInfo programInfo, MemoryCache memoryCache) {
+    public MongodbAbstractSource(ProgramInfo programInfo, MemoryCache memoryCache) {
         super(programInfo, memoryCache);
         procSourceTask.put(procNameAndBatchNo, taskMetadataQueue);
         mongoClient = MongoDbConnection.getMongoClient(procNameAndBatchNoAndSourceDsName);

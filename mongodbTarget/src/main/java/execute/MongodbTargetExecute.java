@@ -4,12 +4,8 @@ import cache.MemoryCache;
 import com.mongodb.BasicDBObject;
 import com.mongodb.client.MongoClient;
 import common.photonV.entity.ProgramInfo;
-import common.taskbase.AbstractTarget;
+import common.taskbase.AbstractTargetExecute;
 import dbconnection.mongodb.MongoDbConnection;
-import dbconnection.mysql.MySqlConnection;
-import org.bson.BSONObject;
-import org.bson.Document;
-import org.springframework.jdbc.core.JdbcTemplate;
 import task.MongodbTargetTask;
 import thread.TargetTaskPoolManager;
 import util.Log;
@@ -23,8 +19,8 @@ import java.util.Set;
  * @desc: 主类
  */
 
-public class MongodbTarget extends AbstractTarget {
-    public MongodbTarget(ProgramInfo programInfo, MemoryCache memoryCache, String procName) {
+public class MongodbTargetExecute extends AbstractTargetExecute {
+    public MongodbTargetExecute(ProgramInfo programInfo, MemoryCache memoryCache, String procName) {
         super(programInfo, memoryCache, procName);
     }
 

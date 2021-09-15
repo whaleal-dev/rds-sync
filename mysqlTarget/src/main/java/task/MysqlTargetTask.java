@@ -2,7 +2,6 @@ package task;
 
 import cache.MemoryCache;
 import common.column.AbstractColumn;
-import common.column.BytesColumn;
 import common.column.StringColumn;
 import common.columnclass.ColumnType;
 import common.dataclass.BatchDataEntity;
@@ -22,8 +21,6 @@ import java.sql.Statement;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 
 
 /**

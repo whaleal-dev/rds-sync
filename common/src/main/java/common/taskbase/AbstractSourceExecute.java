@@ -1,4 +1,4 @@
-package common.taskbase.metadata;
+package common.taskbase;
 
 import cache.MemoryCache;
 import common.taskbase.SourceTaskInfo;
@@ -17,7 +17,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  * @author: lhp
  * @time: 2021/7/31 1:34 下午
  */
-public abstract class SourceMetadata {
+public abstract class AbstractSourceExecute {
     /**
      * 配置文件类
      */
@@ -91,7 +91,7 @@ public abstract class SourceMetadata {
         return dbTableNameSet;
     }
 
-    public SourceMetadata(ProgramInfo programInfo, MemoryCache memoryCache) {
+    public AbstractSourceExecute(ProgramInfo programInfo, MemoryCache memoryCache) {
         this.sourceDsName = programInfo.getSourceDsName();
         this.taskName = programInfo.getTaskName();
         this.proName = programInfo.getProName();

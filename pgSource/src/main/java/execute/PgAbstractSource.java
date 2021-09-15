@@ -3,10 +3,9 @@ package execute;
 import cache.MemoryCache;
 import common.dataclass.Range;
 import common.taskbase.SourceTaskInfo;
-import common.taskbase.metadata.SourceMetadata;
+import common.taskbase.AbstractSourceExecute;
 import common.photonV.entity.ProgramInfo;
 import dbconnection.pgserver.PgServerConnection;
-import lombok.NoArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
 import sourcesplit.PgSourceSplitRange;
 import task.PgSourceTask;
@@ -27,13 +26,13 @@ import java.util.concurrent.TimeUnit;
  * @desc: PgSource类
  */
 
-public class PgSource extends SourceMetadata {
+public class PgAbstractSource extends AbstractSourceExecute {
 
     private JdbcTemplate jdbcTemplate;
 
     protected static Map<String, Queue<SourceTaskInfo>> procSourceTask = new ConcurrentHashMap<>();
 
-    public PgSource(ProgramInfo programInfo, MemoryCache memoryCache) {
+    public PgAbstractSource(ProgramInfo programInfo, MemoryCache memoryCache) {
         super(programInfo, memoryCache);
         procSourceTask.put(procNameAndBatchNo, taskMetadataQueue);
         this.jdbcTemplate=PgServerConnection.getJdbcTemplate(procNameAndBatchNoAndSourceDsName);

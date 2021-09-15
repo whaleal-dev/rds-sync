@@ -1,7 +1,6 @@
 package task;
 
 import cache.MemoryCache;
-import com.mongodb.bulk.BulkWriteResult;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.model.BulkWriteOptions;
 import com.mongodb.client.model.InsertOneModel;
@@ -19,9 +18,6 @@ import util.Log;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 
 /**

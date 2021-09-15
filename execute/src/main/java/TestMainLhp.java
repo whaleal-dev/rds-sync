@@ -1,12 +1,12 @@
 import cache.MemoryCache;
-import com.whaleal.photon.source.oracle.execute.OracleSource;
+import com.whaleal.photon.source.oracle.execute.OracleAbstractSource;
 import common.OplogMetadata;
 import common.dbtype.DbTypeFlag;
 import common.photonV.entity.Datasource;
 import common.photonV.entity.TaskTrigger;
 import common.photonV.entity.ProgramInfo;
 import common.taskbase.AbstractTargetTask;
-import common.taskbase.metadata.SourceMetadata;
+import common.taskbase.AbstractSourceExecute;
 import dbconnection.oracle.OracleConnection;
 import programInfo.ProgramInfoUtil;
 import datasource.DataSourceUtil;
@@ -154,14 +154,14 @@ public class TestMainLhp {
 
     }
 
-    public static void getProExeInfo(ProgramInfo programInfo, SourceMetadata sourceMetadata, MemoryCache memoryCache, TaskTrigger taskTrigger) {
+    public static void getProExeInfo(ProgramInfo programInfo, AbstractSourceExecute abstractSourceExecute, MemoryCache memoryCache, TaskTrigger taskTrigger) {
         String procNameAndBatchNo = programInfo.getProName() + programInfo.getBatchNO();
         while (true) {
             try {
                 Thread.sleep(10000);
                 int sourceThread = SourceTaskPoolManager.setSourceActiveThreadNum(procNameAndBatchNo, 0);
-                boolean getAllDbTable = sourceMetadata.isGetAllDbTable();
-                int sourceTaskQueueSize = sourceMetadata.getTaskMetadataQueueSize();
+                boolean getAllDbTable = abstractSourceExecute.isGetAllDbTable();
+                int sourceTaskQueueSize = abstractSourceExecute.getTaskMetadataQueueSize();
                 int setSysActiveThreadNum = SysPoolManager.setSysActiveThreadNum(procNameAndBatchNo, 0);
                 int targetActiveThreadNum = TargetTaskPoolManager.setTargetActiveThreadNum(procNameAndBatchNo, 0);
                 int allDataCacheNum = memoryCache.getAllDataCacheNum();
@@ -261,8 +261,8 @@ public class TestMainLhp {
 
     public static void testMongoDbToMysql(ProgramInfo programInfo, MemoryCache memoryCache, TaskTrigger taskTrigger) {
 
-        MysqlTarget mysqlTarget = new MysqlTarget(programInfo, memoryCache, programInfo.getProName());
-        MongodbSource mongodbSource = new MongodbSource(programInfo, memoryCache);
+        MysqlTargetExecute mysqlTarget = new MysqlTargetExecute(programInfo, memoryCache, programInfo.getProName());
+        MongodbAbstractSource mongodbSource = new MongodbAbstractSource(programInfo, memoryCache);
         // 获取数据源的全部库表
         mongodbSource.getAllDbCollections(programInfo.getSourceDsName());
 
@@ -297,8 +297,8 @@ public class TestMainLhp {
     public static void testPgToMysql(ProgramInfo programInfo, MemoryCache memoryCache, TaskTrigger taskTrigger) {
 
 
-        PgSource pgSource = new PgSource(programInfo, memoryCache);
-        MysqlTarget mysqlTarget = new MysqlTarget(programInfo, memoryCache, programInfo.getProName());
+        PgAbstractSource pgSource = new PgAbstractSource(programInfo, memoryCache);
+        MysqlTargetExecute mysqlTarget = new MysqlTargetExecute(programInfo, memoryCache, programInfo.getProName());
 
 
         pgSource.getAllDbCollections(programInfo.getSourceDsName());
@@ -346,8 +346,8 @@ public class TestMainLhp {
 
     public static void testMongoDbToMongoDb(ProgramInfo programInfo, MemoryCache memoryCache, TaskTrigger taskTrigger) {
 
-        MongodbTarget mongodbTarget = new MongodbTarget(programInfo, memoryCache, programInfo.getProName());
-        MongodbSource mongodbSource = new MongodbSource(programInfo, memoryCache);
+        MongodbTargetExecute mongodbTarget = new MongodbTargetExecute(programInfo, memoryCache, programInfo.getProName());
+        MongodbAbstractSource mongodbSource = new MongodbAbstractSource(programInfo, memoryCache);
         // 获取数据源的全部库表
         mongodbSource.getAllDbCollections(programInfo.getSourceDsName());
 
@@ -383,8 +383,8 @@ public class TestMainLhp {
 
     public static void testMysqlToMongoDb(ProgramInfo programInfo, MemoryCache memoryCache, TaskTrigger taskTrigger) {
 
-        MongodbTarget mongodbTarget = new MongodbTarget(programInfo, memoryCache, programInfo.getProName());
-        MysqlSource mysqlSource = new MysqlSource(programInfo, memoryCache);
+        MongodbTargetExecute mongodbTarget = new MongodbTargetExecute(programInfo, memoryCache, programInfo.getProName());
+        MysqlAbstractSource mysqlSource = new MysqlAbstractSource(programInfo, memoryCache);
         // 获取数据源的全部库表
         mysqlSource.getAllDbCollections(programInfo.getSourceDsName());
 
@@ -419,8 +419,8 @@ public class TestMainLhp {
     public static void testPgToMongoDb(ProgramInfo programInfo, MemoryCache memoryCache, TaskTrigger taskTrigger) {
 
 
-        MongodbTarget mongodbTarget = new MongodbTarget(programInfo, memoryCache, programInfo.getProName());
-        PgSource pgSource = new PgSource(programInfo, memoryCache);
+        MongodbTargetExecute mongodbTarget = new MongodbTargetExecute(programInfo, memoryCache, programInfo.getProName());
+        PgAbstractSource pgSource = new PgAbstractSource(programInfo, memoryCache);
 
         pgSource.getAllDbCollections(programInfo.getSourceDsName());
 
@@ -455,9 +455,9 @@ public class TestMainLhp {
     public static void testOracleToMongoDb(ProgramInfo programInfo, MemoryCache memoryCache, TaskTrigger taskTrigger) {
 
 
-        MongodbTarget mongodbTarget = new MongodbTarget(programInfo, memoryCache, programInfo.getProName());
+        MongodbTargetExecute mongodbTarget = new MongodbTargetExecute(programInfo, memoryCache, programInfo.getProName());
 
-        OracleSource oracleSource = new OracleSource(programInfo, memoryCache);
+        OracleAbstractSource oracleSource = new OracleAbstractSource(programInfo, memoryCache);
         oracleSource.getAllDbCollections(programInfo.getSourceDsName());
 
 
@@ -492,9 +492,9 @@ public class TestMainLhp {
     public static void testMysqlToMysql(ProgramInfo programInfo, MemoryCache memoryCache, TaskTrigger taskTrigger) {
 
 
-        MysqlTarget mysqlTarget = new MysqlTarget(programInfo, memoryCache, programInfo.getProName());
+        MysqlTargetExecute mysqlTarget = new MysqlTargetExecute(programInfo, memoryCache, programInfo.getProName());
 
-        MysqlSource mysqlSource = new MysqlSource(programInfo, memoryCache);
+        MysqlAbstractSource mysqlSource = new MysqlAbstractSource(programInfo, memoryCache);
         // 获取数据源的全部库表
         mysqlSource.getAllDbCollections(programInfo.getSourceDsName());
 
@@ -538,8 +538,8 @@ public class TestMainLhp {
     public static void testOracleToMysql(ProgramInfo programInfo, MemoryCache memoryCache, TaskTrigger taskTrigger) {
 
 
-        MysqlTarget mysqlTarget = new MysqlTarget(programInfo, memoryCache, programInfo.getProName());
-        OracleSource oracleSource = new OracleSource(programInfo, memoryCache);
+        MysqlTargetExecute mysqlTarget = new MysqlTargetExecute(programInfo, memoryCache, programInfo.getProName());
+        OracleAbstractSource oracleSource = new OracleAbstractSource(programInfo, memoryCache);
         // 获取数据源的全部库表
         oracleSource.getAllDbCollections(programInfo.getSourceDsName());
 

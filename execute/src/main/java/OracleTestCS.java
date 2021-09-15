@@ -1,10 +1,10 @@
 import cache.MemoryCache;
-import com.whaleal.photon.source.oracle.execute.OracleSource;
+import com.whaleal.photon.source.oracle.execute.OracleAbstractSource;
 import common.photonV.entity.ProgramInfo;
 import datasource.DataSourceUtil;
 import dbconnection.mongodb.MongoDbConnection;
 import dbconnection.oracle.OracleConnection;
-import execute.MongodbTarget;
+import execute.MongodbTargetExecute;
 import programInfo.ProgramInfoUtil;
 import task.MongodbTargetTask;
 import thread.SourceTaskPoolManager;
@@ -41,10 +41,10 @@ public class OracleTestCS {
                 5, 5);
 
 
-        MongodbTarget mongodbTarget = new MongodbTarget(programInfo, memoryCache, programInfo.getProName());
+        MongodbTargetExecute mongodbTarget = new MongodbTargetExecute(programInfo, memoryCache, programInfo.getProName());
         mongodbTarget.startToTarget();
 
-        OracleSource oracleSource = new OracleSource(programInfo, memoryCache);
+        OracleAbstractSource oracleSource = new OracleAbstractSource(programInfo, memoryCache);
         oracleSource.createTask();
 
         while (true) {

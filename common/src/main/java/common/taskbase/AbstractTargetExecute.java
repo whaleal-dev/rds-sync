@@ -12,7 +12,7 @@ import java.util.Set;
  * @time: 2021/8/24 12:41 下午
  */
 @AllArgsConstructor
-public abstract class AbstractTarget {
+public abstract class AbstractTargetExecute {
 
     protected ProgramInfo programInfo;
 
@@ -28,7 +28,7 @@ public abstract class AbstractTarget {
 
     protected String procNameAndBatchNoAndTargetDsName;
 
-    public AbstractTarget(ProgramInfo programInfo, MemoryCache memoryCache, String procName) {
+    public AbstractTargetExecute(ProgramInfo programInfo, MemoryCache memoryCache, String procName) {
         this.programInfo = programInfo;
         this.memoryCache = memoryCache;
         this.procName = procName;

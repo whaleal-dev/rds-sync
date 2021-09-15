@@ -2,17 +2,14 @@ package execute;
 
 import cache.MemoryCache;
 
-import com.mongodb.client.MongoClient;
 import common.photonV.entity.ProgramInfo;
-import common.taskbase.AbstractTarget;
-import dbconnection.mongodb.MongoDbConnection;
+import common.taskbase.AbstractTargetExecute;
 import dbconnection.mysql.MySqlConnection;
 import org.springframework.jdbc.core.JdbcTemplate;
 import task.MysqlTargetTask;
 import thread.TargetTaskPoolManager;
 import util.Log;
 
-import java.sql.Connection;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
@@ -21,12 +18,12 @@ import java.util.Set;
 /**
  * @author: lhp
  * @time: 2021/7/19 3:02 下午
- * @desc: MysqlTarget
+ * @desc: MysqlTargetExecute
  */
 
-public class MysqlTarget extends AbstractTarget {
+public class MysqlTargetExecute extends AbstractTargetExecute {
 
-    public MysqlTarget(ProgramInfo programInfo, MemoryCache memoryCache, String procName) {
+    public MysqlTargetExecute(ProgramInfo programInfo, MemoryCache memoryCache, String procName) {
         super(programInfo, memoryCache, procName);
     }
 

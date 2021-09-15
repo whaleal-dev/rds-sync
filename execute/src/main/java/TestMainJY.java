@@ -1,11 +1,11 @@
 import cache.MemoryCache;
 import common.photonV.entity.ProgramInfo;
+import execute.MongodbTargetExecute;
 import programInfo.ProgramInfoUtil;
 import datasource.DataSourceUtil;
 import dbconnection.mongodb.MongoDbConnection;
 import dbconnection.mysql.MySqlConnection;
-import execute.MongodbTarget;
-import execute.MysqlSource;
+import execute.MysqlAbstractSource;
 import task.*;
 import thread.SourceTaskPoolManager;
 import thread.SysPoolManager;
@@ -71,10 +71,10 @@ public class TestMainJY {
         TargetTaskPoolManager targetTaskPoolManager = new TargetTaskPoolManager(programInfo.getProName(),
                 5, 5);
 
-        MongodbTarget mongodbTarget = new MongodbTarget(programInfo, memoryCache, programInfo.getProName());
+        MongodbTargetExecute mongodbTarget = new MongodbTargetExecute(programInfo, memoryCache, programInfo.getProName());
         mongodbTarget.startToTarget();
 
-        MysqlSource mysqlSource = new MysqlSource(programInfo, memoryCache);
+        MysqlAbstractSource mysqlSource = new MysqlAbstractSource(programInfo, memoryCache);
         mysqlSource.createTask();
 
         while (true) {

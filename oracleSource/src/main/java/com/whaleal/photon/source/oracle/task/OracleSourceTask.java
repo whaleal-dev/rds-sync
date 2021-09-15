@@ -8,14 +8,12 @@ import common.dataclass.Range;
 import common.taskbase.AbstractSourceTask;
 import common.taskbase.SourceTaskInfo;
 import dbconnection.oracle.OracleConnection;
-import org.springframework.jdbc.core.JdbcTemplate;
 import thread.SourceTaskPoolManager;
 import util.Log;
 
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * oracle目标源任务

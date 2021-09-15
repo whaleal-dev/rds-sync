@@ -11,7 +11,7 @@ import common.column.AbstractColumn;
 import common.dataclass.BatchDataEntity;
 import common.dataclass.Range;
 
-import execute.MongodbSource;
+import execute.MongodbAbstractSource;
 import dbconnection.mongodb.MongoDbConnection;
 import org.bson.Document;
 import parse.MongodbDataToColumnData;
@@ -19,7 +19,6 @@ import thread.SourceTaskPoolManager;
 import util.Log;
 
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @author: lhp
@@ -40,7 +39,7 @@ public class MongodbSourceTask extends AbstractSourceTask {
 
 
     public MongodbSourceTask(SourceTaskInfo taskMetadata, String procName, MemoryCache memoryCache,
-                             int dataBatchSize,long batchNo,boolean isUserDeFaultType) {
+                             int dataBatchSize, long batchNo, boolean isUserDeFaultType) {
         super(taskMetadata, procName, memoryCache, dataBatchSize,batchNo,isUserDeFaultType);
         this.mongoClient = MongoDbConnection.getMongoClient(procNameAndBatchNoAndSourceDsName);
     }
@@ -105,7 +104,7 @@ public class MongodbSourceTask extends AbstractSourceTask {
             rangeTem.setMax(range.isMax());
             // 出现意外时，再次启动该任务实例
             SourceTaskInfo taskMetadata = new SourceTaskInfo(rangeTem, this.taskMetadata.getDbTableName(), this.taskMetadata.getSourceDsName());
-            MongodbSource.pushTaskMeta(procNameAndBatchNo, taskMetadata);
+            MongodbAbstractSource.pushTaskMeta(procNameAndBatchNo, taskMetadata);
         } finally {
             // 设置range的结束时间。设置range的开始结束时间，后期会使用到该参数
             range.setEndTime(System.currentTimeMillis());
