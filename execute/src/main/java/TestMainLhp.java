@@ -1,26 +1,34 @@
-import cache.MemoryCache;
-import com.whaleal.photon.source.oracle.execute.OracleAbstractSource;
-import common.OplogMetadata;
-import common.dbtype.DbTypeFlag;
-import common.photonV.entity.Datasource;
-import common.photonV.entity.TaskTrigger;
-import common.photonV.entity.ProgramInfo;
-import common.taskbase.AbstractTargetTask;
-import common.taskbase.AbstractSourceExecute;
-import dbconnection.oracle.OracleConnection;
-import programInfo.ProgramInfoUtil;
-import datasource.DataSourceUtil;
-import dbconnection.mongodb.MongoDbConnection;
-import dbconnection.mysql.MySqlConnection;
-import dbconnection.pgserver.PgServerConnection;
-import execute.*;
-import task.*;
-import thread.SourceTaskPoolManager;
-import thread.SysPoolManager;
-import thread.TargetTaskPoolManager;
-import trigger.TriggerUtil;
-import util.Log;
-import util.StringUtil;
+import com.whaleal.photon.common.cache.MemoryCache;
+import com.whaleal.photon.common.common.columntype.DbTypeFlag;
+import com.whaleal.photon.common.common.photonV.entity.Datasource;
+import com.whaleal.photon.common.common.photonV.entity.TaskTrigger;
+import com.whaleal.photon.common.common.photonV.entity.ProgramInfo;
+import com.whaleal.photon.common.common.taskbase.AbstractTargetTask;
+import com.whaleal.photon.common.common.taskbase.AbstractSourceExecute;
+import com.whaleal.photon.core.dbconnection.oracle.OracleConnection;
+import com.whaleal.photon.core.datasource.DataSourceUtil;
+import com.whaleal.photon.core.dbconnection.mongodb.MongoDbConnection;
+import com.whaleal.photon.core.dbconnection.mysql.MySqlConnection;
+import com.whaleal.photon.core.dbconnection.pgserver.PgServerConnection;
+import com.whaleal.photon.core.programInfo.ProgramInfoUtil;
+import com.whaleal.photon.core.trigger.TriggerUtil;
+import com.whaleal.photon.realtime.mongodb.common.OplogMetadata;
+import com.whaleal.photon.realtime.mongodb.task.OplogNsBucketTask;
+import com.whaleal.photon.realtime.mongodb.task.OplogNsTask;
+import com.whaleal.photon.realtime.mongodb.task.OplogReadTask;
+import com.whaleal.photon.realtime.mongodb.task.OplogWriteTask;
+import com.whaleal.photon.source.mongodb.exexute.MongodbSourceExecute;
+import com.whaleal.photon.source.mysql.execute.MysqlSourceExecute;
+import com.whaleal.photon.source.oracle.execute.OracleSourceExecute;
+import com.whaleal.photon.source.pg.execute.PgSourceExecute;
+import com.whaleal.photon.target.mongodb.execute.*;
+
+import com.whaleal.photon.common.thread.SourceTaskPoolManager;
+import com.whaleal.photon.common.thread.SysPoolManager;
+import com.whaleal.photon.common.thread.TargetTaskPoolManager;
+import com.whaleal.photon.common.util.Log;
+import com.whaleal.photon.common.util.StringUtil;
+import com.whaleal.photon.target.mysql.execute.MysqlTargetExecute;
 
 import java.util.Map;
 import java.util.Set;
@@ -46,10 +54,10 @@ public class TestMainLhp {
         // proc1 mongodb实时同步
 
 
-        String[] procNameArray = new String[]{"proc9"};
+        String[] procNameArray = new String[]{"proc5"};
         for (String procName : procNameArray) {
             try {
-                long batchNo =1;
+                long batchNo = 1;
                 exe(procName, "taskName", batchNo);
             } catch (Exception e) {
                 e.printStackTrace();
@@ -67,7 +75,7 @@ public class TestMainLhp {
             programInfo.setUseDeFaultType(true);
 
         }
-        System.out.println("=============="+programInfo.isUseDeFaultType());
+        System.out.println("==============" + programInfo.isUseDeFaultType());
     }
 
     public static void exe(String procName, String taskName, long batchNo) throws InterruptedException {
@@ -78,7 +86,7 @@ public class TestMainLhp {
         if (programInfo == null || programInfo.getProName().length() == 0) {
             return;
         }
-        programInfo.setBatchNO(batchNo);
+        programInfo.setBatchNo(batchNo);
         // programInfo.setTargetThreadNum(1);
         //获取数据源对象
         Datasource dataSourceDb = DataSourceUtil.getDataSourceByDsName(programInfo.getSourceDsName());
@@ -145,7 +153,7 @@ public class TestMainLhp {
     }
 
     public static void createThreadPoolManager(ProgramInfo programInfo) {
-        String procNameAndBatchNo = programInfo.getProName() + programInfo.getBatchNO();
+        String procNameAndBatchNo = programInfo.getProName() + programInfo.getBatchNo();
         SourceTaskPoolManager sourceTaskPoolManager = new SourceTaskPoolManager(procNameAndBatchNo, programInfo.getSourceThreadNum(), programInfo.getSourceThreadNum());
 
         SysPoolManager sysPoolManager = new SysPoolManager(procNameAndBatchNo, 3, 3);
@@ -155,7 +163,7 @@ public class TestMainLhp {
     }
 
     public static void getProExeInfo(ProgramInfo programInfo, AbstractSourceExecute abstractSourceExecute, MemoryCache memoryCache, TaskTrigger taskTrigger) {
-        String procNameAndBatchNo = programInfo.getProName() + programInfo.getBatchNO();
+        String procNameAndBatchNo = programInfo.getProName() + programInfo.getBatchNo();
         while (true) {
             try {
                 Thread.sleep(10000);
@@ -229,11 +237,11 @@ public class TestMainLhp {
 
     public static void testRealTimeOfMongodb() {
         ProgramInfo programInfo = ProgramInfoUtil.getProgramInfo("proc1");
-        programInfo.setBatchNO(System.currentTimeMillis());
+        programInfo.setBatchNo(System.currentTimeMillis());
         programInfo.setDbTableWhite("photon.+");
         System.out.println(1);
 
-        String procNameAndBatchNo = programInfo.getProName() + programInfo.getBatchNO();
+        String procNameAndBatchNo = programInfo.getProName() + programInfo.getBatchNo();
 
         programInfo.setRealTimeThreadNum(5);
 
@@ -261,10 +269,10 @@ public class TestMainLhp {
 
     public static void testMongoDbToMysql(ProgramInfo programInfo, MemoryCache memoryCache, TaskTrigger taskTrigger) {
 
-        MysqlTargetExecute mysqlTarget = new MysqlTargetExecute(programInfo, memoryCache, programInfo.getProName());
-        MongodbAbstractSource mongodbSource = new MongodbAbstractSource(programInfo, memoryCache);
+        MysqlTargetExecute mysqlTarget = new MysqlTargetExecute(programInfo, memoryCache);
+        MongodbSourceExecute mongodbSource = new MongodbSourceExecute(programInfo, memoryCache);
         // 获取数据源的全部库表
-        mongodbSource.getAllDbCollections(programInfo.getSourceDsName());
+        mongodbSource.getAllDbTables();
 
         Set<String> dbTableNameSet = mongodbSource.getDbTableNameSet();
 
@@ -273,7 +281,7 @@ public class TestMainLhp {
             mysqlTarget.deleteExistDbTable(dbTableNameSet);
         } else {
             mysqlTarget.rollBackDataFromDbTable(dbTableNameSet);
-            String procNameAndBatchNo = programInfo.getProName() + programInfo.getBatchNO();
+            String procNameAndBatchNo = programInfo.getProName() + programInfo.getBatchNo();
             int targetActiveThreadNum = 0;
             do {
                 targetActiveThreadNum = TargetTaskPoolManager.setTargetActiveThreadNum(procNameAndBatchNo, 0);
@@ -288,20 +296,20 @@ public class TestMainLhp {
         // 启动获取提交Task任务的线程
         mongodbSource.submitSourceTask();
         // 开始遍历抽取该数据源的所有库表
-        mongodbSource.startFromSource(programInfo.getSourceDsName(), false);
+        mongodbSource.splitDbTable();
 
-        mysqlTarget.startToTarget();
+        mysqlTarget.start();
         getProExeInfo(programInfo, mongodbSource, memoryCache, taskTrigger);
     }
 
     public static void testPgToMysql(ProgramInfo programInfo, MemoryCache memoryCache, TaskTrigger taskTrigger) {
 
 
-        PgAbstractSource pgSource = new PgAbstractSource(programInfo, memoryCache);
-        MysqlTargetExecute mysqlTarget = new MysqlTargetExecute(programInfo, memoryCache, programInfo.getProName());
+        PgSourceExecute pgSource = new PgSourceExecute(programInfo, memoryCache);
+        MysqlTargetExecute mysqlTarget = new MysqlTargetExecute(programInfo, memoryCache);
 
 
-        pgSource.getAllDbCollections(programInfo.getSourceDsName());
+        pgSource.getAllDbTables();
 
 
         Set<String> dbTableNameSet = pgSource.getDbTableNameSet();
@@ -311,7 +319,7 @@ public class TestMainLhp {
             mysqlTarget.deleteExistDbTable(dbTableNameSet);
         } else {
             mysqlTarget.rollBackDataFromDbTable(dbTableNameSet);
-            String procNameAndBatchNo = programInfo.getProName() + programInfo.getBatchNO();
+            String procNameAndBatchNo = programInfo.getProName() + programInfo.getBatchNo();
             int targetActiveThreadNum = 0;
             do {
                 targetActiveThreadNum = TargetTaskPoolManager.setTargetActiveThreadNum(procNameAndBatchNo, 0);
@@ -327,10 +335,8 @@ public class TestMainLhp {
         // 启动获取提交Task任务的线程
         pgSource.submitSourceTask();
         // 开始遍历抽取该数据源的所有库表
-        pgSource.startFromSource(programInfo.getSourceDsName(), false);
-
-
-        mysqlTarget.startToTarget();
+        pgSource.splitDbTable();
+        mysqlTarget.start();
 
         getProExeInfo(programInfo, pgSource, memoryCache, taskTrigger);
     }
@@ -340,16 +346,16 @@ public class TestMainLhp {
         taskTrigger.setId(StringUtil.generateUUID());
         taskTrigger.setBatchNo(batchNo);
         taskTrigger.setTaskName(taskName);
-        taskTrigger.setProcName(procName);
+        taskTrigger.setProName(procName);
         return taskTrigger;
     }
 
     public static void testMongoDbToMongoDb(ProgramInfo programInfo, MemoryCache memoryCache, TaskTrigger taskTrigger) {
 
-        MongodbTargetExecute mongodbTarget = new MongodbTargetExecute(programInfo, memoryCache, programInfo.getProName());
-        MongodbAbstractSource mongodbSource = new MongodbAbstractSource(programInfo, memoryCache);
+        MongodbTargetExecute mongodbTarget = new MongodbTargetExecute(programInfo, memoryCache);
+        MongodbSourceExecute mongodbSource = new MongodbSourceExecute(programInfo, memoryCache);
         // 获取数据源的全部库表
-        mongodbSource.getAllDbCollections(programInfo.getSourceDsName());
+        mongodbSource.getAllDbTables();
 
         Set<String> dbTableNameSet = mongodbSource.getDbTableNameSet();
 
@@ -358,7 +364,7 @@ public class TestMainLhp {
             mongodbTarget.deleteExistDbTable(dbTableNameSet);
         } else {
             mongodbTarget.rollBackDataFromDbTable(dbTableNameSet);
-            String procNameAndBatchNo = programInfo.getProName() + programInfo.getBatchNO();
+            String procNameAndBatchNo = programInfo.getProName() + programInfo.getBatchNo();
             int targetActiveThreadNum = 0;
             do {
                 targetActiveThreadNum = TargetTaskPoolManager.setTargetActiveThreadNum(procNameAndBatchNo, 0);
@@ -373,20 +379,20 @@ public class TestMainLhp {
         // 启动获取提交Task任务的线程
         mongodbSource.submitSourceTask();
         // 开始遍历抽取该数据源的所有库表
-        mongodbSource.startFromSource(programInfo.getSourceDsName(), false);
+        mongodbSource.splitDbTable();
 
 
-        mongodbTarget.startToTarget();
+        mongodbTarget.start();
 
         getProExeInfo(programInfo, mongodbSource, memoryCache, taskTrigger);
     }
 
     public static void testMysqlToMongoDb(ProgramInfo programInfo, MemoryCache memoryCache, TaskTrigger taskTrigger) {
 
-        MongodbTargetExecute mongodbTarget = new MongodbTargetExecute(programInfo, memoryCache, programInfo.getProName());
-        MysqlAbstractSource mysqlSource = new MysqlAbstractSource(programInfo, memoryCache);
+        MongodbTargetExecute mongodbTarget = new MongodbTargetExecute(programInfo, memoryCache);
+        MysqlSourceExecute mysqlSource = new MysqlSourceExecute(programInfo, memoryCache);
         // 获取数据源的全部库表
-        mysqlSource.getAllDbCollections(programInfo.getSourceDsName());
+        mysqlSource.getAllDbTables();
 
         Set<String> dbTableNameSet = mysqlSource.getDbTableNameSet();
 
@@ -395,7 +401,7 @@ public class TestMainLhp {
             mongodbTarget.deleteExistDbTable(dbTableNameSet);
         } else {
             mongodbTarget.rollBackDataFromDbTable(dbTableNameSet);
-            String procNameAndBatchNo = programInfo.getProName() + programInfo.getBatchNO();
+            String procNameAndBatchNo = programInfo.getProName() + programInfo.getBatchNo();
             int targetActiveThreadNum = 0;
             do {
                 targetActiveThreadNum = TargetTaskPoolManager.setTargetActiveThreadNum(procNameAndBatchNo, 0);
@@ -411,18 +417,18 @@ public class TestMainLhp {
         // 启动获取提交Task任务的线程
         mysqlSource.submitSourceTask();
         // 开始遍历抽取该数据源的所有库表
-        mysqlSource.startFromSource(programInfo.getSourceDsName(), false);
-        mongodbTarget.startToTarget();
+        mysqlSource.splitDbTable();
+        mongodbTarget.start();
         getProExeInfo(programInfo, mysqlSource, memoryCache, taskTrigger);
     }
 
     public static void testPgToMongoDb(ProgramInfo programInfo, MemoryCache memoryCache, TaskTrigger taskTrigger) {
 
 
-        MongodbTargetExecute mongodbTarget = new MongodbTargetExecute(programInfo, memoryCache, programInfo.getProName());
-        PgAbstractSource pgSource = new PgAbstractSource(programInfo, memoryCache);
+        MongodbTargetExecute mongodbTarget = new MongodbTargetExecute(programInfo, memoryCache);
+        PgSourceExecute pgSource = new PgSourceExecute(programInfo, memoryCache);
 
-        pgSource.getAllDbCollections(programInfo.getSourceDsName());
+        pgSource.getAllDbTables();
 
         Set<String> dbTableNameSet = pgSource.getDbTableNameSet();
 
@@ -431,7 +437,7 @@ public class TestMainLhp {
             mongodbTarget.deleteExistDbTable(dbTableNameSet);
         } else {
             mongodbTarget.rollBackDataFromDbTable(dbTableNameSet);
-            String procNameAndBatchNo = programInfo.getProName() + programInfo.getBatchNO();
+            String procNameAndBatchNo = programInfo.getProName() + programInfo.getBatchNo();
             int targetActiveThreadNum = 0;
             do {
                 targetActiveThreadNum = TargetTaskPoolManager.setTargetActiveThreadNum(procNameAndBatchNo, 0);
@@ -447,18 +453,18 @@ public class TestMainLhp {
         // 启动获取提交Task任务的线程
         pgSource.submitSourceTask();
         // 开始遍历抽取该数据源的所有库表
-        pgSource.startFromSource(programInfo.getSourceDsName(), false);
-        mongodbTarget.startToTarget();
+        pgSource.splitDbTable();
+        mongodbTarget.start();
         getProExeInfo(programInfo, pgSource, memoryCache, taskTrigger);
     }
 
     public static void testOracleToMongoDb(ProgramInfo programInfo, MemoryCache memoryCache, TaskTrigger taskTrigger) {
 
 
-        MongodbTargetExecute mongodbTarget = new MongodbTargetExecute(programInfo, memoryCache, programInfo.getProName());
+        MongodbTargetExecute mongodbTarget = new MongodbTargetExecute(programInfo, memoryCache);
 
-        OracleAbstractSource oracleSource = new OracleAbstractSource(programInfo, memoryCache);
-        oracleSource.getAllDbCollections(programInfo.getSourceDsName());
+        OracleSourceExecute oracleSource = new OracleSourceExecute(programInfo, memoryCache);
+        oracleSource.getAllDbTables();
 
 
         Set<String> dbTableNameSet = oracleSource.getDbTableNameSet();
@@ -468,7 +474,7 @@ public class TestMainLhp {
             mongodbTarget.deleteExistDbTable(dbTableNameSet);
         } else {
             mongodbTarget.rollBackDataFromDbTable(dbTableNameSet);
-            String procNameAndBatchNo = programInfo.getProName() + programInfo.getBatchNO();
+            String procNameAndBatchNo = programInfo.getProName() + programInfo.getBatchNo();
             int targetActiveThreadNum = 0;
             do {
                 targetActiveThreadNum = TargetTaskPoolManager.setTargetActiveThreadNum(procNameAndBatchNo, 0);
@@ -484,19 +490,19 @@ public class TestMainLhp {
         // 启动获取提交Task任务的线程
         oracleSource.submitSourceTask();
         // 开始遍历抽取该数据源的所有库表
-        oracleSource.startFromSource(programInfo.getSourceDsName(), false);
-        mongodbTarget.startToTarget();
+        oracleSource.splitDbTable();
+        mongodbTarget.start();
         getProExeInfo(programInfo, oracleSource, memoryCache, taskTrigger);
     }
 
     public static void testMysqlToMysql(ProgramInfo programInfo, MemoryCache memoryCache, TaskTrigger taskTrigger) {
 
 
-        MysqlTargetExecute mysqlTarget = new MysqlTargetExecute(programInfo, memoryCache, programInfo.getProName());
+        MysqlTargetExecute mysqlTarget = new MysqlTargetExecute(programInfo, memoryCache);
 
-        MysqlAbstractSource mysqlSource = new MysqlAbstractSource(programInfo, memoryCache);
+        MysqlSourceExecute mysqlSource = new MysqlSourceExecute(programInfo, memoryCache);
         // 获取数据源的全部库表
-        mysqlSource.getAllDbCollections(programInfo.getSourceDsName());
+        mysqlSource.getAllDbTables();
 
 
         Set<String> dbTableNameSet = mysqlSource.getDbTableNameSet();
@@ -513,7 +519,7 @@ public class TestMainLhp {
             }
         } else {
             mysqlTarget.rollBackDataFromDbTable(dbTableNameSet);
-            String procNameAndBatchNo = programInfo.getProName() + programInfo.getBatchNO();
+            String procNameAndBatchNo = programInfo.getProName() + programInfo.getBatchNo();
             int targetActiveThreadNum = 0;
             do {
                 targetActiveThreadNum = TargetTaskPoolManager.setTargetActiveThreadNum(procNameAndBatchNo, 0);
@@ -529,19 +535,19 @@ public class TestMainLhp {
         // 启动获取提交Task任务的线程
         mysqlSource.submitSourceTask();
         // 开始遍历抽取该数据源的所有库表
-        mysqlSource.startFromSource(programInfo.getSourceDsName(), false);
+        mysqlSource.splitDbTable();
 
-        mysqlTarget.startToTarget();
+        mysqlTarget.start();
         getProExeInfo(programInfo, mysqlSource, memoryCache, taskTrigger);
     }
 
     public static void testOracleToMysql(ProgramInfo programInfo, MemoryCache memoryCache, TaskTrigger taskTrigger) {
 
 
-        MysqlTargetExecute mysqlTarget = new MysqlTargetExecute(programInfo, memoryCache, programInfo.getProName());
-        OracleAbstractSource oracleSource = new OracleAbstractSource(programInfo, memoryCache);
+        MysqlTargetExecute mysqlTarget = new MysqlTargetExecute(programInfo, memoryCache);
+        OracleSourceExecute oracleSource = new OracleSourceExecute(programInfo, memoryCache);
         // 获取数据源的全部库表
-        oracleSource.getAllDbCollections(programInfo.getSourceDsName());
+        oracleSource.getAllDbTables();
 
 
         Set<String> dbTableNameSet = oracleSource.getDbTableNameSet();
@@ -551,7 +557,7 @@ public class TestMainLhp {
             mysqlTarget.deleteExistDbTable(dbTableNameSet);
         } else {
             mysqlTarget.rollBackDataFromDbTable(dbTableNameSet);
-            String procNameAndBatchNo = programInfo.getProName() + programInfo.getBatchNO();
+            String procNameAndBatchNo = programInfo.getProName() + programInfo.getBatchNo();
             int targetActiveThreadNum = 0;
             do {
                 targetActiveThreadNum = TargetTaskPoolManager.setTargetActiveThreadNum(procNameAndBatchNo, 0);
@@ -567,8 +573,8 @@ public class TestMainLhp {
         // 启动获取提交Task任务的线程
         oracleSource.submitSourceTask();
         // 开始遍历抽取该数据源的所有库表
-        oracleSource.startFromSource(programInfo.getSourceDsName(), false);
-        mysqlTarget.startToTarget();
+        oracleSource.splitDbTable();
+        mysqlTarget.start();
         getProExeInfo(programInfo, oracleSource, memoryCache, taskTrigger);
     }
 

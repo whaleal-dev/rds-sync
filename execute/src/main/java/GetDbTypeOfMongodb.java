@@ -1,9 +1,9 @@
 import com.google.gson.Gson;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCollection;
-import common.photonV.entity.Datasource;
-import datasource.DataSourceUtil;
-import dbconnection.mongodb.MongoDbConnection;
+import com.whaleal.photon.common.common.photonV.entity.Datasource;
+import com.whaleal.photon.core.datasource.DataSourceUtil;
+import com.whaleal.photon.core.dbconnection.mongodb.MongoDbConnection;
 import org.bson.*;
 import org.bson.conversions.Bson;
 import org.bson.types.Binary;

@@ -1,7 +1,7 @@
 package com.whaleal.photon.source.oracle.parse;
 
-import common.column.*;
-import common.dbtype.java.EnumOracleDataInJavaType;
+import com.whaleal.photon.common.common.column.*;
+import com.whaleal.photon.common.common.columntype.java.EnumOracleDataInJavaType;
 
 import java.math.BigDecimal;
 import java.sql.Timestamp;
@@ -18,8 +18,8 @@ public class OracleDataToColumnData {
         if (object == null) {
             return new StringColumn(columnName, "null");
         }
-        //获取 mysql 值的数据类型
         String type = object.getClass().getSimpleName().toUpperCase();
+        //switch不能识别BYTE[]
         if (("BYTE[]").equals(type)) {
             type = "BYTES";
         }
@@ -43,5 +43,4 @@ public class OracleDataToColumnData {
                 return new StringColumn(columnName, object.toString());
         }
     }
-
 }

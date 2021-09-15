@@ -1,10 +1,10 @@
 import com.google.gson.Gson;
-import common.column.AbstractColumn;
-import common.photonV.entity.Datasource;
-import datasource.DataSourceUtil;
-import dbconnection.MetadataConnection;
-import dbconnection.oracle.OracleConnection;
-import dbconnection.pgserver.PgServerConnection;
+import com.whaleal.photon.common.common.column.AbstractColumn;
+import com.whaleal.photon.common.common.photonV.entity.Datasource;
+import com.whaleal.photon.core.datasource.DataSourceUtil;
+import com.whaleal.photon.core.dbconnection.MetadataConnection;
+import com.whaleal.photon.core.dbconnection.oracle.OracleConnection;
+import com.whaleal.photon.core.dbconnection.pgserver.PgServerConnection;
 
 import java.io.FileNotFoundException;
 import java.sql.*;
@@ -24,7 +24,7 @@ public class GetDbTypeOfOracle {
     static Gson gson = new Gson();
 
     public static void main(String[] args) throws FileNotFoundException, SQLException {
-//        InputStream in = new FileInputStream("/Users/liheping/Desktop/project/photonT/common/src/main/java/common/dbtype/DbTypeFlag.java");//生成被插入文件的节点流
+//        InputStream in = new FileInputStream("/Users/liheping/Desktop/project/photonT/com.whaleal.photon.common.common/src/main/java/com.whaleal.photon.common.common/dbtype/DbTypeFlag.java");//生成被插入文件的节点流
 //        Connection connection = MetadataConnection.getConnection();
 //
 //        PreparedStatement preparedStatement = connection.prepareStatement("insert into test.test(x2) values(?)");

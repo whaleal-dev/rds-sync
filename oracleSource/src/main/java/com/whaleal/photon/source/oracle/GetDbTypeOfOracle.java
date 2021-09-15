@@ -1,9 +1,9 @@
 package com.whaleal.photon.source.oracle;
 
 import com.google.gson.Gson;
-import common.photonV.entity.Datasource;
-import datasource.DBUtil;
-import dbconnection.oracle.OracleConnection;
+import com.whaleal.photon.common.common.photonV.entity.Datasource;
+import com.whaleal.photon.core.datasource.DBUtil;
+import com.whaleal.photon.core.dbconnection.oracle.OracleConnection;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.sql.Connection;

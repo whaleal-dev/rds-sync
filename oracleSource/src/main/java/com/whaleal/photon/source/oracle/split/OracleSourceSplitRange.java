@@ -1,18 +1,17 @@
 package com.whaleal.photon.source.oracle.split;
 
 
-import common.dataclass.Range;
-import common.photonV.entity.Datasource;
-import common.taskbase.SplitRangeOfRdbInterface;
-import datasource.DataSourceUtil;
-import dbconnection.oracle.OracleConnection;
-import dbconnection.pgserver.PgServerConnection;
+import com.whaleal.photon.common.common.dataclass.Range;
+import com.whaleal.photon.common.common.photonV.entity.Datasource;
+import com.whaleal.photon.common.common.taskbase.SplitRangeOfRdbInterface;
+import com.whaleal.photon.core.datasource.DataSourceUtil;
+import com.whaleal.photon.core.dbconnection.oracle.OracleConnection;
+import com.whaleal.photon.core.dbconnection.pgserver.PgServerConnection;
 import org.springframework.jdbc.core.JdbcTemplate;
-import util.Log;
-import util.split.RangeSplitUtil;
+import com.whaleal.photon.common.util.Log;
+import com.whaleal.photon.common.util.split.RangeSplitUtil;
 
 import java.math.BigDecimal;
-import java.sql.Connection;
 import java.util.*;
 
 /**

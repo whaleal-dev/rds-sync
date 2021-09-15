@@ -1,15 +1,13 @@
 package test;
 
-import common.photonV.entity.ProgramInfo;
-import datasource.DataSourceUtil;
-import dbconnection.mysql.MySqlConnection;
-import programInfo.ProgramInfoUtil;
+import com.whaleal.photon.common.common.photonV.entity.ProgramInfo;
+import com.whaleal.photon.core.datasource.DataSourceUtil;
+import com.whaleal.photon.core.dbconnection.mysql.MySqlConnection;
+import com.whaleal.photon.core.programInfo.ProgramInfoUtil;
 
 import java.sql.*;
-import java.time.Year;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 import java.util.UUID;
 
 /**

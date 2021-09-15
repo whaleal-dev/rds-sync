@@ -1,11 +1,11 @@
 import com.google.gson.Gson;
-import common.column.AbstractColumn;
-import common.columnclass.ColumnType;
-import common.photonV.entity.Datasource;
-import datasource.DataSourceUtil;
-import dbconnection.MetadataConnection;
-import dbconnection.mysql.MySqlConnection;
-import dbconnection.pgserver.PgServerConnection;
+import com.whaleal.photon.common.common.column.AbstractColumn;
+import com.whaleal.photon.common.common.columnclass.ColumnType;
+import com.whaleal.photon.common.common.photonV.entity.Datasource;
+import com.whaleal.photon.core.datasource.DataSourceUtil;
+import com.whaleal.photon.core.dbconnection.MetadataConnection;
+import com.whaleal.photon.core.dbconnection.mysql.MySqlConnection;
+import com.whaleal.photon.core.dbconnection.pgserver.PgServerConnection;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.io.FileNotFoundException;
@@ -26,7 +26,7 @@ public class GetDbTypeOfMysql {
     static Gson gson = new Gson();
 
     public static void main(String[] args) throws FileNotFoundException, SQLException, InterruptedException {
-//        InputStream in = new FileInputStream("/Users/liheping/Desktop/project/photonT/common/src/main/java/common/dbtype/DbTypeFlag.java");//生成被插入文件的节点流
+//        InputStream in = new FileInputStream("/Users/liheping/Desktop/project/photonT/com.whaleal.photon.common.common/src/main/java/com.whaleal.photon.common.common/dbtype/DbTypeFlag.java");//生成被插入文件的节点流
 //
 //        Connection connection = MetadataConnection.getConnection();
 //        Statement statement = connection.createStatement();
@@ -51,7 +51,7 @@ public class GetDbTypeOfMysql {
 //        }
 
 
-//        Date date=new java.util.Date(1630553229060L);
+//        Date date=new java.com.whaleal.photon.common.util.Date(1630553229060L);
 //        System.out.println(date.toString());
 //        Instant instant = date.toInstant();
 //        ZoneId zoneId = ZoneId.systemDefault();

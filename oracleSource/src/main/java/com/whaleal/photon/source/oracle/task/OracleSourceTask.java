@@ -1,15 +1,16 @@
 package com.whaleal.photon.source.oracle.task;
 
-import cache.MemoryCache;
+import com.whaleal.photon.common.common.operation.OperationFlag;
 import com.whaleal.photon.source.oracle.parse.OracleDataToColumnData;
-import common.column.AbstractColumn;
-import common.dataclass.BatchDataEntity;
-import common.dataclass.Range;
-import common.taskbase.AbstractSourceTask;
-import common.taskbase.SourceTaskInfo;
-import dbconnection.oracle.OracleConnection;
-import thread.SourceTaskPoolManager;
-import util.Log;
+import com.whaleal.photon.common.common.column.AbstractColumn;
+import com.whaleal.photon.common.common.dataclass.BatchDataEntity;
+import com.whaleal.photon.common.common.dataclass.Range;
+import com.whaleal.photon.common.common.photonV.entity.ProgramInfo;
+import com.whaleal.photon.common.common.taskbase.AbstractSourceTask;
+import com.whaleal.photon.common.common.taskbase.SourceTaskInfo;
+import com.whaleal.photon.core.dbconnection.oracle.OracleConnection;
+import com.whaleal.photon.common.thread.SourceTaskPoolManager;
+import com.whaleal.photon.common.util.Log;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -23,7 +24,6 @@ import java.util.List;
  */
 public class OracleSourceTask extends AbstractSourceTask {
 
-
     /**
      * connection
      */
@@ -34,22 +34,28 @@ public class OracleSourceTask extends AbstractSourceTask {
      */
     private List<List<AbstractColumn>> dataList = new ArrayList<>();
 
-    public OracleSourceTask(SourceTaskInfo taskMetadata, String procName, MemoryCache memoryCache, int dataBatchSize, long batchNo) {
-        super(taskMetadata, procName, memoryCache, dataBatchSize,batchNo);
-        this.connection = OracleConnection.getConnection(procNameAndBatchNoAndSourceDsName);
+    public OracleSourceTask(SourceTaskInfo taskMetadata, ProgramInfo programInfo) {
+        super(taskMetadata, programInfo);
+        this.connection = OracleConnection.getConnection(getProcNameAndBatchNoAndSourceDsName());
     }
 
     @Override
     public void run() {
-        SourceTaskPoolManager.setSourceActiveThreadNum(procNameAndBatchNo, 1);
-        Log.info("启动source任务:" + this.taskMetadata.toString());
-        // 读取数据
-        getDataFromCollection();
-        SourceTaskPoolManager.setSourceActiveThreadNum(procNameAndBatchNo, -1);
+        try {
+            SourceTaskPoolManager.setSourceActiveThreadNum(getProcNameAndBatchNo(), 1);
+            Log.info("启动source任务:" + this.taskMetadata.toString());
+            // 读取数据
+            getDataFromDbTable();
+        } catch (Exception e) {
+            Log.error(e.getMessage());
+        } finally {
+            SourceTaskPoolManager.setSourceActiveThreadNum(getProcNameAndBatchNo(), -1);
+            Log.info("关闭source任务:" + this.taskMetadata.toString());
+        }
     }
 
     @Override
-    public void getDataFromCollection() {
+    public void getDataFromDbTable() {
         String dbTableName = this.taskMetadata.getDbTableName();
         Range range = this.taskMetadata.getRange();
         String query = range.getQuery();
@@ -109,17 +115,15 @@ public class OracleSourceTask extends AbstractSourceTask {
                 String columnName = md.getColumnName(i);
                 //值
                 Object values = ((ResultSet) rs).getObject(md.getColumnName(i));
-                // System.out.println(columnName +"          "+values.getClass());
                 AbstractColumn abstractColumn = OracleDataToColumnData.parseValue(columnName, values);
                 abstractColumns.add(abstractColumn);
             }
             this.dataList.add(abstractColumns);
         } catch (Exception e) {
-            e.printStackTrace();
             Log.error(e.getMessage());
         }
-
     }
+
 
     @Override
     public void putDataToCache() {
@@ -129,14 +133,13 @@ public class OracleSourceTask extends AbstractSourceTask {
         //源数据表名
         batchDataEntity.setDbTableName(this.taskMetadata.getDbTableName());
         //操作行为
-        batchDataEntity.setOperation("INSERTMANY");
+        batchDataEntity.setOperation(OperationFlag.INSERTMANY);
         //源数据库名
         batchDataEntity.setSourceDsName(this.taskMetadata.getSourceDsName());
         //批次号
         batchDataEntity.setBatchNo(System.currentTimeMillis());
         // 推送数据到缓存区中
         memoryCache.putData(batchDataEntity);
-        // Log.info("sourceNum:" + atomicInteger.addAndGet(batchDataEntity.getDataList().size()));
         this.dataList = new ArrayList<>();
         this.cache = 0;
     }
