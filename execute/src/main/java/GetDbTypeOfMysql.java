@@ -1,10 +1,12 @@
 import com.google.gson.Gson;
 import common.column.AbstractColumn;
+import common.columnclass.ColumnType;
 import common.photonV.entity.Datasource;
 import datasource.DataSourceUtil;
 import dbconnection.MetadataConnection;
 import dbconnection.mysql.MySqlConnection;
 import dbconnection.pgserver.PgServerConnection;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.io.FileNotFoundException;
 import java.sql.*;
@@ -58,19 +60,27 @@ public class GetDbTypeOfMysql {
 //        System.out.println("LocalDateTime = " + localDateTime.toString());
 
 
-
         Datasource mysqltest = DataSourceUtil.getDataSourceByDsName("mysqltest");
 
         MySqlConnection.createConnection(mysqltest.getName(), mysqltest);
-        Connection pgConnection = MySqlConnection.getConnection("mysqltest");
-        Statement statement = pgConnection.createStatement();
-        PreparedStatement ps = pgConnection.prepareStatement("select * from blog.ms_article");
+        JdbcTemplate mysqltest2 = MySqlConnection.getJdbcTemplate("mysqltest");
 
-        ps.setFetchSize(128);
-        ResultSet rs = ps.executeQuery();
+        String dbName = "blog";
 
-        while (rs.next()) {
-            System.out.println(rs.getString(1));
+        String tableName = "ms_article";
+
+        String sql = "select *  from information_schema.COLUMNS t where t.TABLE_SCHEMA ='" + dbName + "' and t.TABLE_NAME  ='" + tableName + "'";
+        sql = "show create table blog.ms_article";
+        List<Map<String, Object>> mysqlColumnMap = mysqltest2.queryForList(sql);
+
+        for (Map<String, Object> tableInfo : mysqlColumnMap) {
+            System.out.println(tableInfo);
+//            String columnName = tableInfo.get("COLUMN_NAME").toString();
+//            System.out.println(columnName);
+//            String dataType = tableInfo.get("COLUMN_TYPE").toString();
+//
+//            System.out.println(dataType);
+
         }
 
 

@@ -58,6 +58,7 @@ public class PgSource extends SourceMetadata {
             String tableName = dbTableNameMap.get("table_name").toString();
             String dbTable = dbSchemaName + "." + tableName;
             dbTables.put(dbTable, dbTable);
+            dbTableNameSet.add(dbTable);
         }
         Log.info("sourceName:" + sourceDsName + ",全量同步的表列表:" + dbTables);
     }

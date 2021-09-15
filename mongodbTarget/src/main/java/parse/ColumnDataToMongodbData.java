@@ -4,7 +4,9 @@ package parse;
 import com.alibaba.fastjson.JSONObject;
 import com.google.gson.Gson;
 import common.column.AbstractColumn;
+import common.column.TimestampColumn;
 import common.dbtype.java.EnumCommonColumnDataType;
+import org.bson.BsonTimestamp;
 import org.bson.Document;
 
 import java.sql.Timestamp;
@@ -25,7 +27,14 @@ public class ColumnDataToMongodbData {
             case DATETIMECOLUMN:
                 return new Date((long) (columnData.getData()));
             case TIMESTAMPCOLUMN:
-                return new Timestamp((long) (columnData.getData()));
+                TimestampColumn column = (TimestampColumn) columnData;
+                if (column.getData() > 0) {
+                    return new BsonTimestamp(column.getSeconds(), column.getInc());
+                } else {
+                    if (column.getData() > 0) {
+                        return new Timestamp(column.getData());
+                    }
+                }
             case DATECOLUMN:
             case TIMECOLUMN:
             case PGOBJECTCOLUMN:

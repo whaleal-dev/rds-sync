@@ -5,8 +5,10 @@ import common.taskbase.SourceTaskInfo;
 import common.photonV.entity.ProgramInfo;
 
 import java.sql.SQLException;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Queue;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
@@ -48,13 +50,25 @@ public abstract class SourceMetadata {
      * 获取全部的表是否完成
      */
     protected volatile boolean isGetAllDbTable = false;
-
-    public boolean isGetAllDbTable() {
-        return isGetAllDbTable;
-    }
+    /**
+     * 库表和对应的MongoNamespace
+     */
+    protected Map<String, String> dbTables = new ConcurrentHashMap<>();
+    /**
+     * TaskMetadata队列
+     */
+    protected Queue<SourceTaskInfo> taskMetadataQueue = new ConcurrentLinkedQueue<>();
 
     protected String procNameAndBatchNo;
+
     protected String procNameAndBatchNoAndSourceDsName;
+
+    /**
+     * 库表和对应的MongoNamespace
+     */
+    protected Set<String> dbTableNameSet = new HashSet<>();
+
+    protected boolean isUseDeFaultType = false;
 
     /**
      * getTaskMetadataQueueSize 获取未执行TaskInfo的个数
@@ -65,11 +79,17 @@ public abstract class SourceMetadata {
         return taskMetadataQueue.size();
     }
 
+    public boolean isGetAllDbTable() {
+        return isGetAllDbTable;
+    }
+
     public void setTaskMetadataQueue(Queue<SourceTaskInfo> taskMetadataQueue) {
         this.taskMetadataQueue = taskMetadataQueue;
     }
 
-    protected boolean isUseDeFaultType = false;
+    public Set<String> getDbTableNameSet() {
+        return dbTableNameSet;
+    }
 
     public SourceMetadata(ProgramInfo programInfo, MemoryCache memoryCache) {
         this.sourceDsName = programInfo.getSourceDsName();
@@ -82,15 +102,6 @@ public abstract class SourceMetadata {
         this.procNameAndBatchNoAndSourceDsName = proName + batchNo + sourceDsName;
         this.isUseDeFaultType = programInfo.isUseDeFaultType();
     }
-
-    /**
-     * 库表和对应的MongoNamespace
-     */
-    protected Map<String, String> dbTables = new ConcurrentHashMap<>();
-    /**
-     * TaskMetadata队列
-     */
-    protected Queue<SourceTaskInfo> taskMetadataQueue = new ConcurrentLinkedQueue<>();
 
     /**
      * createTask

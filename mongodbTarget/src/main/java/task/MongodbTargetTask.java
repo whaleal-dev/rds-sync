@@ -80,12 +80,14 @@ public class MongodbTargetTask extends AbstractTargetTask {
 
     @Override
     public void parseColumnDataToTargetData(BatchDataEntity batchDataEntity) {
+        int partition = (int) ((Math.random() * 100) % 10);
         List<List<AbstractColumn>> dataList = batchDataEntity.getDataList();
         for (List<AbstractColumn> columnList : dataList) {
             Document document = new Document();
             for (AbstractColumn columnData : columnList) {
                 document.append(columnData.getColumnName(), ColumnDataToMongodbData.parseColumnData(columnData));
             }
+       //     document.append("procNameAndBatchNo",procNameAndBatchNo+"_"+partition);
             writeModels.add(new InsertOneModel<>(document));
         }
     }

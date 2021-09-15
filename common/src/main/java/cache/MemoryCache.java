@@ -23,7 +23,7 @@ public class MemoryCache {
     /**
      * 程序名称
      */
-    private String procName;
+    private String proName;
     /**
      * 批次号
      */
@@ -50,6 +50,7 @@ public class MemoryCache {
     private AtomicBoolean[] isUseState;
     /**
      * 空跑次数
+     * 可以用来判断读取和写入是否平衡
      */
     public LongAdder waitTimes = new LongAdder();
 
@@ -58,8 +59,8 @@ public class MemoryCache {
      *
      * @desc 初始化缓存区类
      */
-    public MemoryCache(String taskName, String procName, int cacheNum, int cacheSize, boolean isFirst) {
-        this.procName = procName;
+    public MemoryCache(String taskName, String proName, int cacheNum, int cacheSize, boolean isFirst) {
+        this.proName = proName;
         this.taskName = taskName;
         this.cacheSize = cacheSize;
         this.cacheNum = cacheNum;
@@ -67,7 +68,7 @@ public class MemoryCache {
         this.isUseState = new AtomicBoolean[cacheNum];
         // 避免出现较多的对象创建
         for (int i = 0; (i < cacheNum) && isFirst; i++) {
-            cacheList[i] = new MemoryCache(taskName, procName, cacheNum, cacheSize, false);
+            cacheList[i] = new MemoryCache(taskName, proName, cacheNum, cacheSize, false);
             isUseState[i] = new AtomicBoolean();
             isUseState[i].set(false);
         }

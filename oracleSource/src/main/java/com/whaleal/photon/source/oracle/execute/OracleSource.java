@@ -60,6 +60,7 @@ public class OracleSource extends SourceMetadata {
             String tableName = dbTableNameMap.get("TABLE_NAME").toString();
             String dbTable = dbSchemaName + "." + tableName;
             if (dbTable.matches(dbTableWhite)) {
+                dbTableNameSet.add(dbTable);
                 dbTables.put(dbTable, dbTable);
             }
         }

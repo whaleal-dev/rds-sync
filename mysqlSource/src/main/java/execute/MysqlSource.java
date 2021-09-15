@@ -90,11 +90,31 @@ public class MysqlSource extends SourceMetadata {
             String tableName = dbTableMap.get("TABLE_NAME").toString();
             String dbTable = dbName + "." + tableName;
             if (dbTable.matches(dbTableWhite)) {
+                dbTableNameSet.add(dbTable);
                 dbTables.put(dbTable, dbTable);
             }
         }
         Log.info("sourceDsName:" + sourceDsName + ",全量同步的表列表:" + dbTables);
     }
+
+    public Map<String, String> getTableStructure() {
+        Map<String, String> tableStructureMap = new HashMap<>();
+        for (String dbTableName : dbTableNameSet) {
+            try {
+                Map<String, Object> map = jdbcTemplate.queryForMap("show create table " + dbTableName);
+                String tableName = dbTableName.split("\\.", 2)[1];
+                String createTableSql = map.get("Create Table").toString().split("\\) ENGINE=")[0] + ")";
+                createTableSql = createTableSql.replaceFirst("CREATE TABLE `" + tableName + "`", "CREATE TABLE " + dbTableName + "");
+                createTableSql=createTableSql.replaceAll("CHARACTER SET \\w+ COLLATE \\w+", " ");
+                tableStructureMap.put(dbTableName, createTableSql);
+            } catch (Exception e) {
+
+            }
+
+        }
+        return tableStructureMap;
+    }
+
 
     @Override
     public void submitSourceTask() {
@@ -106,7 +126,7 @@ public class MysqlSource extends SourceMetadata {
                         SourceTaskInfo taskMetadata = taskMetadataQueue.poll();
                         if (taskMetadata != null) {
 
-                            SourceTaskPoolManager.submit(procNameAndBatchNo, new MysqlSourceTask(taskMetadata, proName, memoryCache, 128,batchNo));
+                            SourceTaskPoolManager.submit(procNameAndBatchNo, new MysqlSourceTask(taskMetadata, proName, memoryCache, 128, batchNo));
                         } else {
                             boolean isOver = taskMetadataQueue.size() == 0 && SourceTaskPoolManager.setSourceActiveThreadNum(procNameAndBatchNo, 0) == 0 && isGetAllDbTable && dbTables.size() == 0 && SysPoolManager.setSysActiveThreadNum(procNameAndBatchNo, 0) == 0;
                             if (isOver) {

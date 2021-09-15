@@ -38,6 +38,11 @@ public class ProgramInfo {
     private String targetDsName;
     /**
      * 同步模式
+     * 全量:all
+     * 增量:inc
+     * 实时:realTime
+     * 全量批次表:allAndBatchNo
+     * 查询批次表:queryAndBatchNo
      */
     private String syncMode;
     /**
@@ -47,15 +52,15 @@ public class ProgramInfo {
     /**
      * 是否同步DDL
      */
-    private boolean filterDdl;
+    private boolean isFilterDdl;
     /**
-     * 已经存在的表是否删除
+     * 已经存在的目标表是否删除
      */
-    private boolean collectionExistDrop;
+    private boolean isDropExistDbTable;
     /**
      * 是否创建索引
      */
-    private boolean createIndex;
+    private boolean isCreateIndex;
     /**
      * target任务线程数
      */
@@ -65,11 +70,11 @@ public class ProgramInfo {
      */
     private int sourceThreadNum;
     /**
-     * 缓存区个数
+     * 每个缓存区缓存批次数量
      */
     private int cacheSize;
     /**
-     * 每个缓存区缓存批次数量
+     * 缓存区个数
      */
     private int cacheNum;
     /**
@@ -77,17 +82,13 @@ public class ProgramInfo {
      */
     private int dataBatchSize;
     /**
-     * 多个源数据源是否并行执行
-     */
-    private boolean syncParallel;
-    /**
-     * #增量同步时，设置增量开始同步的时间。时间戳格式，单位s
+     * 增量同步时，设置增量开始同步的时间。时间戳格式，单位s
      */
     private int startIncrementTime;
     /**
-     * 在增量中每个数据源解析数据的线程
+     * 在实时同步中每个数据源解析数据的线程
      */
-    private int incrementParseThreadNum;
+    private int realTimeThreadNum;
     /**
      * 切表字段
      */
@@ -109,6 +110,8 @@ public class ProgramInfo {
      * 仅使用于查询。不可应用于库表同步中
      */
     private String query;
-
-    private boolean isUseDeFaultType=false;
+    /**
+     * 判断源和目标是否为同一类数据源
+     */
+    private boolean isUseDeFaultType = false;
 }

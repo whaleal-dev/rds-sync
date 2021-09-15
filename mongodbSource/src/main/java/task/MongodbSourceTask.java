@@ -124,7 +124,7 @@ public class MongodbSourceTask extends AbstractSourceTask {
         Iterator<Map.Entry<String, Object>> iterator = ((Document) document).entrySet().iterator();
         while (iterator.hasNext()) {
             Map.Entry<String, Object> next = iterator.next();
-            AbstractColumn abstractColumn = MongodbDataToColumnData.parseValue(next.getKey(), next.getValue(),isUserDeFaultType);
+            AbstractColumn abstractColumn = MongodbDataToColumnData.parseValue(next.getKey(), next.getValue(),false);
             abstractColumns.add(abstractColumn);
         }
         this.dataList.add(abstractColumns);

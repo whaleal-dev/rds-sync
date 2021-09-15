@@ -109,12 +109,12 @@ public class MysqlTargetTask extends AbstractTargetTask {
     public void parseColumnDataToTargetData(BatchDataEntity batchDataEntity) {
 
         List<List<AbstractColumn>> dataList = batchDataEntity.getDataList();
-
+        int partition = (int) ((Math.random() * 100) % 10);
         for (List<AbstractColumn> columnList : dataList) {
-            checkDataIsCorrect(columnList, targetDsName, dbTableName, procNameAndBatchNoAndTargetDsName);
+          //  checkDataIsCorrect(columnList, targetDsName, dbTableName, procNameAndBatchNoAndTargetDsName);
             String insertSql = "insert into " + batchDataEntity.getDbTableName();
-            String columns = "(";
-            String values = "values(";
+            String columns = "(procNameAndBatchNo,";
+            String values = "values('" + procNameAndBatchNo + "_" + partition + "',";
             for (AbstractColumn columnData : columnList) {
                 Object value = ColumnDataToMysqlData.parseColumnData(columnData);
                 if (value == null) {
@@ -199,6 +199,18 @@ public class MysqlTargetTask extends AbstractTargetTask {
             }
             columnTypeMap.put((targetDsName + ":" + dbTable + ":" + columnName).toUpperCase(), columnAndType);
         }
+        if (!columnTypeMap.containsKey((targetDsName + ":" + dbTable + ":procNameAndBatchNo").toUpperCase())) {
+            ColumnType columnAndType = new ColumnType();
+            columnAndType.setColumnType(MySqlType.VARCHAR);
+            columnAndType.setColumnName("procNameAndBatchNo".toUpperCase());
+            columnAndType.setDbTableName(dbTable);
+            columnAndType.setLength(128);
+            columnAndType.setDescType(DbTypeFlag.MYSQL);
+            String addColumnSql = "alter table " + dbTable + " add column " + columnAndType.toString();
+            MySqlConnection.getJdbcTemplate(procNameAndBatchNoAndTargetDsName).execute(addColumnSql);
+            columnTypeMap.put((targetDsName + ":" + dbTable + ":procNameAndBatchNo").toUpperCase(), columnAndType);
+        }
+
         dbTableSet.add((dbTable).toUpperCase());
         return mysqlColumnMap.size();
     }

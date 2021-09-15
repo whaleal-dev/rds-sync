@@ -50,9 +50,9 @@ public class ProgramInfoUtil {
             }
             Object collectionExistDrop = map.get("collection_exist_drop");
             if (collectionExistDrop != null) {
-                programInfo.setCollectionExistDrop(false);
+                programInfo.setDropExistDbTable(false);
                 if ((Boolean) collectionExistDrop) {
-                    programInfo.setCollectionExistDrop(true);
+                    programInfo.setDropExistDbTable(true);
                 }
             }
             Object createIndex = map.get("create_index");
@@ -92,13 +92,13 @@ public class ProgramInfoUtil {
             } else {
                 programInfo.setDataBatchSize(128);
             }
-            Object syncParallel = map.get("sync_parallel");
-            if (syncParallel != null) {
-                programInfo.setSyncParallel(false);
-                if ((Boolean) syncParallel) {
-                    programInfo.setSyncParallel(true);
-                }
-            }
+//            Object syncParallel = map.get("sync_parallel");
+//            if (syncParallel != null) {
+//                programInfo.setSyncParallel(false);
+//                if ((Boolean) syncParallel) {
+//                    programInfo.setSyncParallel(true);
+//                }
+//            }
             Object startIncrementTime = map.get("start_increment_time");
             if (startIncrementTime != null) {
                 programInfo.setStartIncrementTime((Integer) startIncrementTime);
@@ -107,9 +107,9 @@ public class ProgramInfoUtil {
             }
             Object incrementParseThreadNum = map.get("increment_parse_thread_num");
             if (incrementParseThreadNum != null) {
-                programInfo.setIncrementParseThreadNum((Integer) incrementParseThreadNum);
+                programInfo.setRealTimeThreadNum((Integer) incrementParseThreadNum);
             } else {
-                programInfo.setIncrementParseThreadNum(5);
+                programInfo.setRealTimeThreadNum(5);
             }
 
         } catch (Exception e) {

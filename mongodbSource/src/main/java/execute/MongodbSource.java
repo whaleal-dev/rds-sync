@@ -70,6 +70,7 @@ public class MongodbSource extends SourceMetadata {
                 String dbTable = dbName + "." + tableName;
                 // 顺序不可写法反
                 if (dbTable.matches(dbTableWhite)) {
+                    dbTableNameSet.add(dbTable);
                     dbTables.put(dbTable, dbTable);
                 }
             }

@@ -4,6 +4,8 @@ import cache.MemoryCache;
 import common.photonV.entity.ProgramInfo;
 import lombok.AllArgsConstructor;
 
+import java.util.Set;
+
 /**
  * @description:
  * @author: lhp
@@ -11,8 +13,11 @@ import lombok.AllArgsConstructor;
  */
 @AllArgsConstructor
 public abstract class AbstractTarget {
+
     protected ProgramInfo programInfo;
+
     protected MemoryCache memoryCache;
+
     protected String procName;
     /**
      * 批次号
@@ -20,6 +25,7 @@ public abstract class AbstractTarget {
     protected long batchNo;
 
     protected String procNameAndBatchNo;
+
     protected String procNameAndBatchNoAndTargetDsName;
 
     public AbstractTarget(ProgramInfo programInfo, MemoryCache memoryCache, String procName) {
@@ -36,4 +42,11 @@ public abstract class AbstractTarget {
      * 开始启动任务
      */
     public abstract void startToTarget();
+
+    /**
+     * @param dbTableNameSet
+     */
+    public abstract void rollBackDataFromDbTable(Set<String> dbTableNameSet);
+
+    public abstract void deleteExistDbTable(Set<String> dbTableNameSet);
 }
