@@ -5,20 +5,22 @@ import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoIterable;
-import common.dbtype.DbTypeFlag;
-import common.photonV.entity.Datasource;
-import common.photonV.entity.ProgramInfo;
-import datasource.DataSourceUtil;
-import dbconnection.mongodb.MongoDbConnection;
-import dbconnection.mysql.MySqlConnection;
-import dbconnection.oracle.OracleConnection;
-import dbconnection.pgserver.PgServerConnection;
+
+import com.whaleal.photon.common.common.columntype.DbTypeFlag;
+import com.whaleal.photon.common.common.photonV.entity.Datasource;
+import com.whaleal.photon.common.common.photonV.entity.ProgramInfo;
+import com.whaleal.photon.common.util.Log;
+import com.whaleal.photon.core.datasource.DataSourceUtil;
+import com.whaleal.photon.core.dbconnection.mongodb.MongoDbConnection;
+import com.whaleal.photon.core.dbconnection.mysql.MySqlConnection;
+import com.whaleal.photon.core.dbconnection.oracle.OracleConnection;
+import com.whaleal.photon.core.dbconnection.pgserver.PgServerConnection;
+import com.whaleal.photon.core.programInfo.ProgramInfoUtil;
 import org.bson.Document;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.jdbc.core.JdbcTemplate;
-import programInfo.ProgramInfoUtil;
-import util.Log;
+
 
 import java.sql.Connection;
 import java.util.*;
