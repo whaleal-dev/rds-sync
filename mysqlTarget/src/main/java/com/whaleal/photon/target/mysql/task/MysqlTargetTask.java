@@ -111,34 +111,69 @@ public class MysqlTargetTask extends AbstractTargetTask {
             return;
         }
         if (isRdbOfSource) {
-            // 获取字段名
-            List<AbstractColumn> abstractColumns = dataList.get(0);
-            String insertSql = "insert into " + batchDataEntity.getDbTableName();
-            String columns = "(";
-            for (AbstractColumn columnData : abstractColumns) {
-                String columnName = columnData.getColumnName();
-                if (columnName.equalsIgnoreCase("procNameAndBatchNo")) {
-                    continue;
-                }
-                columns += "`" + columnName + "`,";
-            }
-            columns += "procNameAndBatchNo)";
+//            // 获取字段名
+//            List<AbstractColumn> abstractColumns = dataList.get(0);
+//            String insertSql = "insert into " + batchDataEntity.getDbTableName();
+//            String columns = "(";
+//            for (AbstractColumn columnData : abstractColumns) {
+//                String columnName = columnData.getColumnName();
+//                if (columnName.equalsIgnoreCase("procNameAndBatchNo")) {
+//                    continue;
+//                }
+//                if (columnTypeMap.containsKey((targetDsName + ":" + dbTableName + ":" + columnName).toUpperCase())) {
+//                    columns += "`" + columnName + "`,";
+//                }
+//            }
+//            columns += "procNameAndBatchNo)";
+//            //  获取values
+//            StringBuilder values = new StringBuilder("values");
+//            for (List<AbstractColumn> columnList : dataList) {
+//                values.append("(");
+//                for (AbstractColumn columnData : columnList) {
+//                    Object value = ColumnDataToMysqlData.parseColumnData(columnData);
+//                    values.append(value).append(",");
+//                }
+//                values.append("'" + getProcNameAndBatchNo() + "_" + partition + "'),");
+//            }
+//            values.deleteCharAt(values.length() - 1);
+//            String finaInsertSql = insertSql + columns + values.toString();
+//            Log.info(finaInsertSql);
+//            sqlList.add(finaInsertSql);
 
-            StringBuilder values = new StringBuilder("values");
-            //  获取values
-            for (List<AbstractColumn> columnList : dataList) {
-                values.append("(");
+
+            Set<String> columnNameSet1 = getColumnSet(dataList.get(0));
+            StringBuilder insertSql = new StringBuilder(getInsertSqlPre(dataList.get(0), batchDataEntity.getDbTableName()));
+            for (int index = 0; index < dataList.size(); index++) {
+                List<AbstractColumn> columnList = dataList.get(index);
+                checkDataIsCorrect(columnList, targetDsName, dbTableName, getProcNameAndBatchNoAndTargetDsName());
+                Set<String> columnNameSet2 = new HashSet<String>();
+                StringBuilder values = new StringBuilder("(");
                 for (AbstractColumn columnData : columnList) {
                     Object value = ColumnDataToMysqlData.parseColumnData(columnData);
+                    String columnName = columnData.getColumnName();
+                    if (value == null || columnName.equalsIgnoreCase("procNameAndBatchNo")) {
+                        continue;
+                    }
+                    columnNameSet2.add(columnName);
                     values.append(value).append(",");
                 }
-                values.append("'"+getProcNameAndBatchNo() + "_" + partition + "'),");
+                values.append("'" + getProcNameAndBatchNo() + "_" + partition + "')");
+                if (!columnNameSet1.equals(columnNameSet2)) {
+                    //处理前序记录数据
+                    String finaInsertSql = insertSql.deleteCharAt(insertSql.length() - 1).toString();
+                    sqlList.add(finaInsertSql);
+                    //准备这次数据
+                    insertSql = new StringBuilder(getInsertSqlPre(dataList.get(index), batchDataEntity.getDbTableName()));
+                    // 重新开启下次
+                    columnNameSet1 = getColumnSet(dataList.get(index));
+                }
+                if (index == dataList.size() - 1) {
+                    insertSql.append(values);
+                    sqlList.add(insertSql.toString());
+                } else {
+                    insertSql.append(values).append(",");
+                }
             }
-            values.deleteCharAt(values.length()-1);
-            String finaInsertSql = insertSql + columns + values.toString();
-            Log.info(finaInsertSql);
-            sqlList.add(finaInsertSql);
-
         } else {
             for (List<AbstractColumn> columnList : dataList) {
                 //mysql-mysql不需要进行数据类型校验。因为获取到了原先的schema
@@ -168,6 +203,39 @@ public class MysqlTargetTask extends AbstractTargetTask {
     }
 
 
+    public String getInsertSqlPre(List<AbstractColumn> columnList, String dbTableName) {
+        String insertSql = "insert into " + dbTableName;
+        String columns = "(";
+        for (AbstractColumn columnData : columnList) {
+            String columnName = columnData.getColumnName();
+            if (columnData.getData() == null || columnName.equalsIgnoreCase("procNameAndBatchNo")) {
+                continue;
+            }
+            if (columnTypeMap.containsKey((targetDsName + ":" + dbTableName + ":" + columnName).toUpperCase())) {
+                columns += "`" + columnName + "`,";
+            }
+        }
+        columns += "procNameAndBatchNo)values";
+        return insertSql + columns;
+    }
+
+    public Set<String> getColumnSet(List<AbstractColumn> columnList) {
+
+        Set<String> columnNameSet1 = new HashSet<String>();
+        for (AbstractColumn columnData : columnList) {
+            String columnName = columnData.getColumnName();
+            if (columnData.getData() == null || columnName.equalsIgnoreCase("procNameAndBatchNo")) {
+                continue;
+            }
+            if (columnTypeMap.containsKey((targetDsName + ":" + dbTableName + ":" + columnName).toUpperCase())) {
+                columnNameSet1.add(columnName);
+            }
+        }
+
+        return columnNameSet1;
+    }
+
+
     @Override
     public void bulkExecute(String dbTable, long batchNo) {
         try {
@@ -187,7 +255,10 @@ public class MysqlTargetTask extends AbstractTargetTask {
             Log.info("dbTable:" + dbTable + ",耗时处理:" + (end - start) + ",sqlListSize:" + sqlList.size());
         } catch (Exception e) {
             e.printStackTrace();
-            Log.error(sqlList.get(0));
+
+            for (String sql : sqlList) {
+                Log.error(sql);
+            }
             try {
                 connection.rollback();
             } catch (SQLException exception) {
