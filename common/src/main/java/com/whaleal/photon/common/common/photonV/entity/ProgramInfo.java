@@ -114,4 +114,8 @@ public class ProgramInfo {
      * 判断源和目标是否为同一类数据源
      */
     private boolean isUseDeFaultType = false;
+    /**
+     * 源端是否为rdb数据库
+     */
+    private boolean isRdbOfSource = false;
 }

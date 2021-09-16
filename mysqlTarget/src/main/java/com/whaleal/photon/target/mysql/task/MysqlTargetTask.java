@@ -107,28 +107,63 @@ public class MysqlTargetTask extends AbstractTargetTask {
     public void parseColumnDataToTargetData(BatchDataEntity batchDataEntity) {
         List<List<AbstractColumn>> dataList = batchDataEntity.getDataList();
         int partition = (int) ((Math.random() * 100) % 10);
-        for (List<AbstractColumn> columnList : dataList) {
-            //mysql-mysql不需要进行数据类型校验。因为获取到了原先的schema
-            if (!isUseDeFaultType) {
-                checkDataIsCorrect(columnList, targetDsName, dbTableName, getProcNameAndBatchNoAndTargetDsName());
-            }
+        if (dataList.size() == 0) {
+            return;
+        }
+        if (isRdbOfSource) {
+            // 获取字段名
+            List<AbstractColumn> abstractColumns = dataList.get(0);
             String insertSql = "insert into " + batchDataEntity.getDbTableName();
-            String columns = "(procNameAndBatchNo,";
-            String values = "values('" + getProcNameAndBatchNo() + "_" + partition + "',";
-            for (AbstractColumn columnData : columnList) {
-                Object value = ColumnDataToMysqlData.parseColumnData(columnData);
-                if (value == null) {
+            String columns = "(";
+            for (AbstractColumn columnData : abstractColumns) {
+                String columnName = columnData.getColumnName();
+                if (columnName.equalsIgnoreCase("procNameAndBatchNo")) {
                     continue;
                 }
-                columns += "`" + columnData.getColumnName() + "`,";
-                values += value + " , ";
+                columns += "`" + columnName + "`,";
             }
-            columns = columns.substring(0, columns.length() - 1);
-            values = values.substring(0, values.length() - 2);
-            columns += ")";
-            values += ") ";
-            insertSql = insertSql + columns + values;
-            sqlList.add(insertSql);
+            columns += "procNameAndBatchNo)";
+
+            StringBuilder values = new StringBuilder("values");
+            //  获取values
+            for (List<AbstractColumn> columnList : dataList) {
+                values.append("(");
+                for (AbstractColumn columnData : columnList) {
+                    Object value = ColumnDataToMysqlData.parseColumnData(columnData);
+                    values.append(value).append(",");
+                }
+                values.append("'"+getProcNameAndBatchNo() + "_" + partition + "'),");
+            }
+            values.deleteCharAt(values.length()-1);
+            String finaInsertSql = insertSql + columns + values.toString();
+            Log.info(finaInsertSql);
+            sqlList.add(finaInsertSql);
+
+        } else {
+            for (List<AbstractColumn> columnList : dataList) {
+                //mysql-mysql不需要进行数据类型校验。因为获取到了原先的schema
+                if (!isUseDeFaultType) {
+                    checkDataIsCorrect(columnList, targetDsName, dbTableName, getProcNameAndBatchNoAndTargetDsName());
+                }
+                String insertSql = "insert into " + batchDataEntity.getDbTableName();
+                String columns = "(procNameAndBatchNo,";
+                String values = "values('" + getProcNameAndBatchNo() + "_" + partition + "',";
+                for (AbstractColumn columnData : columnList) {
+                    Object value = ColumnDataToMysqlData.parseColumnData(columnData);
+                    String columnName = columnData.getColumnName();
+                    if (value == null || columnName.equalsIgnoreCase("procNameAndBatchNo")) {
+                        continue;
+                    }
+                    columns += "`" + columnName + "`,";
+                    values += value + " , ";
+                }
+                columns = columns.substring(0, columns.length() - 1);
+                values = values.substring(0, values.length() - 2);
+                columns += ")";
+                values += ") ";
+                insertSql = insertSql + columns + values;
+                sqlList.add(insertSql);
+            }
         }
     }
 
@@ -364,7 +399,6 @@ public class MysqlTargetTask extends AbstractTargetTask {
                         columnTypeTemp.setColumnName(columnName);
                         columnTypeTemp.setDescType(DbTypeFlag.MYSQL);
                     }
-
 
                     String alterSql = "alter table " + dbTableName + " modify column" + columnTypeTemp.toString() + " ";
                     Log.error(alterSql);

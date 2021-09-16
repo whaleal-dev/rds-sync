@@ -52,9 +52,9 @@ public class TestMainLhp {
         // proc10  oracle-mysql   300/s
         // proc14 mongodb-mysql   400/s
         // proc1 mongodb实时同步
-
-
-        String[] procNameArray = new String[]{"proc5"};
+//
+//
+        String[] procNameArray = new String[]{"proc7"};
         for (String procName : procNameArray) {
             try {
                 long batchNo = 1;
@@ -73,7 +73,12 @@ public class TestMainLhp {
 
         if (dbSource.getType().equalsIgnoreCase(DbTypeFlag.MONGODB) && dbTarget.getType().equalsIgnoreCase(DbTypeFlag.MONGODB)) {
             programInfo.setUseDeFaultType(true);
-
+        }
+        //源端是否为rdb
+        if (dbSource.getType().equalsIgnoreCase(DbTypeFlag.MYSQL) ||
+                dbSource.getType().equalsIgnoreCase(DbTypeFlag.PG) ||
+                dbSource.getType().equalsIgnoreCase(DbTypeFlag.ORACLE)) {
+            programInfo.setRdbOfSource(true);
         }
         System.out.println("==============" + programInfo.isUseDeFaultType());
     }

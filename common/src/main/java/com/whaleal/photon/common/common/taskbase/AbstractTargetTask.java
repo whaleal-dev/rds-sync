@@ -36,6 +36,10 @@ public abstract class AbstractTargetTask extends AbstractPhotonObject implements
      * 两端是否为同一类数据源
      */
     protected boolean isUseDeFaultType;
+    /**
+     * 源端是否为rdb数据库
+     */
+    protected boolean isRdbOfSource = false;
 
     public String getProcNameAndBatchNo() {
         return proName + batchNo;
@@ -51,6 +55,7 @@ public abstract class AbstractTargetTask extends AbstractPhotonObject implements
         this.isUseDeFaultType = programInfo.isUseDeFaultType();
         this.targetDsName = programInfo.getTargetDsName();
         this.memoryCache = memoryCache;
+        this.isRdbOfSource = programInfo.isRdbOfSource();
         if (!isStop.containsKey(getProcNameAndBatchNo())) {
             synchronized (AbstractTargetTask.class) {
                 if (!isStop.containsKey(getProcNameAndBatchNo())) {
