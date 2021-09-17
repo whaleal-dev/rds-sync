@@ -145,6 +145,18 @@ public class OracleSourceExecute extends AbstractSourceExecute {
         SysPoolManager.submit(getProcNameAndBatchNo(), runnable);
     }
 
+    @Override
+    public void executeQueryTask() {
+        SourceTaskInfo taskMetadata = new SourceTaskInfo();
+        taskMetadata.setSourceDsName(sourceDsName);
+        Range range = new Range();
+        taskMetadata.setDbTableName(programInfo.getDbTableName());
+        range.setDbTableName(programInfo.getDbTableName());
+        range.setSql(programInfo.getQuerySql());
+        taskMetadata.setRange(range);
+        SourceTaskPoolManager.submit(getProcNameAndBatchNo(), new OracleSourceTask(taskMetadata, programInfo));
+    }
+
     public static void pushTaskMeta(String procNameAndBatchNo, SourceTaskInfo taskMetadata) {
         proSourceTask.get(procNameAndBatchNo).add(taskMetadata);
     }

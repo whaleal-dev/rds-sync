@@ -143,6 +143,18 @@ public class MysqlSourceExecute extends AbstractSourceExecute {
         SysPoolManager.submit(getProcNameAndBatchNo(), runnable);
     }
 
+    @Override
+    public void executeQueryTask() {
+        SourceTaskInfo taskMetadata = new SourceTaskInfo();
+        taskMetadata.setSourceDsName(sourceDsName);
+        taskMetadata.setDbTableName(programInfo.getDbTableName());
+        Range range = new Range();
+        range.setDbTableName(programInfo.getDbTableName());
+        range.setSql(programInfo.getQuerySql());
+        taskMetadata.setRange(range);
+        SourceTaskPoolManager.submit(getProcNameAndBatchNo(), new MysqlSourceTask(taskMetadata, programInfo));
+    }
+
 
     public static void pushTaskMeta(String procNameAndBatchNo, SourceTaskInfo taskMetadata) {
         procSourceTask.get(procNameAndBatchNo).add(taskMetadata);
@@ -169,4 +181,6 @@ public class MysqlSourceExecute extends AbstractSourceExecute {
         }
         return tableStructureMap;
     }
+
+
 }

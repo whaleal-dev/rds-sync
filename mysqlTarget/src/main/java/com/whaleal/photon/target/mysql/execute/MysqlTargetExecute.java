@@ -49,6 +49,16 @@ public class MysqlTargetExecute extends AbstractTargetExecute {
     }
 
     @Override
+    public void executePreSql(String sql) {
+        JdbcTemplate jdbcTemplate = MySqlConnection.getJdbcTemplate(getProcNameAndBatchNoAndTargetDsName());
+        try {
+            jdbcTemplate.execute(sql);
+        } catch (Exception e) {
+            Log.error(e.getMessage());
+        }
+    }
+
+    @Override
     public void rollBackDataFromDbTable(Set<String> dbTableNameSet) {
         for (String dbTableName : dbTableNameSet) {
             try {

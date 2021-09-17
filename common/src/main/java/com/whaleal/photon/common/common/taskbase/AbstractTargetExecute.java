@@ -49,4 +49,11 @@ public abstract class AbstractTargetExecute extends AbstractPhotonObject {
      * @param dbTableNameSet
      */
     public abstract void deleteExistDbTable(Set<String> dbTableNameSet);
+
+    /**
+     * 执行前置sql
+     *
+     * @param sql
+     */
+    public abstract void executePreSql(String sql);
 }

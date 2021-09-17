@@ -29,7 +29,7 @@ public class OracleSourceSplitRange implements SplitRangeOfRdbInterface {
 
     public OracleSourceSplitRange(String sourceDsName, String procName, long batchNo) {
         this.sourceDsName = sourceDsName;
-         String procNameAndBatchNoAndSourceDsName=procName+batchNo+sourceDsName;
+        String procNameAndBatchNoAndSourceDsName = procName + batchNo + sourceDsName;
         this.jdbcTemplate = OracleConnection.getJdbcTemplate(procNameAndBatchNoAndSourceDsName);
     }
 
@@ -135,6 +135,11 @@ public class OracleSourceSplitRange implements SplitRangeOfRdbInterface {
             range.setQuery("(1=1)");
             rangeList.add(range);
         }
+        String tableName = dbTableName.split("\\.", 2)[1];
+        for (Range range : rangeList) {
+            String sql = "select * from  " + tableName + " where " + range.getQuery();
+            range.setSql(sql);
+        }
         return rangeList;
     }
 
@@ -208,7 +213,7 @@ public class OracleSourceSplitRange implements SplitRangeOfRdbInterface {
         Datasource oracle = DataSourceUtil.getDataSourceByDsName("oracle3");
         OracleConnection.createConnection(oracle.getName(), oracle);
         PgServerConnection.getConnection("oracle3");
-        OracleSourceSplitRange oracleSourceSplitRangeByLhp = new OracleSourceSplitRange("oracle3","pr",0);
+        OracleSourceSplitRange oracleSourceSplitRangeByLhp = new OracleSourceSplitRange("oracle3", "pr", 0);
         oracleSourceSplitRangeByLhp.getRangeList("public.TEST_P_2").forEach(range -> System.out.println(range.getQuery()));
         // oracleSourceSplitRangeByLhp.getStringLengthMaxDifference("T_NAME", "cs.TTYPE");
 

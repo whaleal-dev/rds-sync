@@ -145,6 +145,17 @@ public class PgSourceExecute extends AbstractSourceExecute {
         SysPoolManager.submit(getProcNameAndBatchNo(), runnable);
     }
 
+    @Override
+    public void executeQueryTask() {
+        SourceTaskInfo taskMetadata = new SourceTaskInfo();
+        taskMetadata.setSourceDsName(sourceDsName);
+        Range range = new Range();
+        range.setSql(programInfo.getQuerySql());
+        taskMetadata.setDbTableName(programInfo.getDbTableName());
+        range.setDbTableName(programInfo.getDbTableName());
+        taskMetadata.setRange(range);
+        SourceTaskPoolManager.submit(getProcNameAndBatchNo(), new PgSourceTask(taskMetadata, programInfo));
+    }
     /**
      * 提交TaskInfo到任务队列中
      *

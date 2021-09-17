@@ -58,13 +58,11 @@ public class OracleSourceTask extends AbstractSourceTask {
     public void getDataFromDbTable() {
         String dbTableName = this.taskMetadata.getDbTableName();
         Range range = this.taskMetadata.getRange();
-        String query = range.getQuery();
+       String sql= range.getSql();
         Statement statement = null;
         ResultSet resultSet = null;
         try {
-            String tableName = dbTableName.split("\\.", 2)[1];
             statement = connection.createStatement();
-            String sql = "select * from  " + tableName + " where " + query;
             resultSet = statement.executeQuery(sql);
             Log.info("执行的sql语句" + sql);
             while (resultSet.next()) {

@@ -114,6 +114,8 @@ public abstract class AbstractSourceExecute extends AbstractPhotonObject {
         return proName + batchNo + sourceDsName;
     }
 
+
+
     /**
      * start
      *
@@ -149,4 +151,12 @@ public abstract class AbstractSourceExecute extends AbstractPhotonObject {
      * @desc 获取这个数据源的某表的且分数据
      */
     public abstract void submitSourceTask();
+
+
+    /**
+     * start
+     *
+     * @desc 全量任务
+     */
+    public abstract void executeQueryTask();
 }

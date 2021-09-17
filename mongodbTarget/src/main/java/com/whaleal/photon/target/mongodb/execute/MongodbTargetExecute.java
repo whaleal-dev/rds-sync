@@ -50,6 +50,11 @@ public class MongodbTargetExecute extends AbstractTargetExecute {
     }
 
     @Override
+    public void executePreSql(String sql) {
+
+    }
+
+    @Override
     public void rollBackDataFromDbTable(Set<String> dbTableNameSet) {
         for (String dbTableName : dbTableNameSet) {
             try {

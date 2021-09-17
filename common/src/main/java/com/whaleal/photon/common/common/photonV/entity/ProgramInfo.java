@@ -109,7 +109,17 @@ public class ProgramInfo {
      * 查询条件
      * 仅使用于查询。不可应用于库表同步中
      */
-    private String query;
+    private String querySql;
+    /**
+     * 查询条件
+     * 仅使用于查询。不可应用于库表同步中
+     */
+    private String dbTableName;
+    /**
+     * 目标端执行的接受数据前执行的sql
+     * 仅使用于preSql。不可应用于库表同步中
+     */
+    private String preSql;
     /**
      * 判断源和目标是否为同一类数据源
      */

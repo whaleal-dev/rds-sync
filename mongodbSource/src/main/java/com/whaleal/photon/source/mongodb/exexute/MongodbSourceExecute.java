@@ -174,6 +174,11 @@ public class MongodbSourceExecute extends AbstractSourceExecute {
         SysPoolManager.submit(getProcNameAndBatchNo(), runnable);
     }
 
+    @Override
+    public void executeQueryTask() {
+
+    }
+
     public static void pushTaskMeta(String procNameAndBatchNo, SourceTaskInfo sourceTaskInfo) {
         proSourceTask.get(procNameAndBatchNo).add(sourceTaskInfo);
     }

@@ -59,15 +59,16 @@ public class PgSourceTask extends AbstractSourceTask {
 
     @Override
     public void getDataFromDbTable() {
-        String dbTableName = this.taskMetadata.getDbTableName();
+//        String dbTableName = this.taskMetadata.getDbTableName();
         Range range = this.taskMetadata.getRange();
-        String query = range.getQuery();
+//        String query = range.getQuery();
         PreparedStatement statement = null;
         ResultSet resultSet = null;
+        String sql=  range.getSql();
         try {
             //读取collection中的数据
             connection.setAutoCommit(false);
-            String sql = "select * from  " + dbTableName + " where " + query;
+//            String sql = "select * from  " + dbTableName + " where " + query;
             statement = connection.prepareStatement(sql,
                     ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
             //也可以修改jdbc url通过defaultFetchSize参数来设置，这样默认所以的返回结果都是通过流方式读取.

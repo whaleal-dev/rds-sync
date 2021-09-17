@@ -48,7 +48,7 @@ public class SingleTableSplitUtil {
         if (StringUtils.isEmpty(splitPkName)) {
             Range range = new Range();
             range.setDbTableName(table);
-            range.setQuery("SELECT * FROM " + table);
+            range.setSql("SELECT * FROM " + table);
             pluginParams.add(range);
             return pluginParams;
         }
@@ -65,7 +65,7 @@ public class SingleTableSplitUtil {
         }
         Range range = new Range();
         range.setDbTableName(table);
-        range.setQuery(buildQuerySql(column, table, where));
+        range.setSql(buildQuerySql(column, table, where));
 
         // 切分后获取到的 start/end 有 Null 的情况
         if (null == minMaxPK.getLeft() || null == minMaxPK.getRight()) {
@@ -102,7 +102,7 @@ public class SingleTableSplitUtil {
                 allQuerySql.add(tempQuerySql);
                 range = new Range();
                 range.setDbTableName(table);
-                range.setQuery(tempQuerySql);
+                range.setSql(tempQuerySql);
                 pluginParams.add(range);
             }
         } else {
@@ -113,7 +113,7 @@ public class SingleTableSplitUtil {
             allQuerySql.add(tempQuerySql);
             range = new Range();
             range.setDbTableName(table);
-            range.setQuery(tempQuerySql);
+            range.setSql(tempQuerySql);
             pluginParams.add(range);
         }
 
@@ -124,7 +124,7 @@ public class SingleTableSplitUtil {
         allQuerySql.add(tempQuerySql);
         range = new Range();
         range.setDbTableName(table);
-        range.setQuery(tempQuerySql);
+        range.setSql(tempQuerySql);
         pluginParams.add(range);
 
         return pluginParams;
@@ -327,7 +327,7 @@ public class SingleTableSplitUtil {
         if (adviceNum == 1) {
             Range range = new Range();
             range.setDbTableName(table);
-            range.setQuery("SELECT * FROM "+ table);
+            range.setSql("SELECT * FROM "+ table);
             lengthRange.add(range);
             return lengthRange;
         } else {
@@ -337,12 +337,12 @@ public class SingleTableSplitUtil {
                     String query1 = String.format(sql1, table, min + splitRange * (k - 1), column, column, min + splitRange * k);
                     Range range1 = new Range();
                     range1.setDbTableName(table);
-                    range1.setQuery(query1);
+                    range1.setSql(query1);
                     lengthRange.add(range1);
                     String query2 = "SELECT * FROM "+ table + " WHERE LENGTH(" + column + ") is NULL";
                     Range range2 = new Range();
                     range2.setDbTableName(table);
-                    range2.setQuery(query2);
+                    range2.setSql(query2);
                     lengthRange.add(range2);
                     break;
                 }
@@ -350,7 +350,7 @@ public class SingleTableSplitUtil {
                 String query = String.format(sql, table, min + splitRange * (k - 1), column, column, min + splitRange * k);
                 Range range = new Range();
                 range.setDbTableName(table);
-                range.setQuery(query);
+                range.setSql(query);
                 lengthRange.add(range);
             }
         }
