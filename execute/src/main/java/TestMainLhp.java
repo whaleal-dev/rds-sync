@@ -88,9 +88,9 @@ public class TestMainLhp {
         //创建pro
         ProgramInfo programInfo = ProgramInfoUtil.getProgramInfo(procName);
         programInfo.setDropExistDbTable(true);
-        programInfo.setQuerySql("select id from nettb");
-        programInfo.setPreSql("drop table public.nettb");
-        programInfo.setDbTableName("public.nettb2");
+        programInfo.setQuerySql("select *,id id2 from count_group");
+        programInfo.setPreSql("drop table public.count_group2");
+        programInfo.setDbTableName("public.count_group2");
         if (programInfo == null || programInfo.getProName().length() == 0) {
             return;
         }
@@ -338,8 +338,10 @@ public class TestMainLhp {
             if (programInfo.getPreSql() != null && programInfo.getPreSql().length() > 2) {
                 mysqlTarget.executePreSql(programInfo.getPreSql());
             }
+
             //执行简单查询语句
             pgSource.executeQueryTask();
+            pgSource.setGetAllDbTable(true);
             //开始target启动任务
         } else {
             //把已经存在的target表进行删除
@@ -541,6 +543,7 @@ public class TestMainLhp {
             }
             //执行简单查询语句
             mysqlSource.executeQueryTask();
+            mysqlSource.setGetAllDbTable(true);
         } else {
             if (programInfo.isDropExistDbTable()) {
                 mysqlTarget.deleteExistDbTable(dbTableNameSet);
@@ -589,6 +592,7 @@ public class TestMainLhp {
             }
             //执行简单查询语句
             oracleSource.executeQueryTask();
+            oracleSource.setGetAllDbTable(true);
         } else {
 
             if (programInfo.isDropExistDbTable()) {

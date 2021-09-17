@@ -36,6 +36,11 @@ public abstract class AbstractSourceExecute extends AbstractPhotonObject {
      * 获取全部的表是否完成
      */
     protected volatile boolean isGetAllDbTable = false;
+
+    public void setGetAllDbTable(boolean getAllDbTable) {
+        isGetAllDbTable = getAllDbTable;
+    }
+
     /**
      * 库表名map
      * k为库表名
