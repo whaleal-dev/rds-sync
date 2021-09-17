@@ -58,7 +58,7 @@ public class OracleSourceTask extends AbstractSourceTask {
     public void getDataFromDbTable() {
         String dbTableName = this.taskMetadata.getDbTableName();
         Range range = this.taskMetadata.getRange();
-       String sql= range.getSql();
+       String sql= range.getSql().toString();;
         Statement statement = null;
         ResultSet resultSet = null;
         try {

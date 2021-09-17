@@ -43,7 +43,7 @@ public class MysqlSourceTask extends AbstractSourceTask {
 
     @Override
     public void getDataFromDbTable() {
-        String sql = this.taskMetadata.getRange().getSql();
+        String sql = this.taskMetadata.getRange().getSql().toString();
         Statement statement = null;
         ResultSet resultSet = null;
         try {

@@ -64,7 +64,7 @@ public class PgSourceTask extends AbstractSourceTask {
 //        String query = range.getQuery();
         PreparedStatement statement = null;
         ResultSet resultSet = null;
-        String sql=  range.getSql();
+        String sql=  range.getSql().toString();;
         try {
             //读取collection中的数据
             connection.setAutoCommit(false);

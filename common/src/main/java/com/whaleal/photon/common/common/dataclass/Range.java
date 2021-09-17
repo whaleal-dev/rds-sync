@@ -1,7 +1,10 @@
 package com.whaleal.photon.common.common.dataclass;
 
 
+import com.mongodb.BasicDBObject;
+import com.whaleal.photon.common.util.StringUtil;
 import lombok.*;
+import org.bson.Document;
 
 /**
  * @author: lhp
@@ -46,9 +49,26 @@ public class Range {
     /**
      * 查询语句 一般为sql后面的条件
      */
-    private String query;
+    private Object query;
     /**
      * 查询语句 一般为一条完整的sql
      */
-    private String sql;
+    private Object sql;
+
+    public Document getQueryForMongodb() {
+        if (sql == null) {
+            Document match = new Document();
+            Document condition = new Document();
+            condition.append("_id", new Document("$lt", maxId).append("$gte", minId));
+            // 如果是range最大范围，则查询范围是[]。否则[)
+            if (isMax) {
+                condition.append("_id", new Document("$lte", maxId).append("$gte", minId));
+            }
+            match.append("$match", condition);
+            return match;
+        } else {
+            Document document = Document.parse(sql.toString());
+            return document;
+        }
+    }
 }

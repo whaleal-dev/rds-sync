@@ -1,4 +1,5 @@
 import com.google.gson.Gson;
+import com.mongodb.BasicDBObject;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.whaleal.photon.common.common.photonV.entity.Datasource;
@@ -116,6 +117,30 @@ public class GetDbTypeOfMongodb {
         Datasource mongodbDataSource = DataSourceUtil.getDataSourceByDsName("mongodb1");
         MongoDbConnection.createMonoDbClient("mongodb1", mongodbDataSource);
         MongoClient mongodbClient = MongoDbConnection.getMongoClient("mongodb1");
-        mongodbClient.getDatabase("photon").runCommand(new Document("a", 1));
+        // condition.append("_id", new Document("$lte", maxId).append("$gte", minId));
+        BasicDBObject condition = new BasicDBObject();
+//        condition.append("_id", new Document("$lte", new ObjectId("6139f53f6d7a24177185686c")).
+//                append("$gte", new ObjectId("6139f53f6d7a24177185686c")));
+        String a ="{$match:{\"_id\":{\"$oid\":\"6139f53f6d7a24177185686c\"}}}";
+        Document parse =Document.parse(a);
+
+
+        System.out.println(parse);
+        System.out.println(gson.toJson(parse));
+        ArrayList<Document> objects = new ArrayList<>();
+        objects.add(parse);
+
+        Document first = mongodbClient.getDatabase("photon").getCollection("test10000").aggregate(objects).first();
+        Document dropDocument = new Document("drop", "test10000");
+        System.out.println(gson.toJson(dropDocument));
+
+        mongodbClient.getDatabase("photon").runCommand(dropDocument);
+
+        System.out.println(first);
+
+
+//
+//
+//        System.out.println(gson.toJson(new ObjectId()));
     }
 }

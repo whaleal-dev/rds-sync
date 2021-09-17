@@ -176,6 +176,16 @@ public class MongodbSourceExecute extends AbstractSourceExecute {
 
     @Override
     public void executeQueryTask() {
+        SourceTaskInfo taskMetadata = new SourceTaskInfo();
+        taskMetadata.setSourceDsName(sourceDsName);
+        Range range = new Range();
+        range.setSql(programInfo.getQuerySql());
+        taskMetadata.setDbTableName(programInfo.getDbTableName());
+        range.setDbTableName(programInfo.getDbTableName());
+        taskMetadata.setRange(range);
+        SourceTaskPoolManager.submit(getProcNameAndBatchNo(), new MongodbSourceTask(taskMetadata, programInfo));
+
+
 
     }
 

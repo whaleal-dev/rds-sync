@@ -83,18 +83,18 @@ public class MongodbSourceTask extends AbstractSourceTask {
         Object minId = range.getMinId();
         Object maxId = range.getMaxId();
         Object minIdTemp = minId;
-        BasicDBObject condition = new BasicDBObject();
-        condition.append("_id", new Document("$lt", maxId).append("$gte", minId));
-        // 如果是range最大范围，则查询范围是[]。否则[)
-        if (range.isMax()) {
-            condition.append("_id", new Document("$lte", maxId).append("$gte", minId));
-        }
+        Document condition = range.getQueryForMongodb();
         // 设置range的开始时间
         range.setStartTime(System.currentTimeMillis());
+        List<Document> arrayList = new ArrayList<>();
+        arrayList.add(condition);
+        System.out.println(condition);
         try {
             //读取collection中的数据
+//            MongoCursor<Document> mongoCursor = this.mongoClient.getDatabase(dbName).getCollection(tableName).
+//                    aggregate(arrayList).sort(new BasicDBObject().append("_id", 1)).iterator();
             MongoCursor<Document> mongoCursor = this.mongoClient.getDatabase(dbName).getCollection(tableName).
-                    find(condition).sort(new BasicDBObject().append("_id", 1)).iterator();
+                    aggregate(arrayList).iterator();
             while (mongoCursor.hasNext()) {
                 Document document = mongoCursor.next();
                 dataTransformation(document);

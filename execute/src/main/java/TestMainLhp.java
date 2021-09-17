@@ -54,7 +54,7 @@ public class TestMainLhp {
         // proc1 mongodb实时同步
 //
 
-        String[] procNameArray = new String[]{"proc7"};
+        String[] procNameArray = new String[]{"proc1"};
         for (String procName : procNameArray) {
             try {
                 long batchNo = 1;
@@ -88,9 +88,9 @@ public class TestMainLhp {
         //创建pro
         ProgramInfo programInfo = ProgramInfoUtil.getProgramInfo(procName);
         programInfo.setDropExistDbTable(true);
-        programInfo.setQuerySql("select *,id id2 from count_group");
-        programInfo.setPreSql("drop table public.count_group2");
-        programInfo.setDbTableName("public.count_group2");
+        programInfo.setQuerySql("{$match:{\"_id\":{\"$oid\":\"6141d46cd772b4c4df974056\"}}}");
+        programInfo.setPreSql("{\"drop\":\"test123\"}");
+        programInfo.setDbTableName("photon.test123");
         if (programInfo == null || programInfo.getProName().length() == 0) {
             return;
         }
@@ -286,16 +286,14 @@ public class TestMainLhp {
 
         // 简单查询任务   mongodb-mysql 暂不支持该功能
         if (programInfo.getQuerySql() != null && programInfo.getQuerySql().length() > 2) {
-
-            //把preSql进行处理
+            //执行target前置sql
             if (programInfo.getPreSql() != null && programInfo.getPreSql().length() > 2) {
                 mysqlTarget.executePreSql(programInfo.getPreSql());
             }
-
-
+            //执行简单查询语句
             mongodbSource.executeQueryTask();
-
-
+            mongodbSource.setGetAllDbTable(true);
+            //开始target启动任务
         } else {
             if (programInfo.isDropExistDbTable()) {
                 mysqlTarget.deleteExistDbTable(dbTableNameSet);
@@ -316,16 +314,13 @@ public class TestMainLhp {
             mongodbSource.submitSourceTask();
             // 开始遍历抽取该数据源的所有库表
             mongodbSource.splitDbTable();
-
-            mysqlTarget.start();
-            getProExeInfo(programInfo, mongodbSource, memoryCache, taskTrigger);
         }
+        mysqlTarget.start();
+        getProExeInfo(programInfo, mongodbSource, memoryCache, taskTrigger);
 
     }
 
     public static void testPgToMysql(ProgramInfo programInfo, MemoryCache memoryCache, TaskTrigger taskTrigger) {
-
-
         PgSourceExecute pgSource = new PgSourceExecute(programInfo, memoryCache);
         MysqlTargetExecute mysqlTarget = new MysqlTargetExecute(programInfo, memoryCache);
         //获取pg的同步的库表
@@ -338,7 +333,6 @@ public class TestMainLhp {
             if (programInfo.getPreSql() != null && programInfo.getPreSql().length() > 2) {
                 mysqlTarget.executePreSql(programInfo.getPreSql());
             }
-
             //执行简单查询语句
             pgSource.executeQueryTask();
             pgSource.setGetAllDbTable(true);
@@ -381,109 +375,122 @@ public class TestMainLhp {
     }
 
     public static void testMongoDbToMongoDb(ProgramInfo programInfo, MemoryCache memoryCache, TaskTrigger taskTrigger) {
-
         MongodbTargetExecute mongodbTarget = new MongodbTargetExecute(programInfo, memoryCache);
         MongodbSourceExecute mongodbSource = new MongodbSourceExecute(programInfo, memoryCache);
         // 获取数据源的全部库表
         mongodbSource.getAllDbTables();
-
         Set<String> dbTableNameSet = mongodbSource.getDbTableNameSet();
-
-
-        if (programInfo.isDropExistDbTable()) {
-            mongodbTarget.deleteExistDbTable(dbTableNameSet);
+        // 简单查询任务
+        if (programInfo.getQuerySql() != null && programInfo.getQuerySql().length() > 2) {
+            //执行target前置sql
+            if (programInfo.getPreSql() != null && programInfo.getPreSql().length() > 2) {
+                mongodbTarget.executePreSql(programInfo.getPreSql());
+            }
+            //执行简单查询语句
+            mongodbSource.executeQueryTask();
+            mongodbSource.setGetAllDbTable(true);
+            //开始target启动任务
         } else {
-            mongodbTarget.rollBackDataFromDbTable(dbTableNameSet);
-            String procNameAndBatchNo = programInfo.getProName() + programInfo.getBatchNo();
-            int targetActiveThreadNum = 0;
-            do {
-                targetActiveThreadNum = TargetTaskPoolManager.setTargetActiveThreadNum(procNameAndBatchNo, 0);
-                try {
-                    Thread.sleep(10000);
-                } catch (Exception e) {
+            if (programInfo.isDropExistDbTable()) {
+                mongodbTarget.deleteExistDbTable(dbTableNameSet);
+            } else {
+                mongodbTarget.rollBackDataFromDbTable(dbTableNameSet);
+                String procNameAndBatchNo = programInfo.getProName() + programInfo.getBatchNo();
+                int targetActiveThreadNum = 0;
+                do {
+                    targetActiveThreadNum = TargetTaskPoolManager.setTargetActiveThreadNum(procNameAndBatchNo, 0);
+                    try {
+                        Thread.sleep(10000);
+                    } catch (Exception e) {
 
-                }
-            } while (targetActiveThreadNum != 0);
+                    }
+                } while (targetActiveThreadNum != 0);
+            }
+            // 启动获取提交Task任务的线程
+            mongodbSource.submitSourceTask();
+            // 开始遍历抽取该数据源的所有库表
+            mongodbSource.splitDbTable();
         }
-
-        // 启动获取提交Task任务的线程
-        mongodbSource.submitSourceTask();
-        // 开始遍历抽取该数据源的所有库表
-        mongodbSource.splitDbTable();
-
-
         mongodbTarget.start();
-
         getProExeInfo(programInfo, mongodbSource, memoryCache, taskTrigger);
     }
 
     public static void testMysqlToMongoDb(ProgramInfo programInfo, MemoryCache memoryCache, TaskTrigger taskTrigger) {
-
         MongodbTargetExecute mongodbTarget = new MongodbTargetExecute(programInfo, memoryCache);
         MysqlSourceExecute mysqlSource = new MysqlSourceExecute(programInfo, memoryCache);
         // 获取数据源的全部库表
         mysqlSource.getAllDbTables();
-
         Set<String> dbTableNameSet = mysqlSource.getDbTableNameSet();
-
-
-        if (programInfo.isDropExistDbTable()) {
-            mongodbTarget.deleteExistDbTable(dbTableNameSet);
+        if (programInfo.getQuerySql() != null && programInfo.getQuerySql().length() > 2) {
+            //执行target前置sql
+            if (programInfo.getPreSql() != null && programInfo.getPreSql().length() > 2) {
+                mongodbTarget.executePreSql(programInfo.getPreSql());
+            }
+            //执行简单查询语句
+            mysqlSource.executeQueryTask();
+            mysqlSource.setGetAllDbTable(true);
+            //开始target启动任务
         } else {
-            mongodbTarget.rollBackDataFromDbTable(dbTableNameSet);
-            String procNameAndBatchNo = programInfo.getProName() + programInfo.getBatchNo();
-            int targetActiveThreadNum = 0;
-            do {
-                targetActiveThreadNum = TargetTaskPoolManager.setTargetActiveThreadNum(procNameAndBatchNo, 0);
-                try {
-                    Thread.sleep(10000);
-                } catch (Exception e) {
+            if (programInfo.isDropExistDbTable()) {
+                mongodbTarget.deleteExistDbTable(dbTableNameSet);
+            } else {
+                mongodbTarget.rollBackDataFromDbTable(dbTableNameSet);
+                String procNameAndBatchNo = programInfo.getProName() + programInfo.getBatchNo();
+                int targetActiveThreadNum = 0;
+                do {
+                    targetActiveThreadNum = TargetTaskPoolManager.setTargetActiveThreadNum(procNameAndBatchNo, 0);
+                    try {
+                        Thread.sleep(10000);
+                    } catch (Exception e) {
 
-                }
-            } while (targetActiveThreadNum != 0);
+                    }
+                } while (targetActiveThreadNum != 0);
+            }
+            // 启动获取提交Task任务的线程
+            mysqlSource.submitSourceTask();
+            // 开始遍历抽取该数据源的所有库表
+            mysqlSource.splitDbTable();
         }
-
-
-        // 启动获取提交Task任务的线程
-        mysqlSource.submitSourceTask();
-        // 开始遍历抽取该数据源的所有库表
-        mysqlSource.splitDbTable();
         mongodbTarget.start();
         getProExeInfo(programInfo, mysqlSource, memoryCache, taskTrigger);
     }
 
     public static void testPgToMongoDb(ProgramInfo programInfo, MemoryCache memoryCache, TaskTrigger taskTrigger) {
-
-
         MongodbTargetExecute mongodbTarget = new MongodbTargetExecute(programInfo, memoryCache);
         PgSourceExecute pgSource = new PgSourceExecute(programInfo, memoryCache);
-
         pgSource.getAllDbTables();
-
         Set<String> dbTableNameSet = pgSource.getDbTableNameSet();
-
-
-        if (programInfo.isDropExistDbTable()) {
-            mongodbTarget.deleteExistDbTable(dbTableNameSet);
+        if (programInfo.getQuerySql() != null && programInfo.getQuerySql().length() > 2) {
+            //执行target前置sql
+            if (programInfo.getPreSql() != null && programInfo.getPreSql().length() > 2) {
+                mongodbTarget.executePreSql(programInfo.getPreSql());
+            }
+            //执行简单查询语句
+            pgSource.executeQueryTask();
+            pgSource.setGetAllDbTable(true);
+            //开始target启动任务
         } else {
-            mongodbTarget.rollBackDataFromDbTable(dbTableNameSet);
-            String procNameAndBatchNo = programInfo.getProName() + programInfo.getBatchNo();
-            int targetActiveThreadNum = 0;
-            do {
-                targetActiveThreadNum = TargetTaskPoolManager.setTargetActiveThreadNum(procNameAndBatchNo, 0);
-                try {
-                    Thread.sleep(10000);
-                } catch (Exception e) {
+            if (programInfo.isDropExistDbTable()) {
+                mongodbTarget.deleteExistDbTable(dbTableNameSet);
+            } else {
+                mongodbTarget.rollBackDataFromDbTable(dbTableNameSet);
+                String procNameAndBatchNo = programInfo.getProName() + programInfo.getBatchNo();
+                int targetActiveThreadNum = 0;
+                do {
+                    targetActiveThreadNum = TargetTaskPoolManager.setTargetActiveThreadNum(procNameAndBatchNo, 0);
+                    try {
+                        Thread.sleep(10000);
+                    } catch (Exception e) {
 
-                }
-            } while (targetActiveThreadNum != 0);
+                    }
+                } while (targetActiveThreadNum != 0);
+            }
+
+            // 启动获取提交Task任务的线程
+            pgSource.submitSourceTask();
+            // 开始遍历抽取该数据源的所有库表
+            pgSource.splitDbTable();
         }
-
-
-        // 启动获取提交Task任务的线程
-        pgSource.submitSourceTask();
-        // 开始遍历抽取该数据源的所有库表
-        pgSource.splitDbTable();
         mongodbTarget.start();
         getProExeInfo(programInfo, pgSource, memoryCache, taskTrigger);
     }
@@ -526,15 +533,10 @@ public class TestMainLhp {
     }
 
     public static void testMysqlToMysql(ProgramInfo programInfo, MemoryCache memoryCache, TaskTrigger taskTrigger) {
-
-
         MysqlTargetExecute mysqlTarget = new MysqlTargetExecute(programInfo, memoryCache);
-
         MysqlSourceExecute mysqlSource = new MysqlSourceExecute(programInfo, memoryCache);
         // 获取数据源的全部库表
         mysqlSource.getAllDbTables();
-
-
         Set<String> dbTableNameSet = mysqlSource.getDbTableNameSet();
         if (programInfo.getQuerySql() != null && programInfo.getQuerySql().length() > 2) {
             //执行target前置sql
@@ -578,8 +580,6 @@ public class TestMainLhp {
     }
 
     public static void testOracleToMysql(ProgramInfo programInfo, MemoryCache memoryCache, TaskTrigger taskTrigger) {
-
-
         MysqlTargetExecute mysqlTarget = new MysqlTargetExecute(programInfo, memoryCache);
         OracleSourceExecute oracleSource = new OracleSourceExecute(programInfo, memoryCache);
         // 获取数据源的全部库表

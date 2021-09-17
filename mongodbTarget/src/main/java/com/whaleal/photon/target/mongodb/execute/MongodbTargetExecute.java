@@ -9,6 +9,7 @@ import com.whaleal.photon.core.dbconnection.mongodb.MongoDbConnection;
 import com.whaleal.photon.target.mongodb.task.MongodbTargetTask;
 import com.whaleal.photon.common.thread.TargetTaskPoolManager;
 import com.whaleal.photon.common.util.Log;
+import org.bson.Document;
 
 import java.util.Set;
 
@@ -51,7 +52,15 @@ public class MongodbTargetExecute extends AbstractTargetExecute {
 
     @Override
     public void executePreSql(String sql) {
-
+        try {
+            MongoClient mongoClient = MongoDbConnection.getMongoClient(getProcNameAndBatchNoAndTargetDsName());
+            String[] split = programInfo.getDbTableName().split("\\.", 2);
+            String dbName = split[0];
+            Document parse = Document.parse(sql);
+            mongoClient.getDatabase(dbName).runCommand(parse);
+        } catch (Exception e) {
+            Log.error(e.getMessage());
+        }
     }
 
     @Override
