@@ -62,4 +62,6 @@ WHERE D.TABLESPACE_NAME = F.TABLESPACE_NAME
 ORDER BY 4 DESC; 
 
 
+alter table CSTEST move tablespace USERS   修改表空间名
+
 

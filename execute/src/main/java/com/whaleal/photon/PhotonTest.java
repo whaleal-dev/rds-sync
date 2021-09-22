@@ -5,7 +5,6 @@ import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoIterable;
-
 import com.whaleal.photon.common.common.columntype.DbTypeFlag;
 import com.whaleal.photon.common.common.photonV.entity.Datasource;
 import com.whaleal.photon.common.common.photonV.entity.ProgramInfo;
@@ -16,11 +15,11 @@ import com.whaleal.photon.core.dbconnection.mysql.MySqlConnection;
 import com.whaleal.photon.core.dbconnection.oracle.OracleConnection;
 import com.whaleal.photon.core.dbconnection.pgserver.PgServerConnection;
 import com.whaleal.photon.core.programInfo.ProgramInfoUtil;
+import lombok.extern.slf4j.Slf4j;
 import org.bson.Document;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.jdbc.core.JdbcTemplate;
-
 
 import java.sql.Connection;
 import java.util.*;
@@ -43,7 +42,7 @@ import static java.util.stream.Collectors.toList;
  * @author cs
  * @date 2021/09/09
  */
-
+@Slf4j
 public class PhotonTest {
 
     /**
@@ -95,9 +94,9 @@ public class PhotonTest {
         sourceByTargetName = DataSourceUtil.getDataSourceByDsName(programInfo.getTargetDsName());
         //根据类型来生成连接对象  并放入到map里面，以后想要使用到去取就可以了
         createDataSourceConnection("1", sourceByDsName, sourceByTargetName);
-        System.out.println(programInfo);
-        System.out.println(sourceByDsName);
-        System.out.println(sourceByTargetName);
+        log.info(programInfo.toString());
+        log.info(sourceByDsName.toString());
+        log.info(sourceByTargetName.toString());
 
         //插入数据源端的连接对象进行装填
         if (sourceByDsName.getType().equalsIgnoreCase(DbTypeFlag.MONGODB)) {
@@ -126,36 +125,27 @@ public class PhotonTest {
     public void testOracle2Mongo() {
 
         oracleSourceDataInject();
-        System.out.println("oracle的目标源库内容");
-        System.out.println("源端数据库" + sourceTables);
-        System.out.println("源端表结构" + sourceSchema);
-        System.out.println("源端表内数据数量" + sourceTableCount);
 
         mongoTargetDataInject();
 
-        System.out.println("mongo的目标源库内容");
-        System.out.println(targetTableCount);
-        System.out.println(targetTables);
-        System.out.println("源端和目标端表的数量对比");
+        checkTable();
 
-        System.out.println(targetTableCount.equals(sourceTableCount));
+        checkContentCount();
 
+        checkData();
     }
 
     @Test
     public void testPg2Mongo() {
         pgSourceDataInject();
 
-        System.out.println("源数据库" + sourceTables);
-        System.out.println("表结构" + sourceSchema);
-        System.out.println("表内容条数" + sourceTableCount);
-
-
         mongoTargetDataInject();
 
-        System.out.println("mongo的目标源库内容");
-        System.out.println(targetTableCount);
-        System.out.println(targetTables);
+        checkTable();
+
+        checkContentCount();
+
+        checkData();
     }
 
     @Test
@@ -193,13 +183,13 @@ public class PhotonTest {
         mysqlSourceDataInject();
         mysqlTargetDataInject();
 
-        System.out.println("数据源表" + sourceTables);
-        System.out.println("数据源表结构" + sourceSchema);
-        System.out.println("数据源表中数量" + sourceTableCount);
+        log.info("数据源表" + sourceTables);
+        log.info("数据源表结构" + sourceSchema);
+        log.info("数据源表中数量" + sourceTableCount);
 
-        System.out.println("数据源表" + targetTables);
-        System.out.println("数据源表结构" + targetSchema);
-        System.out.println("数据源表中数量" + targetTableCount);
+        log.info("数据源表" + targetTables);
+        log.info("数据源表结构" + targetSchema);
+        log.info("数据源表中数量" + targetTableCount);
 
     }
 
@@ -226,15 +216,10 @@ public class PhotonTest {
     @Test
     public void testMongo2Mysql() {
         mongoSourceDataInject();
-        System.out.println("mongo的数据源库内容");
-        System.out.println(sourceTableCount);
-        System.out.println(sourceTables);
-
         mysqlTargetDataInject();
-        System.out.println("目标数据源表" + targetTables);
-        System.out.println("目标数据源表结构" + targetSchema);
-        System.out.println("目标数据源表中数量" + targetTableCount);
-
+        checkTable();
+        checkContentCount();
+        checkData();
     }
 
     public static void createDataSourceConnection(String procNameAndBatchNo, Datasource... dataSourceList) {
@@ -274,15 +259,14 @@ public class PhotonTest {
             String tableName = dbTableMap.get("TABLE_NAME").toString();
             String dbTable = dbName + "." + tableName;
             //其中一个表
-            List<Map<String, Object>> targetList = new ArrayList<>();
             if (dbTable.matches(programInfo.getDbTableWhite())) {
+                List<Map<String, Object>> targetList = new ArrayList<>();
                 targetTables.add(dbTable);
                 List<Map<String, Object>> tableDesc = targetJdbcTemplate.queryForList("desc " + dbTable);
                 targetSchema.put(dbTable, tableDesc);
                 Map<String, Object> countMap = targetJdbcTemplate.queryForMap("select  count(1) from " + dbTable);
                 targetTableCount.put(dbTable, (Long) countMap.get("count(1)"));
-                String querySql = "select * from " + dbTable + " where %s = %s";
-
+                String querySql = "select * from " + dbTable + " where 1 = 1 and  ?  =  ?";
                 //根据源表抽象数据查询表中的抽样数据， 开始
                 if (sourceSampleDataList.get(dbTable) != null) {
                     //源数据表里面的内容
@@ -294,18 +278,23 @@ public class PhotonTest {
                         //数据记录里面有很多内容，列的名字，和列的值
                         //测试数据的主键值
                         Object primaryValue = item.get(primaryKey);
-                        String querySqlResult = String.format(querySql, primaryKey, primaryValue);
+                        String primaryValueType = primaryValue.getClass().getSimpleName();
+                        if ("Integer".equals(primaryValueType) || "Long".equals(primaryValueType) || "Double".equals(primaryValueType) || "Float".equals(primaryValueType) || "Int32".equals(primaryValueType)
+                                || "Int64".equals(primaryValueType) || "Int".equals(primaryValueType)) {
 
-                        System.out.println(querySql);
-                        System.out.println(querySqlResult);
-                        Map<String, Object> targetData = new HashMap<>();
+                        } else {
+                            primaryValue = "'" + primaryValue + "'";
+                        }
+                        Map<String, Object> targetData;
                         try {
+                            String querySqlResult = "select * from " + dbTable + " where 1 = 1 and  " + primaryKey + "  =  " + primaryValue;
+                            log.info("查询语句" + querySqlResult);
                             targetData = targetJdbcTemplate.queryForMap(querySqlResult);
-                            System.out.println("查询到了数据" + targetData);
+                            log.info("查询到了数据" + targetData);
+                            //targetData = targetJdbcTemplate.queryForMap(querySql, primaryKey, primaryValue);
                         } catch (Exception e) {
                             targetData = null;
-                            System.out.println("根据源端案例数据查询到目标端对应数据失败，数据查询语句为：" + querySqlResult);
-
+                            log.info("根据源端案例数据查询到目标端对应数据失败，数据查询语句为：" + querySql + primaryKey + primaryValue);
                         }
                         if (targetData != null) {
                             targetList.add(targetData);
@@ -314,11 +303,10 @@ public class PhotonTest {
                     //根据原本的数据查找完成
                     targetSampleDataList.put(dbTable, targetList);
                 }
-
             }
         }
 
-        System.out.println(targetSampleDataList);
+        log.info(targetSampleDataList.toString());
 
     }
 
@@ -450,7 +438,7 @@ public class PhotonTest {
                             try {
                                 document = targetClient.getDatabase(dbName).getCollection(tableName).find(condition).first();
                             } catch (Exception e) {
-                                System.out.println("查询目标数据失败,查询条件" + dbTable + primaryKey + primaryValue);
+                                log.info("查询目标数据失败,查询条件" + dbTable + primaryKey + primaryValue);
                             }
                             if (document != null) {
                                 targetDataList.add(document);
@@ -481,23 +469,23 @@ public class PhotonTest {
             MongoCursor<String> mongoCursorOfTable = mongoIterableOfTable.iterator();
             // 遍历表列表
             while (mongoCursorOfTable.hasNext()) {
-                List<Map<String, Object>> targetList = new ArrayList<>();
                 String tableName = mongoCursorOfTable.next();
                 String dbTable = dbName + "." + tableName;
                 // 顺序不可写法反
                 if (dbTable.matches(programInfo.getDbTableWhite())) {
-                    Long count = targetClient.getDatabase(dbName).getCollection(tableName).countDocuments();
+                    List<Map<String, Object>> targetList = new ArrayList<>();
+                    Long count = sourceClient.getDatabase(dbName).getCollection(tableName).countDocuments();
                     sourceTables.add(dbTable);
                     //mongo的主键都是  _id
                     sourceTableCount.put(dbTable, count);
                     sourcePrimaryKey.put(dbTable, "_id");
-                    FindIterable<Document> documents = targetClient.getDatabase(dbName).getCollection(tableName).find().limit(3);
+                    FindIterable<Document> documents = sourceClient.getDatabase(dbName).getCollection(tableName).find().limit(3);
                     MongoCursor<Document> iterator = documents.iterator();
                     while (iterator.hasNext()) {
                         targetList.add(iterator.next());
                     }
+                    sourceSampleDataList.put(dbTable, targetList);
                 }
-                sourceSampleDataList.put(dbTable, targetList);
             }
         }
     }
@@ -506,18 +494,18 @@ public class PhotonTest {
      * 检查表
      */
     private void checkTable() {
-        System.out.println("数据源表" + sourceTables);
-        System.out.println("目标源表" + targetTables);
-        System.out.println("数据源表和目标表数量的对比");
+        log.info("数据源表" + sourceTables);
+        log.info("目标源表" + targetTables);
+        log.info("数据源表和目标表数量的对比");
         //找到公共的表
         List<String> common = targetTables.stream().filter(sourceTables::contains).collect(toList());
         if (common.size() < sourceTables.size()) {
             String format = String.format("目标端表的数量和源端表数量不一致，目标端表端数量为：%d ，源端表的数量为：%d ，缺少了%d 张表的数据", targetTables.size(), sourceTables.size(), (sourceTables.size() - common.size()));
-            System.out.println(format);
+            log.info(format);
             List<String> reduce1 = sourceTables.stream().filter(item -> !common.contains(item)).collect(toList());
-            System.out.println("差异的表名字为" + reduce1);
+            log.info("差异的表名字为" + reduce1);
         } else {
-            System.out.println("目标端表的数量和源端表数量一致");
+            log.info("目标端表的数量和源端表数量一致");
         }
     }
 
@@ -532,13 +520,13 @@ public class PhotonTest {
             String key = next.getKey();
             Long value = next.getValue();
             if (targetTableCount.get(key) == null) {
-                System.out.println("目标端没有表" + key);
+                log.info("目标端没有表" + key);
             } else if (!value.equals(targetTableCount.get(key))) {
                 String format = String.format("表数量存在差异,源端表：%s ，表内容条数：%d ； 目标端表：%s  ，表内容条数：%d 。 ", key, value, key, targetTableCount.get(key));
-                System.out.println(format);
+                log.info(format);
             } else {
                 String format = String.format("表数量没有差异,源端表：%s ，表内容条数：%d ； 目标端表：%s  ，表内容条数：%d 。 ", key, value, key, targetTableCount.get(key));
-                System.out.println(format);
+                log.info(format);
             }
         }
         //对比源和目标的表中字段数量 end
@@ -548,7 +536,9 @@ public class PhotonTest {
      * 对比数据内容
      */
     private void checkData() {
-        System.out.println("开始校对数据");
+        log.info("开始校对数据");
+        log.info(sourceSampleDataList.toString());
+        log.info(targetSampleDataList.toString());
         //对比测试数据 begin
         Iterator<Map.Entry<String, List<Map<String, Object>>>> iterator = targetSampleDataList.entrySet().iterator();
         while (iterator.hasNext()) {
@@ -557,8 +547,13 @@ public class PhotonTest {
             List<Map<String, Object>> dataList = entry.getValue();
             dataList.forEach(item -> {
                 Object o = sourcePrimaryKey.get(tableName);
+//                List<Map<String, Object>> sourceSampleList = sourceSampleDataList.get(tableName);
+//                List<Map<String, Object>> list = sourceSampleList.stream().filter(
+//                        item2 -> item2.get(sourcePrimaryKey.get(tableName)).equals(item.get(sourcePrimaryKey.get(tableName)))
+//                ).collect(toList());
+//                log.info("根据目标端查询到的源端端集合"+list);
                 Stream<Map<String, Object>> mapStream = sourceSampleDataList.get(tableName).stream().filter(
-                        item2 -> item2.get(sourcePrimaryKey.get(tableName)).equals(item.get(sourcePrimaryKey.get(tableName))));
+                        item2 -> item2.get(sourcePrimaryKey.get(tableName)).toString().equals(item.get(sourcePrimaryKey.get(tableName)).toString()));
                 //收集到的源端的数据
                 Map<String, Object> collect = mapStream.collect(toList()).get(0);
                 //目前item就是目标端的数据， collect就是我们根据目标端查询到的源端的数据
@@ -568,12 +563,12 @@ public class PhotonTest {
                     Object sourceValue = item.get(next.getKey());
 
                     if (next.getValue() != null && !next.getValue().toString().equals(sourceValue.toString())) {
-                        System.out.println(tableName + "表的" + next.getKey() + "字段传输不一致,源端值为" + next.getValue() + "目标端获取到的数据为" + sourceValue);
+                        log.info(tableName + "表的" + next.getKey() + "字段传输不一致,目标端值为" + next.getValue() + "源端获取到的数据为" + sourceValue);
                     }
                 }
             });
         }
-        System.out.println("校对完成");
+        log.info("校对完成");
         //对比测试数据 end
     }
 }
