@@ -26,7 +26,7 @@ PhotonT是数据同步组件，实现包括 MySQL、MongoDB等各种异构数据
 
 ## 架构
 
-![architecture_00](./imgs/img1.png)
+![architecture_00](imgs/img1.png)
 
 **说明:**
 
@@ -38,7 +38,7 @@ PhotonT是数据同步组件，实现包括 MySQL、MongoDB等各种异构数据
 
 1.实时迁移
 
-![workflow_00](./imgs/img2.jpg)
+![workflow_00](imgs/img2.jpg)
 注：
 
 使用cas机制确保每个库表在同一时刻仅有一个线程对该库表进行分桶 
@@ -49,7 +49,7 @@ PhotonT是数据同步组件，实现包括 MySQL、MongoDB等各种异构数据
 
 2.全量/增量迁移
 
-![workflow_00](./imgs/img3.png)
+![workflow_00](imgs/img3.png)
 
 注：
 
@@ -60,13 +60,13 @@ PhotonT是数据同步组件，实现包括 MySQL、MongoDB等各种异构数据
 
 ## 方案设计
 
-[DevDesign](./DevDesign.md)
+[DevDesign](DevDesign.md)
 
 
 
 ## 快速开始
 
-[QuickStart](./QuickStart.md)
+[QuickStart](QuickStart.md)
 
 
 
