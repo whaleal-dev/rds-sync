@@ -90,6 +90,12 @@
             <scope>compile</scope>
         </dependency>
         <dependency>
+            <groupId>com.jinmu.info</groupId>
+            <artifactId>hdfsTarget</artifactId>
+            <version>1.0-SNAPSHOT</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
             <groupId>org.mongodb</groupId>
             <artifactId>mongodb-driver-core</artifactId>
             <version>4.2.3</version>
