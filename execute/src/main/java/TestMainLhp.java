@@ -5,6 +5,7 @@ import com.whaleal.photon.common.common.photonV.entity.TaskTrigger;
 import com.whaleal.photon.common.common.photonV.entity.ProgramInfo;
 import com.whaleal.photon.common.common.taskbase.AbstractTargetTask;
 import com.whaleal.photon.common.common.taskbase.AbstractSourceExecute;
+import com.whaleal.photon.core.dbconnection.hadoop.HadoopConnection;
 import com.whaleal.photon.core.dbconnection.oracle.OracleConnection;
 import com.whaleal.photon.core.datasource.DataSourceUtil;
 import com.whaleal.photon.core.dbconnection.mongodb.MongoDbConnection;
@@ -21,6 +22,7 @@ import com.whaleal.photon.source.mongodb.exexute.MongodbSourceExecute;
 import com.whaleal.photon.source.mysql.execute.MysqlSourceExecute;
 import com.whaleal.photon.source.oracle.execute.OracleSourceExecute;
 import com.whaleal.photon.source.pg.execute.PgSourceExecute;
+import com.whaleal.photon.target.hdfs.execute.HdfsTargetExecute;
 import com.whaleal.photon.target.mongodb.execute.*;
 
 import com.whaleal.photon.common.thread.SourceTaskPoolManager;
@@ -51,10 +53,11 @@ public class TestMainLhp {
         // proc7 pg-mysql         400/s
         // proc10  oracle-mysql   300/s
         // proc14 mongodb-mysql   400/s
+        // proc15 mongodb-hdfs   400/s
         // proc1 mongodb实时同步
-//
 
-        String[] procNameArray = new String[]{"proc1"};
+
+        String[] procNameArray = new String[]{"proc15"};
         for (String procName : procNameArray) {
             try {
                 long batchNo = 1;
@@ -88,9 +91,9 @@ public class TestMainLhp {
         //创建pro
         ProgramInfo programInfo = ProgramInfoUtil.getProgramInfo(procName);
         programInfo.setDropExistDbTable(true);
-        programInfo.setQuerySql("{$match:{\"_id\":{\"$oid\":\"6141d46cd772b4c4df974056\"}}}");
-        programInfo.setPreSql("{\"drop\":\"test123\"}");
-        programInfo.setDbTableName("photon.test123");
+//        programInfo.setQuerySql("    {$match:{a:1}},{$sort:{b:-1}},{$limit:100}");
+//        programInfo.setPreSql("{\"drop\":\"test1000\"}");
+//        programInfo.setDbTableName("photon.test1000");
         if (programInfo == null || programInfo.getProName().length() == 0) {
             return;
         }
@@ -132,6 +135,8 @@ public class TestMainLhp {
                     PgServerConnection.createConnection(procNameAndBatchNoAndDsName, dataSourceDb);
                 } else if (dataSourceDb.getType().equalsIgnoreCase(DbTypeFlag.ORACLE)) {
                     OracleConnection.createConnection(procNameAndBatchNoAndDsName, dataSourceDb);
+                } else if (dataSourceDb.getType().equalsIgnoreCase(DbTypeFlag.HADOOP)) {
+                    HadoopConnection.createHadoopFileSystem(procNameAndBatchNoAndDsName, dataSourceDb);
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -157,7 +162,11 @@ public class TestMainLhp {
             testPgToMysql(programInfo, memoryCache, taskTrigger);
         } else if (dataSourceDb.getType().equalsIgnoreCase(DbTypeFlag.MYSQL) && dataTargetDb.getType().equalsIgnoreCase(DbTypeFlag.MYSQL)) {
             testMysqlToMysql(programInfo, memoryCache, taskTrigger);
+        } else if (dataSourceDb.getType().equalsIgnoreCase(DbTypeFlag.MONGODB) && dataTargetDb.getType().equalsIgnoreCase(DbTypeFlag.HADOOP)) {
+            testMongoDbToHadoop(programInfo, memoryCache, taskTrigger);
         }
+
+
     }
 
     public static void createThreadPoolManager(ProgramInfo programInfo) {
@@ -235,6 +244,8 @@ public class TestMainLhp {
                     PgServerConnection.close(procNameAndBatchNoAndDsName);
                 } else if (dataSourceDb.getType().equalsIgnoreCase(DbTypeFlag.ORACLE)) {
                     OracleConnection.close(procNameAndBatchNoAndDsName);
+                } else if (dataSourceDb.getType().equalsIgnoreCase(DbTypeFlag.HADOOP)) {
+                    HadoopConnection.close(procNameAndBatchNoAndDsName);
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -618,4 +629,46 @@ public class TestMainLhp {
         mysqlTarget.start();
         getProExeInfo(programInfo, oracleSource, memoryCache, taskTrigger);
     }
+
+    public static void testMongoDbToHadoop(ProgramInfo programInfo, MemoryCache memoryCache, TaskTrigger taskTrigger) {
+        HdfsTargetExecute hdfsTargetExecute = new HdfsTargetExecute(programInfo, memoryCache);
+        MongodbSourceExecute mongodbSource = new MongodbSourceExecute(programInfo, memoryCache);
+        // 获取数据源的全部库表
+        mongodbSource.getAllDbTables();
+        Set<String> dbTableNameSet = mongodbSource.getDbTableNameSet();
+        // 简单查询任务
+        if (programInfo.getQuerySql() != null && programInfo.getQuerySql().length() > 2) {
+            //执行target前置sql
+            if (programInfo.getPreSql() != null && programInfo.getPreSql().length() > 2) {
+                hdfsTargetExecute.executePreSql(programInfo.getPreSql());
+            }
+            //执行简单查询语句
+            mongodbSource.executeQueryTask();
+            mongodbSource.setGetAllDbTable(true);
+            //开始target启动任务
+        } else {
+            if (programInfo.isDropExistDbTable()) {
+                hdfsTargetExecute.deleteExistDbTable(dbTableNameSet);
+            } else {
+                hdfsTargetExecute.rollBackDataFromDbTable(dbTableNameSet);
+                String procNameAndBatchNo = programInfo.getProName() + programInfo.getBatchNo();
+                int targetActiveThreadNum = 0;
+                do {
+                    targetActiveThreadNum = TargetTaskPoolManager.setTargetActiveThreadNum(procNameAndBatchNo, 0);
+                    try {
+                        Thread.sleep(10000);
+                    } catch (Exception e) {
+
+                    }
+                } while (targetActiveThreadNum != 0);
+            }
+            // 启动获取提交Task任务的线程
+            mongodbSource.submitSourceTask();
+            // 开始遍历抽取该数据源的所有库表
+            mongodbSource.splitDbTable();
+        }
+        hdfsTargetExecute.start();
+        getProExeInfo(programInfo, mongodbSource, memoryCache, taskTrigger);
+    }
+
 }

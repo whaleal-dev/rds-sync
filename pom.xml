@@ -20,6 +20,7 @@
         <module>pgSource</module>
         <module>oracleSource</module>
         <module>realTimeOfMysql</module>
+        <module>hdfsTarget</module>
     </modules>
     <properties>
         <maven.compiler.source>8</maven.compiler.source>

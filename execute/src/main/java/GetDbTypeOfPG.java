@@ -69,18 +69,30 @@ public class GetDbTypeOfPG {
         Connection pgConnection = PgServerConnection.getConnection("pg");
         pgConnection.setAutoCommit(false);
         Statement statement = pgConnection.createStatement();
-        PreparedStatement ps = pgConnection.prepareStatement("select * from count_group limit 1",
+        PreparedStatement ps = pgConnection.prepareStatement("select * from nettb where id=8953 limit 2",
                 ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
 
         //也可以修改jdbc url通过defaultFetchSize参数来设置，这样默认所以的返回结果都是通过流方式读取.
         ps.setFetchSize(200);
         ResultSet rs = ps.executeQuery();
-
+        ResultSetMetaData md = rs.getMetaData();
         while (rs.next()) {
-            Timestamp create_time = (Timestamp) rs.getObject("create_time");
-            System.out.println(create_time.getTime());
-            System.out.println(rs.getObject("create_time").getClass().getSimpleName());
+//            Timestamp create_time = (Timestamp) rs.getObject("create_time");
+//            System.out.println(create_time.getTime());
+//            System.out.println(rs.getObject("create_time").getClass().getSimpleName());
+            for (int i = 1; i <= md.getColumnCount(); i++) {
+                //属性名下划线改驼峰
+                String columnName = md.getColumnName(i);
+                //值
+                Object values = rs.getObject(md.getColumnName(i));
 
+//                if (values != null) {
+//                    String type = values.getClass().getSimpleName().toUpperCase();
+//                    System.out.print(type + "(\"" + type + "\"),");
+//                }
+                System.out.println(columnName + "     " + values);
+
+            }
         }
 
 

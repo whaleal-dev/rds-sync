@@ -13,16 +13,18 @@ import java.util.Map;
  */
 public class DataSourceUtil {
     private static JdbcTemplate jdbcTemplate = MetadataConnection.getJdbcTemplate();
+
     public static Datasource getDataSourceByDsName(String dsName) {
         Map<String, Object> map = jdbcTemplate.queryForMap("select * from photon.datasource where name='" + dsName + "' ");
         Datasource dataSource = new Datasource();
+        System.out.println(map);
         dataSource.setName(dsName);
         Object type = map.get("type");
         if (type != null) {
             dataSource.setType(type.toString());
         }
         Object dsDatabase = map.get("ds_database");
-        if (type != null) {
+        if (dsDatabase != null) {
             dataSource.setDsDatabase(dsDatabase.toString());
         }
         Object dsSchema = map.get("ds_schema");
