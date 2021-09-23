@@ -70,12 +70,6 @@ PhotonT是数据同步组件，实现包括 MySQL、MongoDB等各种异构数据
 
 
 
-## 运维管理
-
-[AdminGuide](./AdminGuide.md)
-
-
-
 ## 相关资料
 
 #### 公司简介
