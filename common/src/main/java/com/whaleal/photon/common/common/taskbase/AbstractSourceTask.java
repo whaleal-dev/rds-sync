@@ -44,18 +44,22 @@ public abstract class AbstractSourceTask  extends AbstractPhotonObject implement
     /**
      * 用于计算现在这批数据量的大小
      */
-    private int cacheTemp = 0;
+    protected int cacheTemp = 0;
 
-    private int writeNum = 0;
+    protected int writeNum = 0;
 
+    protected boolean scanOver = false;
 
     public AbstractSourceTask(SourceTaskInfo taskMetadata,ProgramInfo programInfo) {
+
         super(programInfo.getTaskName(),programInfo.getProName(),programInfo.getBatchNo());
+
         this.sourceDsName = taskMetadata.getSourceDsName();
         this.memoryCache = programInfo.getMemoryCache();
         this.dataBatchSize = programInfo.getDataBatchSize();
         this.isUserDeFaultType = programInfo.isUseDeFaultType();
         this.taskMetadata = taskMetadata;
+
     }
     /**
      * getDataFromDbTable 获取表数据

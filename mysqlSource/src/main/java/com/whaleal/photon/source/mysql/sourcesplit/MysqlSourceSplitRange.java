@@ -244,8 +244,9 @@ public class MysqlSourceSplitRange implements SplitRangeOfRdbInterface {
         dbTableSet.add("user");
         dbTableSet.add("users_roles");
         for (String tableName : dbTableSet) {
-
-            mysqlSourceSplitRange.getRangeList("sms."+tableName).forEach(range -> Log.info(range.getQuery() + ""));
+            List<Map<String, Object>> mapList = mysqlSourceSplitRange.jdbcTemplate.queryForList("show tables");
+            System.out.println(mapList);
+            mysqlSourceSplitRange.getRangeList("sms." + tableName).forEach(range -> Log.info(range.getQuery() + ""));
 
         }
 

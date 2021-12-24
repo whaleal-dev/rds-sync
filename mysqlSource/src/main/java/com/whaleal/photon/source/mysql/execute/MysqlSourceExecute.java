@@ -9,7 +9,6 @@ import com.whaleal.photon.core.dbconnection.mysql.MySqlConnection;
 
 import com.whaleal.photon.core.thread.SourceTaskPoolManager;
 import com.whaleal.photon.core.thread.SysPoolManager;
-import com.whaleal.photon.source.mysql.sourcesplit.MysqlSourceSplitRange;
 import org.springframework.jdbc.core.JdbcTemplate;
 import com.whaleal.photon.source.mysql.task.MysqlSourceTask;
 
