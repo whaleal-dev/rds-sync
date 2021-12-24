@@ -19,7 +19,7 @@ public class SourceTaskInfo {
      */
     private Range range;
     /**
-     * mongoNamespace
+     * dbTableName
      */
     private String dbTableName;
     /**
@@ -30,10 +30,19 @@ public class SourceTaskInfo {
      * 目标数据源名称
      */
     private String targetDsName;
+    /**
+     * 开始时间
+     */
+    private long startTime;
+    /**
+     * 结束时间
+     */
+    private long endTime;
 
     public SourceTaskInfo(Range range, String dbTableName, String sourceDsName) {
         this.range = range;
         this.dbTableName = dbTableName;
         this.sourceDsName = sourceDsName;
     }
+
 }

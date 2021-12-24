@@ -48,29 +48,11 @@ public class ColumnType implements Serializable {
      * 是否是索引
      */
     private boolean indexAble;
-
     /**
      * 数据类型
      */
     private String descType;
 
-    public ColumnType(String columnName, String columnType) {
-        this.columnName = columnName;
-        this.columnType = columnType;
-    }
-
-    public ColumnType(String columnName, String columnType, int length) {
-        this.columnName = columnName;
-        this.columnType = columnType;
-        this.length = length;
-    }
-
-    public ColumnType(String columnName, String columnType, int length, int precision) {
-        this.columnName = columnName;
-        this.columnType = columnType;
-        this.length = length;
-        this.precision = precision;
-    }
 
     public String getColumnType() {
         return columnType.toUpperCase();
@@ -78,25 +60,25 @@ public class ColumnType implements Serializable {
 
     @Override
     public String toString() {
-        StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append("`" + columnName + "`");
-        stringBuilder.append(" " + columnType);
-        if (length > -1) {
-            stringBuilder.append("(" + length);
-            if (precision > -1) {
-                stringBuilder.append("," + precision + ")");
-            } else {
-                stringBuilder.append(")");
-            }
-        }
-        if(columnType.equalsIgnoreCase("timestamp")){
-            // 默认时间戳精确度为毫秒级
-            stringBuilder.append("(6)");
-        }
-        if (descType != null && DbTypeFlag.ORACLE.equalsIgnoreCase(descType)) {
-            return stringBuilder.toString().replaceAll("`", "\"");
-        }
-        return stringBuilder.toString();
+//        StringBuilder stringBuilder = new StringBuilder();
+//        stringBuilder.append("`" + columnName + "`");
+//        stringBuilder.append(" " + columnType);
+//        if (length > -1) {
+//            stringBuilder.append("(" + length);
+//            if (precision > -1) {
+//                stringBuilder.append("," + precision + ")");
+//            } else {
+//                stringBuilder.append(")");
+//            }
+//        }
+//        if(columnType.equalsIgnoreCase("timestamp")){
+//            // 默认时间戳精确度为毫秒级
+//            stringBuilder.append("(6)");
+//        }
+//        if (descType != null && DbTypeFlag.ORACLE.equalsIgnoreCase(descType)) {
+//            return stringBuilder.toString().replaceAll("`", "\"");
+//        }
+        return "";
     }
 
 }

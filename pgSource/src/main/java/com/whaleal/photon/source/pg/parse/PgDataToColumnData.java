@@ -1,6 +1,7 @@
 package com.whaleal.photon.source.pg.parse;
 
 import com.whaleal.photon.common.common.column.*;
+import com.whaleal.photon.common.common.column.dbSpecificType.PgObjectColumn;
 import com.whaleal.photon.common.common.columntype.java.EnumPgDataInJavaType;
 import org.postgresql.util.PGobject;
 

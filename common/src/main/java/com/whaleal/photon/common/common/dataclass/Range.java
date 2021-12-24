@@ -21,11 +21,11 @@ public class Range {
     /**
      * 最大值
      */
-    private Object maxId;
+    private Object maxValue;
     /**
      * 最小值
      */
-    private Object minId;
+    private Object minValue;
     /**
      * 是否为边缘值
      */
@@ -45,30 +45,35 @@ public class Range {
     /**
      * 数据类型
      */
-    private int _idType;
+    private int type;
     /**
      * 查询语句 一般为sql后面的条件
      */
-    private Object query;
+    private Object queryCondition;
     /**
      * 查询语句 一般为一条完整的sql
      */
-    private Object sql;
+    private Object query;
+    /**
+     * 查询范围条数
+     */
+    private int rangeSize;
 
     public Document getQueryForMongodb() {
-        if (sql == null) {
+        if (query == null) {
             Document match = new Document();
             Document condition = new Document();
-            condition.append("_id", new Document("$lt", maxId).append("$gte", minId));
+            condition.append("_id", new Document("$lt", maxValue).append("$gte", minValue));
             // 如果是range最大范围，则查询范围是[]。否则[)
             if (isMax) {
-                condition.append("_id", new Document("$lte", maxId).append("$gte", minId));
+                condition.append("_id", new Document("$lte", maxValue).append("$gte", minValue));
             }
             match.append("$match", condition);
             return match;
         } else {
-            Document document = Document.parse(sql.toString());
+            Document document = Document.parse(query.toString());
             return document;
         }
     }
+
 }

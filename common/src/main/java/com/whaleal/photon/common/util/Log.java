@@ -1,7 +1,10 @@
 package com.whaleal.photon.common.util;
 
-import org.apache.log4j.Logger;
-import org.bson.BsonTimestamp;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import java.util.concurrent.TimeUnit;
 
 /**
  * 日志记录类
@@ -13,17 +16,26 @@ public class Log {
     /**
      * Logger对象
      */
-    private static final Logger Log = Logger.getLogger(Log.class.getName());
+
+    private static final Logger log4j = LogManager.getLogger("HelloWorld");
 
     public static void info(String message) {
+        log4j.info(message);
+    }
+
+    public static void warn(String message) {
         StackTraceElement callInfo = new Throwable().getStackTrace()[1];
-       // Log.info(logDetail(callInfo, message));
-        Log.info(message);
+        log4j.warn(logDetail(callInfo, message));
     }
 
     public static void error(String message) {
         StackTraceElement callInfo = new Throwable().getStackTrace()[1];
-        Log.error(logDetail(callInfo, message));
+        log4j.error(logDetail(callInfo, message));
+        try {
+            TimeUnit.SECONDS.sleep(1);
+        } catch (Exception ignored) {
+            // 由于程序中较多的while循环,当出现异常时 可能无限循环打印错误日志。因此进行睡眠1s
+        }
     }
 
     /**
@@ -40,13 +52,5 @@ public class Log {
         return buffer.toString();
     }
 
-
-    public static void main(String[] args) {
-        // , 2862945894
-        BsonTimestamp bsonTimestamp=new BsonTimestamp(2862945894L);
-
-
-    }
 }
-
 

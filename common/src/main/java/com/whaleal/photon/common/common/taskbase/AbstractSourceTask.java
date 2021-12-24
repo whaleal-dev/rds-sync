@@ -42,21 +42,12 @@ public abstract class AbstractSourceTask  extends AbstractPhotonObject implement
      */
     protected List<List<AbstractColumn>> dataList = new ArrayList<>();
     /**
-     * getProcNameAndBatchNo
-     *
-     * @desc proName + batchNo
+     * 用于计算现在这批数据量的大小
      */
-    public String getProcNameAndBatchNo() {
-        return proName + batchNo;
-    }
-    /**
-     * getProcNameAndBatchNoAndSourceDsName
-     *
-     * @desc proName + batchNo + sourceDsName
-     */
-    public String getProcNameAndBatchNoAndSourceDsName() {
-        return proName + batchNo + sourceDsName;
-    }
+    private int cacheTemp = 0;
+
+    private int writeNum = 0;
+
 
     public AbstractSourceTask(SourceTaskInfo taskMetadata,ProgramInfo programInfo) {
         super(programInfo.getTaskName(),programInfo.getProName(),programInfo.getBatchNo());
@@ -84,7 +75,7 @@ public abstract class AbstractSourceTask  extends AbstractPhotonObject implement
      * dataTransformation 解析数据到AbstractColumn
      *
      * @param object
-     * @desc 放数据到缓存对象中
+     * @desc 解析数据
      */
     public abstract void dataTransformation(Object object);
 }

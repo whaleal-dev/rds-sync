@@ -9,6 +9,7 @@ import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @description: sourceExe
@@ -19,48 +20,44 @@ public abstract class AbstractSourceExecute extends AbstractPhotonObject {
     /**
      * 配置文件类
      */
-    protected ProgramInfo programInfo;
+    protected final ProgramInfo programInfo;
     /**
      * 数据缓存类
      */
-    protected MemoryCache memoryCache;
+    protected final MemoryCache memoryCache;
     /**
      * 源端数据源名称
      */
-    protected String sourceDsName;
+    protected final String sourceDsName;
     /**
      * 表名过滤的策略
      */
-    protected String dbTableWhite;
+    protected final String dbTableWhite;
     /**
      * 获取全部的表是否完成
      */
     protected volatile boolean isGetAllDbTable = false;
 
-    public void setGetAllDbTable(boolean getAllDbTable) {
-        isGetAllDbTable = getAllDbTable;
+    protected final AtomicInteger maxSourceTaskInfoNum = new AtomicInteger();
+
+
+    public int getMaxSourceTaskInfoNum() {
+        return maxSourceTaskInfoNum.get();
     }
 
     /**
-     * 库表名map
-     * k为库表名
-     * v为库表名
-     * 后续扩展使用到k
-     */
-    protected Map<String, String> dbTableNameMap = new ConcurrentHashMap<>();
-    /**
      * TaskMetadata队列
      */
-    protected Queue<SourceTaskInfo> taskMetadataQueue = new ConcurrentLinkedQueue<>();
-
+    protected final Queue<SourceTaskInfo> taskMetadataQueue = new ConcurrentLinkedQueue<>();
     /**
-     * 库表和对应的MongoNamespace
+     * 库表
      */
     protected Set<String> dbTableNameSet = new HashSet<>();
     /**
      * 判断源和目标是否为同一类数据源
      */
     protected boolean isUseDeFaultType = false;
+
     /**
      * isGetAllDbTable
      *
@@ -68,10 +65,6 @@ public abstract class AbstractSourceExecute extends AbstractPhotonObject {
      */
     public boolean isGetAllDbTable() {
         return isGetAllDbTable;
-    }
-
-    private void setTaskMetadataQueue(Queue<SourceTaskInfo> taskMetadataQueue) {
-        this.taskMetadataQueue = taskMetadataQueue;
     }
 
     /**
@@ -94,31 +87,12 @@ public abstract class AbstractSourceExecute extends AbstractPhotonObject {
 
     public AbstractSourceExecute(ProgramInfo programInfo, MemoryCache memoryCache) {
         super(programInfo.getTaskName(), programInfo.getProName(), programInfo.getBatchNo());
-        this.programInfo=programInfo;
+        this.programInfo = programInfo;
         this.memoryCache = memoryCache;
         this.sourceDsName = programInfo.getSourceDsName();
         this.dbTableWhite = programInfo.getDbTableWhite();
         this.isUseDeFaultType = programInfo.isUseDeFaultType();
     }
-
-    /**
-     * getProcNameAndBatchNo
-     *
-     * @desc proName + batchNo
-     */
-    public String getProcNameAndBatchNo() {
-        return proName + batchNo;
-    }
-
-    /**
-     * getProcNameAndBatchNoAndSourceDsName
-     *
-     * @desc proName + batchNo + sourceDsName
-     */
-    public String getProcNameAndBatchNoAndSourceDsName() {
-        return proName + batchNo + sourceDsName;
-    }
-
 
 
     /**
@@ -157,9 +131,8 @@ public abstract class AbstractSourceExecute extends AbstractPhotonObject {
      */
     public abstract void submitSourceTask();
 
-
     /**
-     * start
+     * executeQueryTask
      *
      * @desc 全量任务
      */

@@ -1,5 +1,6 @@
 package com.whaleal.photon.realtime.mongodb.common;
 
+import com.mongodb.client.model.WriteModel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -20,6 +21,7 @@ import java.util.List;
 @AllArgsConstructor
 @ToString
 public class BatchDataEntityOfMongodb implements Serializable {
+
     private static final long serialVersionUID = 1L;
     /**
      * 批次号
@@ -42,16 +44,11 @@ public class BatchDataEntityOfMongodb implements Serializable {
      */
     private String targetDsName;
     /**
-     * 任务名称
-     */
-    private String taskName;
-    /**
      * 程序名称
      */
-    private String procName;
-
+    private String proName;
     /**
      * 数据集合
      */
-    private List<Document> dataList = new ArrayList<>();
+    private List<WriteModel<Document>> dataList = new ArrayList();
 }

@@ -17,13 +17,6 @@ public abstract class AbstractTargetExecute extends AbstractPhotonObject {
 
     protected MemoryCache memoryCache;
 
-    public String getProcNameAndBatchNo() {
-        return proName + batchNo;
-    }
-
-    public String getProcNameAndBatchNoAndTargetDsName() {
-        return proName + batchNo + programInfo.getTargetDsName();
-    }
 
     public AbstractTargetExecute(ProgramInfo programInfo, MemoryCache memoryCache) {
         super(programInfo.getTaskName(), programInfo.getProName(), programInfo.getBatchNo());
@@ -48,12 +41,12 @@ public abstract class AbstractTargetExecute extends AbstractPhotonObject {
      *
      * @param dbTableNameSet
      */
-    public abstract void deleteExistDbTable(Set<String> dbTableNameSet);
+    public abstract void dropExistDbTable(Set<String> dbTableNameSet);
 
     /**
      * 执行前置sql
      *
      * @param sql
      */
-    public abstract void executePreSql(String sql);
+    public abstract void preExecute(Object sql);
 }

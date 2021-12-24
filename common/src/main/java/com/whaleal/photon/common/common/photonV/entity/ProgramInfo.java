@@ -56,11 +56,11 @@ public class ProgramInfo {
     /**
      * 已经存在的目标表是否删除
      */
-    private boolean isDropExistDbTable;
+    private boolean autoDropExistDbTable;
     /**
      * 是否创建索引
      */
-    private boolean isCreateIndex;
+    private boolean autoCreateIndex;
     /**
      * target任务线程数
      */
@@ -72,13 +72,13 @@ public class ProgramInfo {
     /**
      * 每个缓存区缓存批次数量
      */
-    private int cacheSize;
+    private int cacheBucketSize;
     /**
      * 缓存区个数
      */
-    private int cacheNum;
+    private int cacheBucketNum;
     /**
-     * 每个批次数据的大小
+     * 每批次数据的大小
      */
     private int dataBatchSize;
     /**
@@ -90,36 +90,15 @@ public class ProgramInfo {
      */
     private int realTimeThreadNum;
     /**
-     * 切表字段
-     */
-    private String splitPk;
-    /**
-     * PK_TYPE
-     */
-    private Object PK_TYPE;
-    /**
-     *
-     */
-    private Integer fetchSize = 500;
-    /**
-     * 切分数
-     */
-    private Integer adviceNumber = 2;
-    /**
      * 查询条件
      * 仅使用于查询。不可应用于库表同步中
      */
-    private String querySql;
-    /**
-     * 查询条件
-     * 仅使用于查询。不可应用于库表同步中
-     */
-    private String dbTableName;
+    private String query;
     /**
      * 目标端执行的接受数据前执行的sql
      * 仅使用于preSql。不可应用于库表同步中
      */
-    private String preSql;
+    private String preExecute;
     /**
      * 判断源和目标是否为同一类数据源
      */
@@ -128,4 +107,16 @@ public class ProgramInfo {
      * 源端是否为rdb数据库
      */
     private boolean isRdbOfSource = false;
+    /**
+     * 全量同步时,是否按照顺序同步表或多表并行同步
+     */
+    private boolean parallelSynchronizationMultipleTables;
+    /**
+     * 延迟时间 单位秒
+     */
+    private int delayTime;
+    /**
+     * source的mongodb版本 单位秒
+     */
+    private String sourceVersion;
 }

@@ -10,18 +10,12 @@ import com.google.gson.Gson;
  */
 
 public class JsonColumn extends AbstractColumn {
-    private static Gson gson = new Gson();
     private String data;
 
     public JsonColumn(String columnName, String object) {
         this.columnName = columnName;
         this.data = object;
     }
-
-//    public JsonColumn(String columnName, Object object) {
-//        this.columnName = columnName;
-//        this.data = gson.toJson(object);
-//    }
 
     @Override
     public String getData() {

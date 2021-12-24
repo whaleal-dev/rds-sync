@@ -12,12 +12,12 @@ import java.util.Map;
  * @time: 2021/8/27 3:24 下午
  */
 public class ProgramInfoUtil {
-    private static JdbcTemplate jdbcTemplate = MetadataConnection.getJdbcTemplate();
+    private static final JdbcTemplate JDBC_TEMPLATE = MetadataConnection.getJdbcTemplate();
 
     public static ProgramInfo getProgramInfo(String procName) {
         ProgramInfo programInfo = null;
         try {
-            Map<String, Object> map = jdbcTemplate.queryForMap("select * from photon.program where proc_name='" + procName + "' ");
+            Map<String, Object> map = JDBC_TEMPLATE.queryForMap("select * from photon.program where proc_name='" + procName + "' ");
             programInfo = new ProgramInfo();
             programInfo.setProName(procName);
             Object taskName = map.get("task_name");
@@ -50,16 +50,16 @@ public class ProgramInfoUtil {
             }
             Object collectionExistDrop = map.get("collection_exist_drop");
             if (collectionExistDrop != null) {
-                programInfo.setDropExistDbTable(false);
+                programInfo.setAutoDropExistDbTable(false);
                 if ((Boolean) collectionExistDrop) {
-                    programInfo.setDropExistDbTable(true);
+                    programInfo.setAutoDropExistDbTable(true);
                 }
             }
             Object createIndex = map.get("create_index");
             if (createIndex != null) {
-                programInfo.setCreateIndex(false);
+                programInfo.setAutoCreateIndex(false);
                 if ((Boolean) createIndex) {
-                    programInfo.setCreateIndex(true);
+                    programInfo.setAutoCreateIndex(true);
                 }
             }
             Object targetThreadNum = map.get("target_thread_num");
@@ -76,15 +76,15 @@ public class ProgramInfoUtil {
             }
             Object cacheSize = map.get("cache_size");
             if (cacheSize != null) {
-                programInfo.setCacheSize((Integer) cacheSize);
+                programInfo.setCacheBucketSize((Integer) cacheSize);
             } else {
-                programInfo.setCacheSize(20);
+                programInfo.setCacheBucketSize(20);
             }
             Object cacheNum = map.get("cache_num");
             if (cacheNum != null) {
-                programInfo.setCacheNum((Integer) cacheNum);
+                programInfo.setCacheBucketNum((Integer) cacheNum);
             } else {
-                programInfo.setCacheNum(20);
+                programInfo.setCacheBucketNum(20);
             }
             Object dataBatchSize = map.get("data_batch_size");
             if (dataBatchSize != null) {
@@ -92,13 +92,7 @@ public class ProgramInfoUtil {
             } else {
                 programInfo.setDataBatchSize(128);
             }
-//            Object syncParallel = map.get("sync_parallel");
-//            if (syncParallel != null) {
-//                com.whaleal.photon.core.programInfo.setSyncParallel(false);
-//                if ((Boolean) syncParallel) {
-//                    com.whaleal.photon.core.programInfo.setSyncParallel(true);
-//                }
-//            }
+
             Object startIncrementTime = map.get("start_increment_time");
             if (startIncrementTime != null) {
                 programInfo.setStartIncrementTime((Integer) startIncrementTime);

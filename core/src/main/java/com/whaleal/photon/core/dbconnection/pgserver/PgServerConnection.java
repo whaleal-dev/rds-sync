@@ -19,40 +19,40 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 @Slf4j
 public final class PgServerConnection {
-    private static Map<String, Connection> pgConnectionMap = new ConcurrentHashMap<>();
-    private static Map<String, JdbcTemplate> jdbcTemplatePgMap = new ConcurrentHashMap<>();
+    private static final Map<String, Connection> PG_CONNECTION_MAP = new ConcurrentHashMap<>();
+    private static final Map<String, JdbcTemplate> JDBC_TEMPLATE_PG_MAP = new ConcurrentHashMap<>();
 
     /**
      * 根据数据库的名字或者数据源来获取连接
      *
-     * @param procNameAndBatchNoAndDsName ds的名字
+     * @param dsName ds的名字
      * @param datasource                  数据源
      * @return {@link Connection}
      */
-    public static void createConnection(String procNameAndBatchNoAndDsName, Datasource datasource) {
-        if (!jdbcTemplatePgMap.containsKey(procNameAndBatchNoAndDsName)) {
+    public static void createConnection(String dsName, Datasource datasource) {
+        if (!JDBC_TEMPLATE_PG_MAP.containsKey(dsName)) {
             synchronized (PgServerConnection.class) {
-                if (!jdbcTemplatePgMap.containsKey(procNameAndBatchNoAndDsName)) {
-                    getBasicDataSource(procNameAndBatchNoAndDsName, datasource);
+                if (!JDBC_TEMPLATE_PG_MAP.containsKey(dsName)) {
+                    getBasicDataSource(dsName, datasource);
                 }
             }
         }
     }
 
-    public static JdbcTemplate getJdbcTemplate(String procNameAndBatchNoAndDsName) {
-        return jdbcTemplatePgMap.get(procNameAndBatchNoAndDsName);
+    public static JdbcTemplate getJdbcTemplate(String dsName) {
+        return JDBC_TEMPLATE_PG_MAP.get(dsName);
     }
 
 
     /**
      * getJdbcTemplate 获取mysql的Jdbc
      *
-     * @param procNameAndBatchNoAndDsName
+     * @param dsName
      * @return JdbcTemplate
      * @desc 获取mysql的Jdbc
      */
-    public static Connection getConnection(String procNameAndBatchNoAndDsName) {
-        return pgConnectionMap.get(procNameAndBatchNoAndDsName);
+    public static Connection getConnection(String dsName) {
+        return PG_CONNECTION_MAP.get(dsName);
     }
 
     /**
@@ -61,42 +61,38 @@ public final class PgServerConnection {
      * @param datasource 数据源
      * @return {@link Connection}
      */
-    public static void getBasicDataSource(String procNameAndBatchNoAndDsName, Datasource datasource) {
+    public static void getBasicDataSource(String dsName, Datasource datasource) {
         try {
             BasicDataSource basicDataSource = new BasicDataSource();
             basicDataSource.setDriverClassName("org.postgresql.Driver");
             basicDataSource.setUrl(datasource.getUrl() + "?useCursorFetch=true");
             basicDataSource.setUsername(datasource.getUsername());
             basicDataSource.setPassword(datasource.getPassword());
-            System.out.println("成功连接数据库");
-            jdbcTemplatePgMap.put(procNameAndBatchNoAndDsName, new JdbcTemplate(basicDataSource));
-            pgConnectionMap.put(procNameAndBatchNoAndDsName, basicDataSource.getConnection());
-        } catch (Exception exception) {
-            Log.error(exception.getMessage());
-            exception.printStackTrace();
+            JDBC_TEMPLATE_PG_MAP.put(dsName, new JdbcTemplate(basicDataSource));
+            PG_CONNECTION_MAP.put(dsName, basicDataSource.getConnection());
+        } catch (Exception e) {
+            Log.error("链接PG:" + datasource.getName() + "数据源出现异常,错误信息:" + e.getMessage());
         }
     }
 
     /**
      * close 关闭jdbc链接
      *
-     * @param procNameAndBatchNoAndDsName
+     * @param dsName
      * @desc 关闭jdbc链接
      */
-    public static void close(String procNameAndBatchNoAndDsName) {
-        if (!pgConnectionMap.containsKey(procNameAndBatchNoAndDsName)) {
+    public static void close(String dsName) {
+        if (!PG_CONNECTION_MAP.containsKey(dsName)) {
             return;
         }
         try {
-            pgConnectionMap.get(procNameAndBatchNoAndDsName).close();
-            System.out.println(procNameAndBatchNoAndDsName + "数据源关闭");
-        } catch (Exception exception) {
-            Log.error(exception.getMessage());
-            exception.printStackTrace();
+            PG_CONNECTION_MAP.get(dsName).close();
+        } catch (Exception e) {
+            Log.error("关闭PG客户端链接发生异常,错误信息:" + e.getMessage());
         } finally {
-            pgConnectionMap.remove(procNameAndBatchNoAndDsName);
-            jdbcTemplatePgMap.remove(procNameAndBatchNoAndDsName);
-            Log.info(procNameAndBatchNoAndDsName + ",pg链接已关闭");
+            PG_CONNECTION_MAP.remove(dsName);
+            JDBC_TEMPLATE_PG_MAP.remove(dsName);
+            Log.info("成功关闭PG链接:" + dsName);
         }
     }
 

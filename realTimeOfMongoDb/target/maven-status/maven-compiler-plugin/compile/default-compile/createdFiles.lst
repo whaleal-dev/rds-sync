@@ -1,0 +1,11 @@
+com/whaleal/photon/realtime/mongodb/task/OplogReadTask.class
+com/whaleal/photon/realtime/mongodb/task/OplogNsBucketTask_v3.class
+com/whaleal/photon/realtime/mongodb/task/OplogNsBucketTask_v1.class
+com/whaleal/photon/realtime/mongodb/task/OplogWriteTask.class
+com/whaleal/photon/realtime/mongodb/common/BatchDataEntityOfMongodb.class
+com/whaleal/photon/realtime/mongodb/task/OplogNsBucketTask_v2.class
+com/whaleal/photon/realtime/mongodb/task/OplogDealIndexTask.class
+com/whaleal/photon/realtime/mongodb/common/OplogMetadata.class
+com/whaleal/photon/realtime/mongodb/common/ParseOplogInterface.class
+com/whaleal/photon/realtime/mongodb/common/AbstractOplogNsBucketTask.class
+com/whaleal/photon/realtime/mongodb/task/OplogNsTask.class

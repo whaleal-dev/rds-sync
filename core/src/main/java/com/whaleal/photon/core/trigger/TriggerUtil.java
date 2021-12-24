@@ -11,18 +11,18 @@ import com.whaleal.photon.common.util.Log;
  * @time: 2021/8/30 1:50 下午
  */
 public class TriggerUtil {
-    private static JdbcTemplate jdbcTemplate = MetadataConnection.getJdbcTemplate();
+    private static final JdbcTemplate JDBC_TEMPLATE = MetadataConnection.getJdbcTemplate();
 
     public static void insertTriggerInfo(TaskTrigger taskTrigger) {
         String sql = "insert into photon.task_trigger(id,task_name,proc_name,batch_no,state)";
         String values = "values(?,?,?,?,?)";
-        jdbcTemplate.update(sql + values, taskTrigger.getId(), taskTrigger.getTaskName(), taskTrigger.getProName(), taskTrigger.getBatchNo(), "new");
+        JDBC_TEMPLATE.update(sql + values, taskTrigger.getId(), taskTrigger.getTaskName(), taskTrigger.getProName(), taskTrigger.getBatchNo(), "new");
     }
 
     public static void updateTriggerInfo(TaskTrigger taskTrigger) {
         try {
             String sql = "update  photon.task_trigger set state=? where id=? and state!='stop' ";
-            jdbcTemplate.update(sql, taskTrigger.getState(), taskTrigger.getId());
+            JDBC_TEMPLATE.update(sql, taskTrigger.getState(), taskTrigger.getId());
         } catch (Exception e) {
             Log.error(e.getMessage());
         }
@@ -33,7 +33,7 @@ public class TriggerUtil {
         try {
             String sql = "select `state`  from photon.task_trigger where id='" + id + "'";
             // System.out.println(sql);
-            state = jdbcTemplate.queryForObject(sql, String.class);
+            state = JDBC_TEMPLATE.queryForObject(sql, String.class);
         } catch (Exception e) {
             Log.error(e.getMessage());
         }

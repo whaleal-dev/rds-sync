@@ -26,12 +26,7 @@ public abstract class AbstractTargetTask extends AbstractPhotonObject implements
      * 数据缓存类
      */
     protected MemoryCache memoryCache;
-    /**
-     * 某target是否停止
-     * k为程序名+批次号
-     * v为boolean
-     */
-    private volatile static Map<String, AtomicBoolean> isStop = new ConcurrentHashMap<>();
+
     /**
      * 两端是否为同一类数据源
      */
@@ -41,45 +36,13 @@ public abstract class AbstractTargetTask extends AbstractPhotonObject implements
      */
     protected boolean isRdbOfSource = false;
 
-    public String getProcNameAndBatchNo() {
-        return proName + batchNo;
-    }
-
-    public String getProcNameAndBatchNoAndTargetDsName() {
-        return proName + batchNo + targetDsName;
-    }
-
-
     public AbstractTargetTask(ProgramInfo programInfo, MemoryCache memoryCache) {
         super(programInfo.getTaskName(), programInfo.getProName(), programInfo.getBatchNo());
         this.isUseDeFaultType = programInfo.isUseDeFaultType();
         this.targetDsName = programInfo.getTargetDsName();
         this.memoryCache = memoryCache;
         this.isRdbOfSource = programInfo.isRdbOfSource();
-        if (!isStop.containsKey(getProcNameAndBatchNo())) {
-            synchronized (AbstractTargetTask.class) {
-                if (!isStop.containsKey(getProcNameAndBatchNo())) {
-                    isStop.put(getProcNameAndBatchNo(), new AtomicBoolean());
-                }
-            }
-        }
     }
-
-    /**
-     * 设置某pro的target是否停止
-     */
-    public static void setIsStopFlagOfTarget(String procNameAndBatchNo, boolean value) {
-        isStop.get(procNameAndBatchNo).set(value);
-    }
-
-    public static void removeIsStopFlagOfTarget(String procNameAndBatchNo) {
-        isStop.remove(procNameAndBatchNo);
-    }
-
-    public static boolean getIsStopFlagOfTarget(String procNameAndBatchNo) {
-        return isStop.get(procNameAndBatchNo).get();
-    }
-
 
     /**
      * applyData 应用数据

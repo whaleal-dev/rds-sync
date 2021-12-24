@@ -19,13 +19,13 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class MySqlConnection {
 
-    private static Map<String, JdbcTemplate> jdbcTemplateMysqlMap = new ConcurrentHashMap<>();
+    private static final Map<String, JdbcTemplate> JDBC_TEMPLATE_MYSQL_MAP = new ConcurrentHashMap<>();
 
-    private static Map<String, Connection> connectionMysqlMap = new ConcurrentHashMap<>();
+    private static final Map<String, Connection> CONNECTION_MYSQL_MAP = new ConcurrentHashMap<>();
 
 
-    private static synchronized void getBasicDataSource(String procNameAndBatchNoAndDsName, Datasource datasource) {
-        if (jdbcTemplateMysqlMap.containsKey(procNameAndBatchNoAndDsName)) {
+    private static synchronized void getBasicDataSource(String dsName, Datasource datasource) {
+        if (JDBC_TEMPLATE_MYSQL_MAP.containsKey(dsName)) {
             return;
         }
         try {
@@ -34,26 +34,25 @@ public class MySqlConnection {
             basicDataSource.setUsername(datasource.getUsername());
             basicDataSource.setPassword(datasource.getPassword());
             JdbcTemplate jdbcTemplate = new JdbcTemplate(basicDataSource);
-            jdbcTemplateMysqlMap.put(procNameAndBatchNoAndDsName, jdbcTemplate);
-            connectionMysqlMap.put(procNameAndBatchNoAndDsName, basicDataSource.getConnection());
-        } catch (SQLException exception) {
-            Log.error(exception.getMessage());
-            exception.printStackTrace();
+            JDBC_TEMPLATE_MYSQL_MAP.put(dsName, jdbcTemplate);
+            CONNECTION_MYSQL_MAP.put(dsName, basicDataSource.getConnection());
+        } catch (Exception e) {
+            Log.error("链接MYSQL:" + datasource.getName() + "数据源出现异常,错误信息:" + e.getMessage());
         }
     }
 
     /**
      * getJdbcTemplate 获取mysql的connection
      *
-     * @param procNameAndBatchNoAndDsName
+     * @param dsName
      * @return JdbcTemplate
      * @desc 获取mysql的Jdbc
      */
-    public static void createConnection(String procNameAndBatchNoAndDsName, Datasource datasource) {
-        if (!jdbcTemplateMysqlMap.containsKey(procNameAndBatchNoAndDsName)) {
+    public static void createConnection(String dsName, Datasource datasource) {
+        if (!JDBC_TEMPLATE_MYSQL_MAP.containsKey(dsName)) {
             synchronized (MySqlConnection.class) {
-                if (!jdbcTemplateMysqlMap.containsKey(procNameAndBatchNoAndDsName)) {
-                    getBasicDataSource(procNameAndBatchNoAndDsName, datasource);
+                if (!JDBC_TEMPLATE_MYSQL_MAP.containsKey(dsName)) {
+                    getBasicDataSource(dsName, datasource);
                 }
             }
         }
@@ -62,45 +61,44 @@ public class MySqlConnection {
     /**
      * getJdbcTemplate 获取mysql的Jdbc
      *
-     * @param procNameAndBatchNoAndDsName
+     * @param dsName
      * @return JdbcTemplate
      * @desc 获取mysql的Jdbc
      */
-    public static JdbcTemplate getJdbcTemplate(String procNameAndBatchNoAndDsName) {
-        return jdbcTemplateMysqlMap.get(procNameAndBatchNoAndDsName);
+    public static JdbcTemplate getJdbcTemplate(String dsName) {
+        return JDBC_TEMPLATE_MYSQL_MAP.get(dsName);
     }
 
     /**
      * getJdbcTemplate 获取mysql的Jdbc
      *
-     * @param procNameAndBatchNoAndDsName
+     * @param dsName
      * @return JdbcTemplate
      * @desc 获取mysql的Jdbc
      */
-    public static Connection getConnection(String procNameAndBatchNoAndDsName) {
-        return connectionMysqlMap.get(procNameAndBatchNoAndDsName);
+    public static Connection getConnection(String dsName) {
+        return CONNECTION_MYSQL_MAP.get(dsName);
     }
 
     /**
      * close 关闭jdbc链接
      *
-     * @param procNameAndBatchNoAndDsName
+     * @param dsName
      * @desc 关闭jdbc链接
      */
-    public static void close(String procNameAndBatchNoAndDsName) {
-        if (!connectionMysqlMap.containsKey(procNameAndBatchNoAndDsName)) {
+    public static void close(String dsName) {
+        if (!CONNECTION_MYSQL_MAP.containsKey(dsName)) {
             return;
         }
         try {
-            connectionMysqlMap.get(procNameAndBatchNoAndDsName).close();
+            CONNECTION_MYSQL_MAP.get(dsName).close();
 
-        } catch (SQLException exception) {
-            Log.error(exception.getMessage());
-            exception.printStackTrace();
+        } catch (SQLException e) {
+            Log.error("关闭MYSQL客户端链接发生异常,错误信息:" + e.getMessage());
         } finally {
-            connectionMysqlMap.remove(procNameAndBatchNoAndDsName);
-            jdbcTemplateMysqlMap.remove(procNameAndBatchNoAndDsName);
-            Log.info(procNameAndBatchNoAndDsName+",Mysql链接已关闭");
+            CONNECTION_MYSQL_MAP.remove(dsName);
+            JDBC_TEMPLATE_MYSQL_MAP.remove(dsName);
+            Log.info("成功关闭MYSQL链接:" + dsName);
         }
     }
 }

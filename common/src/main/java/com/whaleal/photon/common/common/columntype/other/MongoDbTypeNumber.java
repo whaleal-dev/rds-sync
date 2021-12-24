@@ -9,28 +9,28 @@ import java.util.Map;
  * @time: 2021/7/22 10:33 上午
  */
 public class MongoDbTypeNumber {
-    public static final Map<String, Integer> typeNumberMap = new HashMap<>();
+    public static final Map<String, Integer> TYPE_NUMBER_MAP = new HashMap<>();
     static {
-        typeNumberMap.put("double", 1);
-        typeNumberMap.put("string", 2);
-        typeNumberMap.put("object", 3);
-        typeNumberMap.put("array", 4);
-        typeNumberMap.put("binData", 5);
-        typeNumberMap.put("undefined", 6);
-        typeNumberMap.put("objectId", 7);
-        typeNumberMap.put("bool", 8);
-        typeNumberMap.put("date", 9);
-        typeNumberMap.put("null", 10);
-        typeNumberMap.put("regex", 11);
-        typeNumberMap.put("dbPointer", 12);
-        typeNumberMap.put("javascript", 13);
-        typeNumberMap.put("symbol", 14);
-        typeNumberMap.put("javascriptWithScope", 15);
-        typeNumberMap.put("int", 16);
-        typeNumberMap.put("timestamp", 17);
-        typeNumberMap.put("long", 18);
-        typeNumberMap.put("decimal", 19);
-        typeNumberMap.put("minKey", -1);
-        typeNumberMap.put("maxKey", 127);
+        TYPE_NUMBER_MAP.put("double", 1);
+        TYPE_NUMBER_MAP.put("string", 2);
+        TYPE_NUMBER_MAP.put("object", 3);
+        TYPE_NUMBER_MAP.put("array", 4);
+        TYPE_NUMBER_MAP.put("binData", 5);
+        TYPE_NUMBER_MAP.put("undefined", 6);
+        TYPE_NUMBER_MAP.put("objectId", 7);
+        TYPE_NUMBER_MAP.put("bool", 8);
+        TYPE_NUMBER_MAP.put("date", 9);
+        TYPE_NUMBER_MAP.put("null", 10);
+        TYPE_NUMBER_MAP.put("regex", 11);
+        TYPE_NUMBER_MAP.put("dbPointer", 12);
+        TYPE_NUMBER_MAP.put("javascript", 13);
+        TYPE_NUMBER_MAP.put("symbol", 14);
+        TYPE_NUMBER_MAP.put("javascriptWithScope", 15);
+        TYPE_NUMBER_MAP.put("int", 16);
+        TYPE_NUMBER_MAP.put("timestamp", 17);
+        TYPE_NUMBER_MAP.put("long", 18);
+        TYPE_NUMBER_MAP.put("decimal", 19);
+        TYPE_NUMBER_MAP.put("minKey", -1);
+        TYPE_NUMBER_MAP.put("maxKey", 127);
     }
 }

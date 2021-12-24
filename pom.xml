@@ -12,15 +12,15 @@
         <module>common</module>
         <module>mongodbSource</module>
         <module>mongodbTarget</module>
-        <module>mysqlSource</module>
-        <module>execute</module>
-        <module>mysqlTarget</module>
+<!--        <module>mysqlSource</module>-->
+<!--        <module>execute</module>-->
+<!--        <module>mysqlTarget</module>-->
         <module>core</module>
         <module>realTimeOfMongoDb</module>
-        <module>pgSource</module>
-        <module>oracleSource</module>
-        <module>realTimeOfMysql</module>
-        <module>hdfsTarget</module>
+<!--        <module>pgSource</module>-->
+<!--        <module>oracleSource</module>-->
+<!--        <module>realTimeOfMysql</module>-->
+<!--        <module>hdfsTarget</module>-->
     </modules>
     <properties>
         <maven.compiler.source>8</maven.compiler.source>

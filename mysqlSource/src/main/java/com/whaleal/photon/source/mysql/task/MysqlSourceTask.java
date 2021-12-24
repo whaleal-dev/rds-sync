@@ -6,8 +6,9 @@ import com.whaleal.photon.common.common.photonV.entity.ProgramInfo;
 import com.whaleal.photon.common.common.taskbase.AbstractSourceTask;
 import com.whaleal.photon.common.common.taskbase.SourceTaskInfo;
 import com.whaleal.photon.core.dbconnection.mysql.MySqlConnection;
+import com.whaleal.photon.core.thread.SourceTaskPoolManager;
 import com.whaleal.photon.source.mysql.parse.MysqlDataToColumnData;
-import com.whaleal.photon.common.thread.SourceTaskPoolManager;
+
 import com.whaleal.photon.common.util.Log;
 
 import java.sql.*;
@@ -27,23 +28,23 @@ public class MysqlSourceTask extends AbstractSourceTask {
 
     public MysqlSourceTask(SourceTaskInfo taskMetadata, ProgramInfo programInfo) {
         super(taskMetadata, programInfo);
-        this.connection = MySqlConnection.getConnection(getProcNameAndBatchNoAndSourceDsName());
+        this.connection = MySqlConnection.getConnection(proName);
     }
 
     @Override
     public void run() {
-        SourceTaskPoolManager.setSourceActiveThreadNum(getProcNameAndBatchNo(), 1);
+        SourceTaskPoolManager.setSourceActiveThreadNum(proName, 1);
         Log.info("启动source任务:" + this.taskMetadata.toString());
         try {
             getDataFromDbTable();
         } finally {
-            SourceTaskPoolManager.setSourceActiveThreadNum(getProcNameAndBatchNo(), -1);
+            SourceTaskPoolManager.setSourceActiveThreadNum(proName, -1);
         }
     }
 
     @Override
     public void getDataFromDbTable() {
-        String sql = this.taskMetadata.getRange().getSql().toString();
+        String sql = this.taskMetadata.getRange().getQuery().toString();
         Statement statement = null;
         ResultSet resultSet = null;
         try {

@@ -1,0 +1,4 @@
+com/whaleal/photon/target/mongodb/execute/MongodbTargetExecute.class
+com/whaleal/photon/target/mongodb/parse/ColumnDataToMongodbData.class
+com/whaleal/photon/target/mongodb/task/MongodbTargetTask.class
+com/whaleal/photon/target/mongodb/parse/ColumnDataToMongodbData$1.class

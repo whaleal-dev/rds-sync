@@ -12,10 +12,10 @@ import java.util.Map;
  * @time: 2021/8/27 3:19 下午
  */
 public class DataSourceUtil {
-    private static JdbcTemplate jdbcTemplate = MetadataConnection.getJdbcTemplate();
+    private static final JdbcTemplate JDBC_TEMPLATE = MetadataConnection.getJdbcTemplate();
 
     public static Datasource getDataSourceByDsName(String dsName) {
-        Map<String, Object> map = jdbcTemplate.queryForMap("select * from photon.datasource where name='" + dsName + "' ");
+        Map<String, Object> map = JDBC_TEMPLATE.queryForMap("select * from photon.datasource where name='" + dsName + "' ");
         Datasource dataSource = new Datasource();
         System.out.println(map);
         dataSource.setName(dsName);

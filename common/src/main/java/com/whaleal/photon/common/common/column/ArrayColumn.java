@@ -10,8 +10,9 @@ import com.whaleal.photon.common.util.Log;
  * @time: 2021/8/24 7:37 下午
  */
 public class ArrayColumn extends AbstractColumn {
-    private static Gson gson = new Gson();
-    private Object data;
+    private static final Gson GSON = new Gson();
+
+    private final Object data;
 
     public ArrayColumn(String columnName, Object object) {
         this.columnName = columnName;
@@ -25,16 +26,12 @@ public class ArrayColumn extends AbstractColumn {
 
     @Override
     public String toString() {
-        // 防止出现[@的数据。
         StringBuilder stringBuilder = new StringBuilder();
         try {
-            stringBuilder.append(gson.toJson(this.data));
+            stringBuilder.append(GSON.toJson(this.data));
         } catch (Exception e) {
-            Log.error(e.getMessage());
+            Log.error("解析ArrayColumn出现异常,错误信息:"+e.getMessage());
             stringBuilder = new StringBuilder();
-//            for (Object object : data) {
-//                stringBuilder.append(object.toString());
-//            }
         }
         return stringBuilder.toString();
     }

@@ -1,0 +1,11 @@
+/Users/liheping/Desktop/project/photon/photonT/realTimeOfMongoDb/src/main/java/com/whaleal/photon/realtime/mongodb/task/OplogDealIndexTask.java
+/Users/liheping/Desktop/project/photon/photonT/realTimeOfMongoDb/src/main/java/com/whaleal/photon/realtime/mongodb/task/OplogNsBucketTask_v2.java
+/Users/liheping/Desktop/project/photon/photonT/realTimeOfMongoDb/src/main/java/com/whaleal/photon/realtime/mongodb/common/ParseOplogInterface.java
+/Users/liheping/Desktop/project/photon/photonT/realTimeOfMongoDb/src/main/java/com/whaleal/photon/realtime/mongodb/common/AbstractOplogNsBucketTask.java
+/Users/liheping/Desktop/project/photon/photonT/realTimeOfMongoDb/src/main/java/com/whaleal/photon/realtime/mongodb/common/OplogMetadata.java
+/Users/liheping/Desktop/project/photon/photonT/realTimeOfMongoDb/src/main/java/com/whaleal/photon/realtime/mongodb/task/OplogNsBucketTask_v1.java
+/Users/liheping/Desktop/project/photon/photonT/realTimeOfMongoDb/src/main/java/com/whaleal/photon/realtime/mongodb/task/OplogReadTask.java
+/Users/liheping/Desktop/project/photon/photonT/realTimeOfMongoDb/src/main/java/com/whaleal/photon/realtime/mongodb/task/OplogNsBucketTask_v3.java
+/Users/liheping/Desktop/project/photon/photonT/realTimeOfMongoDb/src/main/java/com/whaleal/photon/realtime/mongodb/task/OplogWriteTask.java
+/Users/liheping/Desktop/project/photon/photonT/realTimeOfMongoDb/src/main/java/com/whaleal/photon/realtime/mongodb/task/OplogNsTask.java
+/Users/liheping/Desktop/project/photon/photonT/realTimeOfMongoDb/src/main/java/com/whaleal/photon/realtime/mongodb/common/BatchDataEntityOfMongodb.java

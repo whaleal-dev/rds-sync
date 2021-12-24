@@ -10,7 +10,7 @@ import java.math.BigDecimal;
  */
 public class BigDecimalColumn extends AbstractColumn {
 
-    private BigDecimal data;
+    private  BigDecimal data;
 
     public BigDecimalColumn(String columnName, BigDecimal data) {
         this.columnName = columnName;

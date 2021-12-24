@@ -18,25 +18,24 @@ public class HadoopConnection {
     /**
      * hadoop的链接
      */
-    private static Map<String, FileSystem> fileSystemMap = new ConcurrentHashMap<>();
+    private static final Map<String, FileSystem> FILE_SYSTEM_MAP = new ConcurrentHashMap<>();
 
     /**
      * createHadoopFileSystem 创造hadoop客户端
      *
-     * @param procNameAndBatchNoAndDsName
+     * @param dsName
      * @desc 创造hadoop客户端。dcl检查
      */
-    public static void createHadoopFileSystem(String procNameAndBatchNoAndDsName, Datasource datasource) {
-        if (fileSystemMap.containsKey(procNameAndBatchNoAndDsName)) {
+    public static void createHadoopFileSystem(String dsName, Datasource datasource) {
+        if (FILE_SYSTEM_MAP.containsKey(dsName)) {
             return;
         }
         try {
-            //FileSystem fileSystem = FileSystem.get(URI.create("1"), new Configuration());
             Configuration conf = new Configuration();
             FileSystem fileSystem = FileSystem.get(new URI("hdfs://hadoop1:9000"), conf, "root");
-            fileSystemMap.put(procNameAndBatchNoAndDsName, fileSystem);
+            FILE_SYSTEM_MAP.put(dsName, fileSystem);
         } catch (Exception e) {
-            Log.error(e.getMessage());
+            Log.error("链接HDFS:" + datasource.getName() + "数据源出现异常,错误信息:" + e.getMessage());
         }
 
     }
@@ -44,31 +43,31 @@ public class HadoopConnection {
     /**
      * getMHadoopFileSystem 获取HadoopFileSystem客户端
      *
-     * @param procNameAndBatchNoAndDsName
+     * @param dsName
      * @return FileSystem
      * @desc 获取HadoopFileSystem客户端
      */
-    public static FileSystem getHadoopFileSystem(String procNameAndBatchNoAndDsName) {
-        return fileSystemMap.get(procNameAndBatchNoAndDsName);
+    public static FileSystem getHadoopFileSystem(String dsName) {
+        return FILE_SYSTEM_MAP.get(dsName);
     }
 
     /**
      * close 关闭FileSystem客户端
      *
-     * @param procNameAndBatchNoAndDsName
+     * @param dsName
      * @desc 关闭FileSystem客户端
      */
-    public static void close(String procNameAndBatchNoAndDsName) {
-        if (!fileSystemMap.containsKey(procNameAndBatchNoAndDsName)) {
+    public static void close(String dsName) {
+        if (!FILE_SYSTEM_MAP.containsKey(dsName)) {
             return;
         }
         try {
-            fileSystemMap.get(procNameAndBatchNoAndDsName).close();
+            FILE_SYSTEM_MAP.get(dsName).close();
         } catch (Exception e) {
-            Log.error(e.getMessage());
+            Log.error("关闭HDFS客户端链接发生异常,错误信息:" + e.getMessage());
         } finally {
-            fileSystemMap.remove(procNameAndBatchNoAndDsName);
-            Log.info(procNameAndBatchNoAndDsName + ",fileSystem链接已关闭");
+            FILE_SYSTEM_MAP.remove(dsName);
+            Log.info("成功关闭HDFS链接:" + dsName);
         }
     }
 }

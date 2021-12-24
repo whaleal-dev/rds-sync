@@ -152,7 +152,7 @@ public class OracleSourceExecute extends AbstractSourceExecute {
         Range range = new Range();
         taskMetadata.setDbTableName(programInfo.getDbTableName());
         range.setDbTableName(programInfo.getDbTableName());
-        range.setSql(programInfo.getQuerySql());
+        range.setQuery(programInfo.getQuerySql());
         taskMetadata.setRange(range);
         SourceTaskPoolManager.submit(getProcNameAndBatchNo(), new OracleSourceTask(taskMetadata, programInfo));
     }
