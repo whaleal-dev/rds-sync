@@ -1,7 +1,0 @@
-com/whaleal/photon/source/mongodb/exexute/MongodbSourceExecute.class
-com/whaleal/photon/source/mongodb/exexute/MongodbSourceExecute$2.class
-com/whaleal/photon/source/mongodb/parse/MongodbDataToColumnData.class
-com/whaleal/photon/source/mongodb/parse/MongodbDataToColumnData$1.class
-com/whaleal/photon/source/mongodb/sourcesplit/MongodbSourceSplitRange.class
-com/whaleal/photon/source/mongodb/exexute/MongodbSourceExecute$1.class
-com/whaleal/photon/source/mongodb/task/MongodbSourceTask.class
