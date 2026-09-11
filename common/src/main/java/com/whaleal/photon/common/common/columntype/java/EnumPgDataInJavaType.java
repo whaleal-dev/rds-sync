@@ -1,7 +1,7 @@
 package com.whaleal.photon.common.common.columntype.java;
 
 /**
- * MongoDB数据类型类
+ * PostgreSQL 数据类型
  *
  * @author lhp
  * @time 2021-05-31 13:12:12

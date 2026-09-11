@@ -9,8 +9,8 @@ import com.whaleal.photon.core.dbconnection.pgserver.PgServerConnection;
 import org.springframework.jdbc.core.JdbcTemplate;
 import com.whaleal.photon.source.pg.sourcesplit.PgSourceSplitRange;
 import com.whaleal.photon.source.pg.task.PgSourceTask;
-import com.whaleal.photon.common.thread.SourceTaskPoolManager;
-import com.whaleal.photon.common.thread.SysPoolManager;
+import com.whaleal.photon.core.thread.SourceTaskPoolManager;
+import com.whaleal.photon.core.thread.SysPoolManager;
 import com.whaleal.photon.common.util.Log;
 
 import java.util.Iterator;

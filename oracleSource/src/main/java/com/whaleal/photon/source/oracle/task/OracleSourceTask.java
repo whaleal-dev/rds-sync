@@ -9,7 +9,7 @@ import com.whaleal.photon.common.common.photonV.entity.ProgramInfo;
 import com.whaleal.photon.common.common.taskbase.AbstractSourceTask;
 import com.whaleal.photon.common.common.taskbase.SourceTaskInfo;
 import com.whaleal.photon.core.dbconnection.oracle.OracleConnection;
-import com.whaleal.photon.common.thread.SourceTaskPoolManager;
+import com.whaleal.photon.core.thread.SourceTaskPoolManager;
 import com.whaleal.photon.common.util.Log;
 
 import java.sql.*;

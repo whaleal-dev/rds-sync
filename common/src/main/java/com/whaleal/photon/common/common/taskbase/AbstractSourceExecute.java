@@ -54,6 +54,10 @@ public abstract class AbstractSourceExecute extends AbstractPhotonObject {
      */
     protected Set<String> dbTableNameSet = new HashSet<>();
     /**
+     * 待切分库表（Oracle/PG 等仍用 map 遍历；MySQL 主要用 set）
+     */
+    protected Map<String, String> dbTableNameMap = new ConcurrentHashMap<>();
+    /**
      * 判断源和目标是否为同一类数据源
      */
     protected boolean isUseDeFaultType = false;
@@ -94,6 +98,15 @@ public abstract class AbstractSourceExecute extends AbstractPhotonObject {
         this.isUseDeFaultType = programInfo.isUseDeFaultType();
     }
 
+    /** proName + batchNo，用作线程池 / 任务键。 */
+    public String getProcNameAndBatchNo() {
+        return proName + batchNo;
+    }
+
+    /** 源连接键：proName + batchNo + sourceDsName。 */
+    public String getProcNameAndBatchNoAndSourceDsName() {
+        return proName + batchNo + sourceDsName;
+    }
 
     /**
      * start

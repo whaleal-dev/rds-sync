@@ -132,13 +132,14 @@ public class OracleSourceSplitRange implements SplitRangeOfRdbInterface {
         if (rangeList.size() == 0) {
             Range range = new Range();
             range.setDbTableName(dbTableName);
-            range.setQuery("(1=1)");
+            range.setQueryCondition("(1=1)");
             rangeList.add(range);
         }
         String tableName = dbTableName.split("\\.", 2)[1];
         for (Range range : rangeList) {
-            String sql = "select * from  " + tableName + " where " + range.getQuery();
-            range.setSql(sql);
+            Object condition = range.getQueryCondition() != null ? range.getQueryCondition() : range.getQuery();
+            String sql = "select * from  " + tableName + " where " + condition;
+            range.setQuery(sql);
         }
         return rangeList;
     }

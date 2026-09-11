@@ -90,15 +90,26 @@ public class ProgramInfo {
      */
     private int realTimeThreadNum;
     /**
-     * 查询条件
-     * 仅使用于查询。不可应用于库表同步中
+     * 查询条件 / 自定义查询 SQL（仅查询模式）
      */
     private String query;
     /**
-     * 目标端执行的接受数据前执行的sql
-     * 仅使用于preSql。不可应用于库表同步中
+     * 自定义查询对应的库表名（仅查询模式）
+     */
+    private String dbTableName;
+    /**
+     * 目标端接收数据前执行的 SQL（仅查询模式）
      */
     private String preExecute;
+
+    /** 兼容旧字段名：querySql → query */
+    public String getQuerySql() {
+        return query;
+    }
+
+    public void setQuerySql(String querySql) {
+        this.query = querySql;
+    }
     /**
      * 判断源和目标是否为同一类数据源
      */
@@ -116,7 +127,7 @@ public class ProgramInfo {
      */
     private int delayTime;
     /**
-     * source的mongodb版本 单位秒
+     * source 版本备注 单位秒
      */
     private String sourceVersion;
 }

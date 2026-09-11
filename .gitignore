@@ -8,3 +8,8 @@
 /httpRequests/
 .idea
 .idea/
+
+# Maven build dirs (module-level only; do NOT ignore Java package .../photon/target/)
+/*/target/
+/target/
+*.iml

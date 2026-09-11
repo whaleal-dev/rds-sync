@@ -1,91 +1,40 @@
 ## 背景
 
-为解决市面上异构数据库之间数据的双向迁移，同时为了将国外数据库向国产数据库 （达梦 TiDB  人大金仓）转型。我司研究开发新型的数据迁移项目，由此Photon项目诞生。
+为解决异构关系型数据库之间的数据迁移，以及向国产数据库（达梦、TiDB、人大金仓等）转型的需求，关系型同步产品在本仓库演进为 **rds-sync**。
 
 ## 项目介绍
 
-名称：Photon（光子）
+名称：rds-sync（原 PhotonT 关系型同步资产）
 
-语言:  纯java开发
+语言：纯 Java
 
-定位:  数据库迁移 (目前主要支持MongoDB,Mysql,Oracle,PgServer,HDFS)
+定位：关系型数据库同步（目前规划支持 MySQL、Oracle、PostgreSQL）
 
+> MongoDB 同步请使用独立产品 [mongo-sync](https://github.com/whaleal-dev/mongo-sync)，本仓不再包含 Mongo 模块。
 
+## 能力范围
 
-## 项目介绍
-
-PhotonT是数据同步组件，实现包括 MySQL、MongoDB等各种异构数据源之间高效的数据同步功能。
-
-迁移过程包括：
-
-1.实时迁移
-
-2.全量迁移
-
-3.增量迁移
+1. 全量迁移  
+2. 增量迁移（CDC，规划中）  
+3. 嵌入式 SDK 编排（规划中，见 [ARCHITECTURE.md](ARCHITECTURE.md)）
 
 ## 架构
+
+详见 [ARCHITECTURE.md](ARCHITECTURE.md)。
+
+历史 PhotonT 架构示意：
 
 ![architecture_00](imgs/img1.png)
 
 **说明:**
 
-1. 一个Jvm Container对应多个instance，每个instance对应于一个的迁移程序
-2.  instance分为三部分 a.source (从源数据库上提取数据，可分为全量/增量/实时实现) b. cache  (将源库上的数据按照目标库的需求进行缓存) c.  target (将数据更新到目标库，可分为全量/增量/实时/对比的实现)
+1. 一个 JVM Container 可对应多个 instance，每个 instance 对应一个迁移程序  
+2. instance 分为三部分：a. source（全量/增量提取） b. cache（缓存） c. target（写入）
 
+## 联系方式
 
-**PhotonT流程图**
+欢迎任何形式的贡献，包括但不限于：提交问题、提供用户体验反馈、代码贡献等。
 
-1.实时迁移
+邮箱：contact@whaleal.com  
 
-![workflow_00](imgs/img2.jpg)
-注：
-
-使用cas机制确保每个库表在同一时刻仅有一个线程对该库表进行分桶 
-
-使用cas机制确保每个库表桶在同一时刻仅有一个线程对该库表桶的数据进行写入
-
-当进行库表分桶时发现DDL操作时，把该库表的全部桶数据进行写入，然后再执行DDL操作
-
-2.全量/增量迁移
-
-![workflow_00](imgs/img3.png)
-
-注：
-
-使用cas机制确保每个区在同一时刻仅有一个线程对该区的桶队列进行写入/读取
-一个source表的数据可以放在任意区，一个target可以从任意区取数据
-
-
-
-## 方案设计
-
-[DevDesign](DevDesign.md)
-
-
-
-## 快速开始
-
-[QuickStart](QuickStart.md)
-
-
-
-## 相关资料
-
-#### 公司简介
-
-锦木信息创立于2015年，是一家专注于数据库本土化解决方案、CDN全球解决方案和全球通信解决方案的专业IT数据咨询与服务提供商。
-
-旗下业务包括：MongoDB技术支持及咨询培训服务，Akamai全球网络性能及安全优化服务，基于Vonage的国内首个本土化通信平台JMC（锦木通信平台）和企业产品定制化业务。
-
-锦木信息是MongoDB北亚区第一的核心合作伙伴、Akamai中国区第二的核心合作伙伴及Vonage中国区第一的核心合作伙伴。
-
-作为以技术创新、客户为先驱动的IT服务提供商，锦木信息的产品及服务已被国内领先企业所认可，拥有 50+ 核心客户，在金融、保险、券商、游戏、电商等行业推出了优质服务和创新产品解决方案，销售业务涵盖中国大陆及中国香港。
-
-
-
-锦木信息官网：www.jinmuinfo.com
-
-咨询邮箱：support@jinmuinfo.com
-
-联系电话：021-58870038      021-66696778
+官网：https://www.whaleal.com

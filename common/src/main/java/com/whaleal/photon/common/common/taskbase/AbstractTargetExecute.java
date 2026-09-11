@@ -17,6 +17,13 @@ public abstract class AbstractTargetExecute extends AbstractPhotonObject {
 
     protected MemoryCache memoryCache;
 
+    public String getProcNameAndBatchNo() {
+        return proName + batchNo;
+    }
+
+    public String getProcNameAndBatchNoAndTargetDsName() {
+        return proName + batchNo + programInfo.getTargetDsName();
+    }
 
     public AbstractTargetExecute(ProgramInfo programInfo, MemoryCache memoryCache) {
         super(programInfo.getTaskName(), programInfo.getProName(), programInfo.getBatchNo());

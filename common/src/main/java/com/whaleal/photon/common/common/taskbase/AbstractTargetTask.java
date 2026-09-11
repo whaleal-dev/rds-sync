@@ -9,32 +9,25 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * @description:
- * @author: lhp
- * @time: 2021/8/24 5:27 下午
+ * Target 写任务基类。
  */
 public abstract class AbstractTargetTask extends AbstractPhotonObject implements Runnable {
-    /**
-     * 目标数据源名称
-     */
     protected String targetDsName;
-    /**
-     * dbTableName
-     */
     protected String dbTableName = "";
-    /**
-     * 数据缓存类
-     */
     protected MemoryCache memoryCache;
-
-    /**
-     * 两端是否为同一类数据源
-     */
     protected boolean isUseDeFaultType;
-    /**
-     * 源端是否为rdb数据库
-     */
     protected boolean isRdbOfSource = false;
+
+    /** k = proName+batchNo */
+    private static final Map<String, AtomicBoolean> IS_STOP = new ConcurrentHashMap<String, AtomicBoolean>();
+
+    public String getProcNameAndBatchNo() {
+        return proName + batchNo;
+    }
+
+    public String getProcNameAndBatchNoAndTargetDsName() {
+        return proName + batchNo + targetDsName;
+    }
 
     public AbstractTargetTask(ProgramInfo programInfo, MemoryCache memoryCache) {
         super(programInfo.getTaskName(), programInfo.getProName(), programInfo.getBatchNo());
@@ -42,29 +35,35 @@ public abstract class AbstractTargetTask extends AbstractPhotonObject implements
         this.targetDsName = programInfo.getTargetDsName();
         this.memoryCache = memoryCache;
         this.isRdbOfSource = programInfo.isRdbOfSource();
+        String key = getProcNameAndBatchNo();
+        if (!IS_STOP.containsKey(key)) {
+            synchronized (AbstractTargetTask.class) {
+                if (!IS_STOP.containsKey(key)) {
+                    IS_STOP.put(key, new AtomicBoolean(false));
+                }
+            }
+        }
     }
 
-    /**
-     * applyData 应用数据
-     *
-     * @desc 应用数据
-     */
+    public static void setIsStopFlagOfTarget(String procNameAndBatchNo, boolean value) {
+        AtomicBoolean flag = IS_STOP.get(procNameAndBatchNo);
+        if (flag != null) {
+            flag.set(value);
+        }
+    }
+
+    public static void removeIsStopFlagOfTarget(String procNameAndBatchNo) {
+        IS_STOP.remove(procNameAndBatchNo);
+    }
+
+    public static boolean getIsStopFlagOfTarget(String procNameAndBatchNo) {
+        AtomicBoolean flag = IS_STOP.get(procNameAndBatchNo);
+        return flag != null && flag.get();
+    }
+
     public abstract void applyData();
 
-    /**
-     * parseColumnDataToTargetData 解析数据
-     *
-     * @param batchDataEntity
-     * @desc 解析数据
-     */
     public abstract void parseColumnDataToTargetData(BatchDataEntity batchDataEntity);
 
-    /**
-     * bulkExecute 批量写数据
-     *
-     * @param dbTable
-     * @param batchNo
-     * @desc 批量写数据
-     */
     public abstract void bulkExecute(String dbTable, long batchNo);
 }

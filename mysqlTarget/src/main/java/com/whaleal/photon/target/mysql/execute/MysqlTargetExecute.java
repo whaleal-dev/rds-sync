@@ -36,7 +36,7 @@ public class MysqlTargetExecute extends AbstractTargetExecute {
     }
 
     @Override
-    public void deleteExistDbTable(Set<String> dbTableNameSet) {
+    public void dropExistDbTable(Set<String> dbTableNameSet) {
         JdbcTemplate jdbcTemplate = MySqlConnection.getJdbcTemplate(getProcNameAndBatchNoAndTargetDsName());
         for (String dbTableName : dbTableNameSet) {
             try {
@@ -49,10 +49,13 @@ public class MysqlTargetExecute extends AbstractTargetExecute {
     }
 
     @Override
-    public void executePreSql(String sql) {
+    public void preExecute(Object sql) {
+        if (sql == null) {
+            return;
+        }
         JdbcTemplate jdbcTemplate = MySqlConnection.getJdbcTemplate(getProcNameAndBatchNoAndTargetDsName());
         try {
-            jdbcTemplate.execute(sql);
+            jdbcTemplate.execute(String.valueOf(sql));
         } catch (Exception e) {
             Log.error(e.getMessage());
         }

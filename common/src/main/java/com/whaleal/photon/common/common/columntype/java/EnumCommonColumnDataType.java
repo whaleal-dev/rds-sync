@@ -1,7 +1,7 @@
 package com.whaleal.photon.common.common.columntype.java;
 
 /**
- * MongoDB数据类型类
+ * 公共列数据类型
  *
  * @author lhp
  * @time 2021-05-31 13:12:12
@@ -75,10 +75,6 @@ public enum EnumCommonColumnDataType {
      * bytes类型
      */
     BYTESCOLUMN("BYTESCOLUMN"),
-    /**
-     * mongodb类型
-     */
-    MONGODBOBJECTCOLUMN("MONGODBOBJECTCOLUMN"),
     /**
      * pg的对象类型
      */

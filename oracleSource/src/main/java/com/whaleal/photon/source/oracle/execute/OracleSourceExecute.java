@@ -10,8 +10,8 @@ import com.whaleal.photon.common.common.photonV.entity.ProgramInfo;
 import com.whaleal.photon.core.dbconnection.oracle.OracleConnection;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.JdbcTemplate;
-import com.whaleal.photon.common.thread.SourceTaskPoolManager;
-import com.whaleal.photon.common.thread.SysPoolManager;
+import com.whaleal.photon.core.thread.SourceTaskPoolManager;
+import com.whaleal.photon.core.thread.SysPoolManager;
 import com.whaleal.photon.common.util.Log;
 
 import java.util.Iterator;

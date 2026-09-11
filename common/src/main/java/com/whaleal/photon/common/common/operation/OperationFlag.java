@@ -32,9 +32,14 @@ public final class OperationFlag {
      */
     public static final String INSERTMANY = "INSERTMANY";
     /**
-     * OPLOG
+     * CDC / 日志类增量操作标记（非 Mongo oplog）。
      */
-    public static final String OPLOG = "OPLOG";
+    public static final String CDC = "CDC";
+    /**
+     * @deprecated 使用 {@link #CDC}
+     */
+    @Deprecated
+    public static final String OPLOG = CDC;
     /**
      * 添加字段
      */

@@ -11,7 +11,7 @@ import com.whaleal.photon.common.common.taskbase.SourceTaskInfo;
 import com.whaleal.photon.core.dbconnection.pgserver.PgServerConnection;
 import org.springframework.jdbc.core.JdbcTemplate;
 import com.whaleal.photon.source.pg.parse.PgDataToColumnData;
-import com.whaleal.photon.common.thread.SourceTaskPoolManager;
+import com.whaleal.photon.core.thread.SourceTaskPoolManager;
 import com.whaleal.photon.common.util.Log;
 
 import java.sql.*;

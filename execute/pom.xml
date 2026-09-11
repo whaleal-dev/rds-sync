@@ -3,106 +3,62 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <artifactId>photonT</artifactId>
-        <groupId>com.jinmu.info</groupId>
-        <version>1.0-SNAPSHOT</version>
+        <artifactId>rds-sync</artifactId>
+        <groupId>com.whaleal</groupId>
+        <version>1.0.0-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>execute</artifactId>
-<!--    <build>-->
-<!--        <plugins>-->
-<!--            <plugin>-->
-<!--                <groupId>org.apache.maven.plugins</groupId>-->
-<!--                <artifactId>maven-compiler-plugin</artifactId>-->
-<!--                <configuration>-->
-<!--                    <source>9</source>-->
-<!--                    <target>9</target>-->
-<!--                </configuration>-->
-<!--            </plugin>-->
-<!--        </plugins>-->
-<!--    </build>-->
+    <description>Optional sample / CLI entry (relational only)</description>
+
     <dependencies>
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <version>4.12</version>
-            <scope>compile</scope>
-            <optional>true</optional>
-        </dependency>
-
-        <dependency>
-            <groupId>com.jinmu.info</groupId>
-            <artifactId>mongodbSource</artifactId>
-            <version>1.0-SNAPSHOT</version>
-            <scope>compile</scope>
+            <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.mongodb</groupId>
-            <artifactId>mongodb-driver-sync</artifactId>
-            <version>4.2.3</version>
-        </dependency>
-        <dependency>
-            <groupId>com.whaleal.photon</groupId>
-            <artifactId>oracleSource</artifactId>
-            <version>1.0-SNAPSHOT</version>
-        </dependency>
-        <dependency>
-            <groupId>com.jinmu.info</groupId>
-            <artifactId>mongodbTarget</artifactId>
-            <version>1.0-SNAPSHOT</version>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.jinmu.info</groupId>
-            <artifactId>mysqlTarget</artifactId>
-            <version>1.0-SNAPSHOT</version>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.jinmu.info</groupId>
-            <artifactId>core</artifactId>
-            <version>1.0-SNAPSHOT</version>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.jinmu.info</groupId>
+            <groupId>com.whaleal</groupId>
             <artifactId>common</artifactId>
-            <version>1.0-SNAPSHOT</version>
-            <scope>compile</scope>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.jinmu.info</groupId>
-            <artifactId>realTimeOfMongoDb</artifactId>
-            <version>1.0-SNAPSHOT</version>
-            <scope>compile</scope>
+            <groupId>com.whaleal</groupId>
+            <artifactId>core</artifactId>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.jinmu.info</groupId>
+            <groupId>com.whaleal</groupId>
             <artifactId>mysqlSource</artifactId>
-            <version>1.0-SNAPSHOT</version>
-            <scope>compile</scope>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.jinmu.info</groupId>
+            <groupId>com.whaleal</groupId>
+            <artifactId>mysqlTarget</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.whaleal</groupId>
+            <artifactId>oracleSource</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.whaleal</groupId>
             <artifactId>pgSource</artifactId>
-            <version>1.0-SNAPSHOT</version>
-            <scope>compile</scope>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.jinmu.info</groupId>
-            <artifactId>hdfsTarget</artifactId>
-            <version>1.0-SNAPSHOT</version>
-            <scope>compile</scope>
+            <groupId>com.whaleal</groupId>
+            <artifactId>realTimeOfMysql</artifactId>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.mongodb</groupId>
-            <artifactId>mongodb-driver-core</artifactId>
-            <version>4.2.3</version>
-            <scope>compile</scope>
+            <groupId>com.whaleal</groupId>
+            <artifactId>rds-sync-client</artifactId>
+            <version>${project.version}</version>
         </dependency>
-
-
     </dependencies>
 
     <properties>

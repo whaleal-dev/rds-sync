@@ -4,26 +4,30 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.jinmu.info</groupId>
-    <artifactId>photonT</artifactId>
+    <groupId>com.whaleal</groupId>
+    <artifactId>rds-sync</artifactId>
     <packaging>pom</packaging>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.0.0-SNAPSHOT</version>
+    <name>rds-sync</name>
+    <description>Relational DB sync (Hybrid: PhotonT assets + mongo-sync-style orchestration)</description>
+
     <modules>
+        <module>rds-transfer-model</module>
         <module>common</module>
-        <module>mongodbSource</module>
-        <module>mongodbTarget</module>
-<!--        <module>mysqlSource</module>-->
-<!--        <module>execute</module>-->
-<!--        <module>mysqlTarget</module>-->
         <module>core</module>
-        <module>realTimeOfMongoDb</module>
-<!--        <module>pgSource</module>-->
-<!--        <module>oracleSource</module>-->
-<!--        <module>realTimeOfMysql</module>-->
-<!--        <module>hdfsTarget</module>-->
+        <module>mysqlSource</module>
+        <module>mysqlTarget</module>
+        <module>oracleSource</module>
+        <module>pgSource</module>
+        <module>realTimeOfMysql</module>
+        <module>rds-sync-client</module>
+        <!-- Mongo / HDFS / Hadoop removed; relational DB only -->
     </modules>
+
     <properties>
         <maven.compiler.source>8</maven.compiler.source>
         <maven.compiler.target>8</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <rds.sync.version>1.0.0-SNAPSHOT</rds.sync.version>
     </properties>
 </project>

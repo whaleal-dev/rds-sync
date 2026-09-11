@@ -50,17 +50,23 @@ public abstract class AbstractSourceTask  extends AbstractPhotonObject implement
 
     protected boolean scanOver = false;
 
-    public AbstractSourceTask(SourceTaskInfo taskMetadata,ProgramInfo programInfo) {
-
-        super(programInfo.getTaskName(),programInfo.getProName(),programInfo.getBatchNo());
-
+    public AbstractSourceTask(SourceTaskInfo taskMetadata, ProgramInfo programInfo) {
+        super(programInfo.getTaskName(), programInfo.getProName(), programInfo.getBatchNo());
         this.sourceDsName = taskMetadata.getSourceDsName();
         this.memoryCache = programInfo.getMemoryCache();
         this.dataBatchSize = programInfo.getDataBatchSize();
         this.isUserDeFaultType = programInfo.isUseDeFaultType();
         this.taskMetadata = taskMetadata;
-
     }
+
+    public String getProcNameAndBatchNo() {
+        return proName + batchNo;
+    }
+
+    public String getProcNameAndBatchNoAndSourceDsName() {
+        return proName + batchNo + sourceDsName;
+    }
+
     /**
      * getDataFromDbTable 获取表数据
      *

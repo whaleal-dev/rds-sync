@@ -141,13 +141,14 @@ public class PgSourceSplitRange implements SplitRangeOfRdbInterface {
         if (rangeList.size() == 0) {
             Range range = new Range();
             range.setDbTableName(dbTableName);
-            range.setQuery("(1=1)");
+            range.setQueryCondition("(1=1)");
             rangeList.add(range);
         }
 
         for (Range range : rangeList) {
-            String querySql = "select * from  " + dbTableName + " where " + range.getQuery();
-            range.setSql(querySql);
+            Object condition = range.getQueryCondition() != null ? range.getQueryCondition() : range.getQuery();
+            String querySql = "select * from  " + dbTableName + " where " + condition;
+            range.setQuery(querySql);
         }
         return rangeList;
     }
