@@ -7,7 +7,7 @@ import com.whaleal.photon.common.common.taskbase.AbstractTargetExecute;
 import com.whaleal.photon.core.dbconnection.mysql.MySqlConnection;
 import org.springframework.jdbc.core.JdbcTemplate;
 import com.whaleal.photon.target.mysql.task.MysqlTargetTask;
-import com.whaleal.photon.common.thread.TargetTaskPoolManager;
+import com.whaleal.photon.core.thread.TargetTaskPoolManager;
 import com.whaleal.photon.common.util.Log;
 
 import java.util.Iterator;

@@ -12,7 +12,7 @@ import com.whaleal.photon.common.common.photonV.entity.ProgramInfo;
 import com.whaleal.photon.core.dbconnection.mysql.MySqlConnection;
 import com.whaleal.photon.target.mysql.parse.ColumnDataToMysqlData;
 import com.whaleal.photon.target.mysql.parse.ParseTypeFromColumnType;
-import com.whaleal.photon.common.thread.TargetTaskPoolManager;
+import com.whaleal.photon.core.thread.TargetTaskPoolManager;
 import com.whaleal.photon.common.util.Log;
 
 import java.sql.Connection;
@@ -86,7 +86,7 @@ public class MysqlTargetTask extends AbstractTargetTask {
                 BatchDataEntity batchDataEntity = memoryCache.getData();
                 // 从缓存中获取一批数据
                 if (batchDataEntity != null) {
-                    // 当前任务拉取的mongoNamespace
+                    // 当前任务对应的库表命名空间
                     this.dbTableName = batchDataEntity.getDbTableName();
                     if (!dbTableSet.contains(batchDataEntity.getDbTableName().toUpperCase())) {
                         createTableByCommonDataEntity(batchDataEntity.getDbTableName(), batchDataEntity.getDataList().get(0), targetDsName, getProcNameAndBatchNoAndTargetDsName());

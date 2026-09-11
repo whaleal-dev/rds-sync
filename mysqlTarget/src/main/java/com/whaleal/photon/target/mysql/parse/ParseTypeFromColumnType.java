@@ -7,7 +7,7 @@ import com.whaleal.photon.common.common.columntype.db.EnumMySqlDataType;
 import com.whaleal.photon.common.common.columntype.MySqlType;
 
 /**
- * 解析mongodb数据到mysql类型类
+ * 将公共列类型解析为 MySQL 类型。
  *
  * @author lhp
  * @time 2021-05-31 13:12:12
