@@ -45,8 +45,8 @@
 
 | 场景 | 推荐方向（可替换，SPI 隔离） | 本仓职责 |
 |------|------------------------------|----------|
-| MySQL 增量 | Debezium Embedded（首选）或 Canal parse | `BinlogEvent` → `RowChange` / `DdlEvent` + Offset |
-| Oracle 增量 | Debezium Oracle / LogMiner 类方案 | 同上 |
+| MySQL 增量 | Debezium Embedded（首选）或 Canal parse；可直接复用旁边本地仓 `debezium` / `canal` 的解析能力 | `BinlogEvent` → `RowChange` / `DdlEvent` + Offset |
+| Oracle 增量 | Debezium Oracle / LogMiner 类方案（旁路本地 `debezium`） | 同上 |
 | PostgreSQL 增量 | Debezium PG（逻辑复制） | 同上 |
 | 全量 ResultSet → 列 | 可继续用 PhotonT JDBC 解析；复杂类型可借 JDBC/驱动官方类型 | 映射到 Column / `RowChange(op=r)` |
 | DDL 文本 | 可借 Druid / JSqlParser 等做结构化（可选） | 落入 `DdlEvent` |
