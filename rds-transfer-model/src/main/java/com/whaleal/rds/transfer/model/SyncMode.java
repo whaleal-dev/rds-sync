@@ -20,4 +20,11 @@ public enum SyncMode {
     public boolean isCatchUpThenStop() {
         return this == FULL_AND_CATCH_UP;
     }
+
+    public static SyncMode parse(String value) {
+        if (value == null || value.trim().isEmpty()) {
+            return FULL;
+        }
+        return SyncMode.valueOf(value.trim().toUpperCase());
+    }
 }

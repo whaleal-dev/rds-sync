@@ -10,5 +10,13 @@
     </parent>
     <artifactId>rds-transfer-model</artifactId>
     <name>rds-transfer-model</name>
-    <description>RowChange / DdlEvent contract for rds-sync</description>
+    <description>RowChange / DdlEvent / TargetType / RowChangeSink contract for rds-sync</description>
+
+    <dependencies>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
 </project>

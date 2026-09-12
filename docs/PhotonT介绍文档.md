@@ -8,9 +8,9 @@
 
 语言：纯 Java
 
-定位：关系型数据库同步（目前规划支持 MySQL、Oracle、PostgreSQL）
+定位：关系型数据库同步（MySQL / Oracle / PostgreSQL 源；目标为 MySQL JDBC 或 Kafka，见 [ARCHITECTURE.md](ARCHITECTURE.md)）
 
-> MongoDB 同步请使用独立产品 [mongo-sync](https://github.com/whaleal-dev/mongo-sync)，本仓不再包含 Mongo 模块。
+> MongoDB 同步请使用 [mongo-sync](https://github.com/whaleal-dev/mongo-sync)。本仓不再包含 Mongo 模块；控制 API 对齐，见 [ARCHITECTURE.md](ARCHITECTURE.md)。
 
 ## 能力范围
 
