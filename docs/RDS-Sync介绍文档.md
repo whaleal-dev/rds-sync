@@ -4,7 +4,7 @@
 
 ## 项目介绍
 
-名称：rds-sync（原 PhotonT 关系型同步资产）
+名称：rds-sync
 
 语言：纯 Java
 
@@ -22,7 +22,7 @@
 
 详见 [ARCHITECTURE.md](ARCHITECTURE.md)。
 
-历史 PhotonT 架构示意：
+架构示意：
 
 ![architecture_00](imgs/img1.png)
 
@@ -34,7 +34,3 @@
 ## 联系方式
 
 欢迎任何形式的贡献，包括但不限于：提交问题、提供用户体验反馈、代码贡献等。
-
-邮箱：contact@whaleal.com  
-
-官网：https://www.whaleal.com

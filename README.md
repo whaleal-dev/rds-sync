@@ -20,7 +20,7 @@ mvn -DskipTests package
 | 诉求 | rds-sync 怎么做 |
 |------|-----------------|
 | 关系库主路径 | MySQL / Oracle / PostgreSQL 全量源 + MySQL JDBC **或 Kafka** Sink |
-| 异构搬迁 | PhotonT 列类型与 Range 切分，按主键分桶有序写 |
+| 异构搬迁 | 列类型转换与主键 Range 切分，按主键分桶有序写 |
 | 投递 Kafka | `sink.type=kafka`，行级 envelope（`op`/`before`/`after`），与 mongo-kafka Change Stream 格式区分 |
 | 不停服切换 | 规划全量∥增量（`FULL_AND_INCREMENTAL`），`canCommit` / `commit` 最小 cutover |
 | 增量不自研协议 | binlog / redo / WAL 借 Debezium 或 Canal，适配进 `RowChange` |
@@ -51,12 +51,12 @@ Sink **不感知** 上游是 JDBC 快照还是 CDC——统一变成 `RowChange`
 
 - **四种同步模式**（契约已定）：仅全量、全量∥持续增量、全量∥追平后停、仅增量  
 - **双 Sink 形态**：MYSQL（JDBC，默认）/ KAFKA（行级 envelope；架构已定，实现见 P1b）  
-- **全量源**：MySQL / Oracle / PostgreSQL（PhotonT JDBC + Range 切分）  
+- **全量源**：MySQL / Oracle / PostgreSQL（JDBC + Range 切分）  
 - **事件契约**：`RowChange` / `DdlEvent`；Pipeline 只依赖 `RowChangeSink`  
 - **控制面骨架**：`RdsSyncClient` 对齐 mongo-sync 状态机  
 - **增量（规划）**：三方解析 → 适配器 → `RowChange`；换 Canal / Debezium 不改 Sink  
 
-当前落地进度见 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) §10：**P0 架构契约**；PhotonT 全量代码尚未接到 SPI。
+当前落地进度见 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) §10：**P0 架构契约**；全量 Source / MYSQL Sink **尚未**接到产品 SPI。
 
 ---
 
@@ -104,13 +104,9 @@ mvn -DskipTests package
 
 源端规划 MySQL / Oracle / PostgreSQL。Sink：**MySQL JDBC** 或 **Kafka**。MongoDB / DocumentDB 请用 [mongo-sync](https://github.com/whaleal-dev/mongo-sync)（其 Kafka 消息是 Change Stream，与本仓行级 envelope 不同）。
 
-### 和 PhotonT 是什么关系？
+### 现有 Source / Sink 模块能直接当 SDK 用吗？
 
-本仓继承 PhotonT 的关系型全量切分、列类型与 JDBC 写入，去掉 Mongo / HDFS；编排壳对齐 mongo-sync。
-
-### PhotonT 那几个 Source/Sink 模块能直接用吗？
-
-不能当产品链路用。它们是旧的全量 JDBC（`BatchDataEntity` + `MemoryCache`），还没适配 `SnapshotSource` / `RowChangeSink`。见 [架构 §8.1](docs/ARCHITECTURE.md)。
+不能当产品链路用。全量 JDBC 仍走内部 `BatchDataEntity` + `MemoryCache`，还没适配 `SnapshotSource` / `RowChangeSink`。见 [架构 §8.1](docs/ARCHITECTURE.md)。
 
 ### 增量自己解析 binlog 吗？
 
@@ -147,8 +143,12 @@ mvn -DskipTests package
 
 ---
 
+## 主要贡献者
+
+- [LHP](https://github.com/GitHubLhp123)
+
+---
+
 ## 交流与支持
 
 - QQ 交流群：**983986505**
-- 邮箱：contact@whaleal.com
-- 官网：https://www.whaleal.com

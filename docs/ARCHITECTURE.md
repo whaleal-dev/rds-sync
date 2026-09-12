@@ -42,10 +42,10 @@ Kafka 在本仓的角色是 **Sink 形态**（本进程 `Producer` 写出），�
                          └─ KAFKA：rds-kafka-sink Producer（P1b）
 ```
 
-**资产来源：**
+**分层职责：**
 
-| 层 | 继承 PhotonT | 对齐 mongo-sync |
-|----|--------------|-----------------|
+| 层 | 本仓 | 对齐 mongo-sync |
+|----|------|-----------------|
 | 列类型 / 全量 Range 切分 / JDBC 连接与批写 | ✅ `rds-common` + `rds-*-source` + `rds-mysql-sink` + `rds-core` | — |
 | 事件模型 / 状态机 / Pipeline / 控制 API / **Sink SPI** | — | ✅ 同构语义（对应 `TransferSink`） |
 | 增量 / 复杂解析 | **三方包**（见 §3） | 本仓只做适配到 `RowChange` |
@@ -125,7 +125,7 @@ Topic 命名对齐 mongo-sync Kafka Sink，仅把 `db.coll` 换成 `schema.table
 | MySQL 增量 | Debezium Embedded（首选）或 Canal parse | `BinlogEvent` → `RowChange` / `DdlEvent` + Offset |
 | Oracle 增量 | Debezium Oracle / LogMiner 类方案 | 同上 |
 | PostgreSQL 增量 | Debezium PG（逻辑复制） | 同上 |
-| 全量 ResultSet → 列 | PhotonT JDBC 解析 | 映射到 Column / `RowChange(op=r)` |
+| 全量 ResultSet → 列 | JDBC 解析 | 映射到 Column / `RowChange(op=r)` |
 | DDL 文本 | 可借 Druid / JSqlParser（可选） | 落入 `DdlEvent` |
 
 **硬约束：**
@@ -137,7 +137,7 @@ Topic 命名对齐 mongo-sync Kafka Sink，仅把 `db.coll` 换成 `schema.table
 
 ## 5. 事件模型（契约）
 
-中间传输**不以** PhotonT `BatchDataEntity` 为对外契约；对内可先适配，对外固定为：
+中间传输**不以**内部 `BatchDataEntity` 为对外契约；对内可先适配，对外固定为：
 
 ### `RowChange`
 
@@ -170,7 +170,7 @@ Topic 命名对齐 mongo-sync Kafka Sink，仅把 `db.coll` 换成 `schema.table
 | `RowChangeSink` | Pipeline → MYSQL / KAFKA |
 | `OffsetStore` | 位点；默认 `MemoryOffsetStore` |
 
-Source 只产出事件；Sink 只消费事件；Client 按 `SinkType` 挂 Sink。PhotonT `BatchDataEntity` **不是**对外契约。
+Source 只产出事件；Sink 只消费事件；Client 按 `SinkType` 挂 Sink。内部 `BatchDataEntity` **不是**对外契约。
 
 ## 6. 状态机与控制面
 
@@ -219,9 +219,9 @@ IDLE → RUNNING ⇄ CAN_COMMIT → COMMITTING → COMMITTED
 | `execute` | 可选 CLI | 空壳 |
 | ~~mongodb*~~ / ~~hdfsTarget~~ | — | **已删除** |
 
-### 8.1 PhotonT 资产 vs 产品 SPI
+### 8.1 旧全量链路 vs 产品 SPI
 
-这四个旧模块**有全量读写代码，但不是 rds-sync 产品链路**：
+现有全量模块**有 JDBC 读写代码，但不是 rds-sync 产品链路**：
 
 ```text
 旧：*SourceExecute → MemoryCache(BatchDataEntity) → MysqlSinkTask
@@ -231,7 +231,7 @@ IDLE → RUNNING ⇄ CAN_COMMIT → COMMITTING → COMMITTED
 约束：
 
 1. `RdsSyncClient` / Pipeline **禁止**直接依赖 `MemoryCache` / `ProStatus` / `ProgramInfo`。  
-2. P1 用适配器把 PhotonT 切分与 ResultSet 映射成 `RowChange`；不要把 `BatchDataEntity` 做成对外 API。  
+2. P1 用适配器把 Range 切分与 ResultSet 映射成 `RowChange`；不要把 `BatchDataEntity` 做成对外 API。  
 3. 换 Sink 只换 `RowChangeSink` 实现，不改 Source。
 
 ## 9. Offset
@@ -248,7 +248,7 @@ IDLE → RUNNING ⇄ CAN_COMMIT → COMMITTING → COMMITTED
 ## 10. 落地顺序
 
 1. **P0** 契约 + Client 装配点 + Kafka topic/envelope（无 Producer）— **本阶段**  
-2. **P1** MySQL 全量：PhotonT 切分适配 `SnapshotSource` → Pipeline → **MYSQL** `RowChangeSink`  
+2. **P1** MySQL 全量：Range 切分 + JDBC 扫表适配 `SnapshotSource` → Pipeline → **MYSQL** `RowChangeSink`  
 3. **P1b** Kafka：`rds-kafka-sink` 接 `kafka-clients`，实现 `RowChangeSink`  
 4. **P2** MySQL 增量：`IncrementalSource`（Debezium / Canal）→ 两 Sink 共用  
 5. **P3** Oracle / PG `SnapshotSource` 接入同一 Pipeline  
