@@ -2,25 +2,36 @@ package com.whaleal.rds.sync.config;
 
 import com.whaleal.rds.sink.kafka.config.KafkaSinkConfig;
 import com.whaleal.rds.transfer.model.SyncMode;
-import com.whaleal.rds.transfer.model.TargetType;
+import com.whaleal.rds.transfer.model.SinkType;
 
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
- * 同步任务配置骨架。P1 起补 Source / Pipeline 字段；此处先锁定双目标形态。
+ * 同步任务配置骨架。P1 起补 Source / Pipeline 字段；此处先锁定 Source / Sink 双形态。
  */
 public final class RdsSyncConfig {
 
     private SyncMode syncMode = SyncMode.FULL;
     /** 源端 JDBC URL。 */
     private String sourceUri;
-    private TargetType targetType = TargetType.MYSQL;
+    private SinkType sinkType = SinkType.MYSQL;
     /** MYSQL：JDBC URL；KAFKA：bootstrap servers（允许 {@code kafka://} 前缀）。 */
-    private String targetUri;
+    private String sinkUri;
     /** MYSQL 可预建表；KAFKA 强制为 false。 */
     private boolean bootstrapTable = true;
+    private String sourceUser;
+    private String sourcePassword;
+    private String sinkUser;
+    private String sinkPassword;
+    /** 库表过滤，匹配 {@code schema.table}，默认全部。 */
+    private String tableWhite = ".*";
+    /** 目标 schema；空则与源 schema 相同。 */
+    private String sinkSchema;
+    private int bucketNum = 4;
+    private int batchSize = 200;
+    private int splitSlices = 4;
 
     private String kafkaTopic;
     private String kafkaTopicPrefix = "";
@@ -46,16 +57,52 @@ public final class RdsSyncConfig {
         return sourceUri;
     }
 
-    public TargetType getTargetType() {
-        return targetType == null ? TargetType.MYSQL : targetType;
+    public SinkType getSinkType() {
+        return sinkType == null ? SinkType.MYSQL : sinkType;
     }
 
-    public String getTargetUri() {
-        return targetUri;
+    public String getSinkUri() {
+        return sinkUri;
     }
 
     public boolean isBootstrapTable() {
         return bootstrapTable;
+    }
+
+    public String getSourceUser() {
+        return sourceUser;
+    }
+
+    public String getSourcePassword() {
+        return sourcePassword;
+    }
+
+    public String getSinkUser() {
+        return sinkUser;
+    }
+
+    public String getSinkPassword() {
+        return sinkPassword;
+    }
+
+    public String getTableWhite() {
+        return tableWhite == null || tableWhite.isEmpty() ? ".*" : tableWhite;
+    }
+
+    public String getSinkSchema() {
+        return sinkSchema;
+    }
+
+    public int getBucketNum() {
+        return bucketNum <= 0 ? 4 : bucketNum;
+    }
+
+    public int getBatchSize() {
+        return batchSize <= 0 ? 200 : batchSize;
+    }
+
+    public int getSplitSlices() {
+        return splitSlices <= 0 ? 4 : splitSlices;
     }
 
     public String getKafkaTopic() {
@@ -108,11 +155,11 @@ public final class RdsSyncConfig {
 
     /** 供 P1b 装配 {@code rds-kafka-sink}。 */
     public KafkaSinkConfig toKafkaSinkConfig() {
-        if (getTargetType() != TargetType.KAFKA) {
-            throw new IllegalStateException("toKafkaSinkConfig requires targetType=KAFKA");
+        if (getSinkType() != SinkType.KAFKA) {
+            throw new IllegalStateException("toKafkaSinkConfig requires sinkType=KAFKA");
         }
         return KafkaSinkConfig.builder()
-                .bootstrapServers(targetUri)
+                .bootstrapServers(sinkUri)
                 .topic(kafkaTopic)
                 .topicPrefix(kafkaTopicPrefix)
                 .topicSeparator(kafkaTopicSeparator)
@@ -145,18 +192,63 @@ public final class RdsSyncConfig {
             return this;
         }
 
-        public Builder targetType(TargetType targetType) {
-            c.targetType = targetType == null ? TargetType.MYSQL : targetType;
+        public Builder sinkType(SinkType sinkType) {
+            c.sinkType = sinkType == null ? SinkType.MYSQL : sinkType;
             return this;
         }
 
-        public Builder targetUri(String targetUri) {
-            c.targetUri = targetUri;
+        public Builder sinkUri(String sinkUri) {
+            c.sinkUri = sinkUri;
             return this;
         }
 
         public Builder bootstrapTable(boolean bootstrapTable) {
             c.bootstrapTable = bootstrapTable;
+            return this;
+        }
+
+        public Builder sourceUser(String sourceUser) {
+            c.sourceUser = sourceUser;
+            return this;
+        }
+
+        public Builder sourcePassword(String sourcePassword) {
+            c.sourcePassword = sourcePassword;
+            return this;
+        }
+
+        public Builder sinkUser(String sinkUser) {
+            c.sinkUser = sinkUser;
+            return this;
+        }
+
+        public Builder sinkPassword(String sinkPassword) {
+            c.sinkPassword = sinkPassword;
+            return this;
+        }
+
+        public Builder tableWhite(String tableWhite) {
+            c.tableWhite = tableWhite;
+            return this;
+        }
+
+        public Builder sinkSchema(String sinkSchema) {
+            c.sinkSchema = sinkSchema;
+            return this;
+        }
+
+        public Builder bucketNum(int bucketNum) {
+            c.bucketNum = bucketNum;
+            return this;
+        }
+
+        public Builder batchSize(int batchSize) {
+            c.batchSize = batchSize;
+            return this;
+        }
+
+        public Builder splitSlices(int splitSlices) {
+            c.splitSlices = splitSlices;
             return this;
         }
 
@@ -230,18 +322,18 @@ public final class RdsSyncConfig {
             if (c.sourceUri == null || c.sourceUri.trim().isEmpty()) {
                 throw new IllegalArgumentException("sourceUri is required");
             }
-            TargetType type = c.getTargetType();
-            if (c.targetUri == null || c.targetUri.trim().isEmpty()) {
+            SinkType type = c.getSinkType();
+            if (c.sinkUri == null || c.sinkUri.trim().isEmpty()) {
                 throw new IllegalArgumentException(
-                        type == TargetType.KAFKA
-                                ? "targetUri (Kafka bootstrap servers) is required when targetType=KAFKA"
-                                : "targetUri (JDBC URL) is required when targetType=MYSQL");
+                        type == SinkType.KAFKA
+                                ? "sinkUri (Kafka bootstrap servers) is required when sinkType=KAFKA"
+                                : "sinkUri (JDBC URL) is required when sinkType=MYSQL");
             }
-            if (type == TargetType.KAFKA) {
-                c.targetUri = KafkaSinkConfig.normalizeBootstrap(c.targetUri);
-                if (c.targetUri == null || c.targetUri.isEmpty()) {
+            if (type == SinkType.KAFKA) {
+                c.sinkUri = KafkaSinkConfig.normalizeBootstrap(c.sinkUri);
+                if (c.sinkUri == null || c.sinkUri.isEmpty()) {
                     throw new IllegalArgumentException(
-                            "targetUri (Kafka bootstrap servers) is required when targetType=KAFKA");
+                            "sinkUri (Kafka bootstrap servers) is required when sinkType=KAFKA");
                 }
                 c.bootstrapTable = false;
             }

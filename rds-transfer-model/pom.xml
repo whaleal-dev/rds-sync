@@ -10,7 +10,7 @@
     </parent>
     <artifactId>rds-transfer-model</artifactId>
     <name>rds-transfer-model</name>
-    <description>RowChange / DdlEvent / TargetType / RowChangeSink contract for rds-sync</description>
+    <description>RowChange / DdlEvent / SinkType / RowChangeSink contract for rds-sync</description>
 
     <dependencies>
         <dependency>

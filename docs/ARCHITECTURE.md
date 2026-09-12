@@ -2,20 +2,20 @@
 
 > 关系型数据库同步产品。文档库由姊妹仓 [mongo-sync](https://github.com/whaleal-dev/mongo-sync) 负责；本仓**不**包含 Mongo / Hadoop / HDFS。  
 > 两边控制面同构、事件模型独立：这里是 `RowChange`，那边是 `TransferEvent`。  
-> **目标形态与 mongo-sync 对齐**：关系库 JDBC **和 Kafka 并列**；Pipeline 只认 Sink SPI，不感知 JDBC 还是 Kafka。
+> **Sink 形态与 mongo-sync 对齐**：关系库 JDBC **和 Kafka 并列**；Pipeline 只认 Sink SPI，不感知 JDBC 还是 Kafka。
 
 ## 1. 定位
 
 | 项 | 约定 |
 |----|------|
 | 源 | MySQL / Oracle / PostgreSQL（插件式 Source） |
-| 目标 | **MYSQL**（JDBC，首发）\| **KAFKA**（行级变更投递）；后续可扩 Oracle/PG JDBC Sink |
+| Sink | **MYSQL**（JDBC，首发）\| **KAFKA**（行级变更投递）；后续可扩 Oracle/PG JDBC Sink |
 | 模式 | 全量、增量、全量∥增量、追平后可停（命名与 mongo-sync 的 `SyncMode` 对齐） |
 | 形态 | 嵌入式 Java SDK + 可选 CLI（对齐 mongo-sync） |
 | 姊妹产品 | [mongo-sync](https://github.com/whaleal-dev/mongo-sync)：MongoDB → MongoDB / Kafka |
 | 非目标 | 做成 Kafka Connect / Flink CDC **产品**；自研 binlog/redo/WAL 协议栈；Mongo / Hadoop 生态；Mongo ↔ 关系库异构直连 |
 
-Kafka 在本仓的角色是 **Sink 目标形态**（本进程 `Producer` 写出），不是再做一个 Connect 插件发行版。
+Kafka 在本仓的角色是 **Sink 形态**（本进程 `Producer` 写出），不是再做一个 Connect 插件发行版。
 
 ## 2. 分层
 
@@ -24,8 +24,8 @@ Kafka 在本仓的角色是 **Sink 目标形态**（本进程 `Producer` 写出�
 │  rds-sync-client                                        │
 │  编排：start / pause / pauseIncremental / progress /    │
 │        canCommit / commit                               │
-│  target.type = MYSQL | KAFKA                            │
-│  TargetSinkFactory 按类型挂 RowChangeSink               │
+│  sink.type = MYSQL | KAFKA                            │
+│  SinkFactory 按类型挂 RowChangeSink               │
 └───────────────────────────┬─────────────────────────────┘
                             │
      SnapshotSource / IncrementalSource
@@ -38,7 +38,7 @@ Kafka 在本仓的角色是 **Sink 目标形态**（本进程 `Producer` 写出�
      ┌──────────────────────┼──────────────────────┐
      ▼                      ▼                      ▼
  OffsetStore            RowChangeSink
- （默认内存）            ├─ MYSQL：mysqlTarget 适配 SPI（P1）
+ （默认内存）            ├─ MYSQL：rds-mysql-sink 适配 SPI（P1）
                          └─ KAFKA：rds-kafka-sink Producer（P1b）
 ```
 
@@ -46,21 +46,21 @@ Kafka 在本仓的角色是 **Sink 目标形态**（本进程 `Producer` 写出�
 
 | 层 | 继承 PhotonT | 对齐 mongo-sync |
 |----|--------------|-----------------|
-| 列类型 / 全量 Range 切分 / JDBC 连接与批写 | ✅ `common` + `*Source` + `*Target` + `core` | — |
+| 列类型 / 全量 Range 切分 / JDBC 连接与批写 | ✅ `rds-common` + `rds-*-source` + `rds-mysql-sink` + `rds-core` | — |
 | 事件模型 / 状态机 / Pipeline / 控制 API / **Sink SPI** | — | ✅ 同构语义（对应 `TransferSink`） |
 | 增量 / 复杂解析 | **三方包**（见 §3） | 本仓只做适配到 `RowChange` |
-| Kafka 目标 | — | ✅ 同构：`target.type=kafka`，独立 sink 模块 |
+| Kafka Sink | — | ✅ 同构：`sink.type=kafka`，独立 sink 模块 |
 
-## 3. 目标形态（MYSQL / KAFKA）
+## 3. Sink 形态（MYSQL / KAFKA）
 
-配置键与 mongo-sync 对齐：`target.type`。
+本仓配置键为 `sink.type` / `sink.uri`（Source / Sink）；mongo-sync 同样使用 `sink.type` / `sink.uri`。
 
-| `target.type` | `target.uri` | 行为 |
+| `sink.type` | `sink.uri` | 行为 |
 |---------------|--------------|------|
-| `MYSQL`（默认） | JDBC URL | `mysqlTarget` 批写；可预建表 / 索引 |
+| `MYSQL`（默认） | JDBC URL | `rds-mysql-sink` 批写；可预建表 / 索引 |
 | `KAFKA` | bootstrap servers（允许 `kafka://` 前缀） | `Producer` 写出；**不**预建 JDBC 表 |
 
-Client 按类型装配 Sink；Kafka 路径不创建目标 `DataSource`。
+Client 按类型装配 Sink；Kafka 路径不创建 JDBC `DataSource`。
 
 ### 3.1 `RowChangeSink` SPI
 
@@ -75,7 +75,7 @@ Pipeline **只**依赖本接口（对齐 mongo-sync `TransferSink`）：
 | `flushAndWait()` | 刷缓冲并等待在途完成 |
 | `close()` | 最终 flush 后关资源 |
 
-MYSQL / KAFKA 各自实现，**换目标不改 Source / Pipeline**。
+MYSQL / KAFKA 各自实现，**换 Sink 不改 Source / Pipeline**。
 
 ### 3.2 Kafka 消息契约
 
@@ -90,17 +90,17 @@ MYSQL / KAFKA 各自实现，**换目标不改 Source / Pipeline**。
 
 `op` 与 `RowChange` 一致：`c` / `u` / `d` / `r`。
 
-DDL：`kafka.publish.ddl=true`（默认）时，barrier 后发消息（同 topic 或 `kafka.ddl.topic`）；Kafka 目标 **不** 在对端执行 DDL。
+DDL：`kafka.publish.ddl=true`（默认）时，barrier 后发消息（同 topic 或 `kafka.ddl.topic`）；Kafka Sink **不** 在对端执行 DDL。
 
-Topic 命名对齐 mongo-sync Kafka 目标，仅把 `db.coll` 换成 `schema.table`。当前 `rds-kafka-sink` **已有** config / mapper / envelope，**不含** `kafka-clients` Producer（P1b）。
+Topic 命名对齐 mongo-sync Kafka Sink，仅把 `db.coll` 换成 `schema.table`。当前 `rds-kafka-sink` **已有** config / mapper / envelope，**不含** `kafka-clients` Producer（P1b）。
 
 ### 3.3 配置键
 
 | 键 | 含义 |
 |----|------|
 | `source.uri` | 源 JDBC URL |
-| `target.type` | `mysql`（默认）\| `kafka`（`jdbc`/`rds` 视为 mysql） |
-| `target.uri` | MYSQL：JDBC URL；KAFKA：bootstrap（允许 `kafka://`） |
+| `sink.type` | `mysql`（默认）\| `kafka`（`jdbc`/`rds` 视为 mysql） |
+| `sink.uri` | MYSQL：JDBC URL；KAFKA：bootstrap（允许 `kafka://`） |
 | `sync.mode` | 与 mongo-sync 同名四模式 |
 | `bootstrap.table` | MYSQL 可预建表；KAFKA **强制 false** |
 | `kafka.topic` / `prefix` / `separator` / `suffix` / `ddl.topic` | Topic |
@@ -113,8 +113,8 @@ Topic 命名对齐 mongo-sync Kafka 目标，仅把 `db.coll` 换成 `schema.tab
 
 1. Pipeline 禁止直接依赖 `kafka-clients` 或 JDBC Driver。  
 2. Kafka 模块不得把 Connect API 泄漏到 `RdsSyncClient`。  
-3. 同一条同步任务同一时刻只有一种 `target.type`（不做双写）。  
-4. Kafka 目标关闭表结构 bootstrap（无 JDBC 会话）。
+3. 同一条同步任务同一时刻只有一种 `sink.type`（不做双写）。  
+4. Kafka Sink 关闭表结构 bootstrap（无 JDBC 会话）。
 
 ## 4. 解析策略：优先三方包
 
@@ -170,7 +170,7 @@ Topic 命名对齐 mongo-sync Kafka 目标，仅把 `db.coll` 换成 `schema.tab
 | `RowChangeSink` | Pipeline → MYSQL / KAFKA |
 | `OffsetStore` | 位点；默认 `MemoryOffsetStore` |
 
-Source 只产出事件；Sink 只消费事件；Client 按 `TargetType` 挂 Sink。PhotonT `BatchDataEntity` **不是**对外契约。
+Source 只产出事件；Sink 只消费事件；Client 按 `SinkType` 挂 Sink。PhotonT `BatchDataEntity` **不是**对外契约。
 
 ## 6. 状态机与控制面
 
@@ -203,18 +203,18 @@ IDLE → RUNNING ⇄ CAN_COMMIT → COMMITTING → COMMITTED
 4. **关闭**：超时仍须 shutdown / 最终 `flushAndWait`  
 5. **同 PK 未落地再来一条**：先 `flushAndWait`（对齐 mongo-sync `landedThrough`）
 
-全量阶段可与增量并行（事件 `op=r` vs CDC）；MYSQL 目标靠 PK 有序 + UPSERT；KAFKA 目标靠 key 分区 + 同 PK flush。
+全量阶段可与增量并行（事件 `op=r` vs CDC）；MYSQL Sink 靠 PK 有序 + UPSERT；KAFKA Sink 靠 key 分区 + 同 PK flush。
 
 ## 8. 模块边界
 
 | 模块 | 职责 | 状态 |
 |------|------|------|
-| `rds-transfer-model` | 事件、`TargetType`、`SyncMode`、全部 SPI | **P0 契约** |
+| `rds-transfer-model` | 事件、`SinkType`、`SyncMode`、全部 SPI | **P0 契约** |
 | `rds-kafka-sink` | Topic / envelope；P1b 再接 Producer | **契约已定，无 Producer** |
-| `rds-sync-client` | `RdsSyncConfig` + `TargetSinkFactory` + 控制面 API | **装配点已定**；Sink 实现待 P1/P1b |
-| `common` / `core` | PhotonT 列类型、切分、JDBC、线程池 | 保留，对内 |
-| `mysqlSource` / `oracleSource` / `pgSource` | PhotonT 全量 JDBC（`BatchDataEntity` → `MemoryCache`） | **未接 SPI**；P1/P3 适配为 `SnapshotSource` |
-| `mysqlTarget` | PhotonT JDBC 批写 | **未接 SPI**；P1 适配为 `RowChangeSink` |
+| `rds-sync-client` | `RdsSyncConfig` + `SinkFactory` + 控制面 API | **装配点已定**；Sink 实现待 P1/P1b |
+| `rds-common` / `rds-core` | 列类型、切分、JDBC、线程池 | 保留，对内 |
+| `rds-mysql-source` / `rds-oracle-source` / `rds-pg-source` | 全量 JDBC（`BatchDataEntity` → `MemoryCache`） | **未接 SPI**；P1/P3 适配为 `SnapshotSource` |
+| `rds-mysql-sink` | JDBC `RowChangeSink` | **未接 SPI**；P1 适配 |
 | `realTimeOfMysql` | MySQL 增量适配层 | 空壳；P2 实现 `IncrementalSource` |
 | `execute` | 可选 CLI | 空壳 |
 | ~~mongodb*~~ / ~~hdfsTarget~~ | — | **已删除** |
@@ -224,7 +224,7 @@ IDLE → RUNNING ⇄ CAN_COMMIT → COMMITTING → COMMITTED
 这四个旧模块**有全量读写代码，但不是 rds-sync 产品链路**：
 
 ```text
-旧：*SourceExecute → MemoryCache(BatchDataEntity) → MysqlTargetTask
+旧：*SourceExecute → MemoryCache(BatchDataEntity) → MysqlSinkTask
 新：SnapshotSource → RowChangePipeline → RowChangeSink
 ```
 
@@ -232,7 +232,7 @@ IDLE → RUNNING ⇄ CAN_COMMIT → COMMITTING → COMMITTED
 
 1. `RdsSyncClient` / Pipeline **禁止**直接依赖 `MemoryCache` / `ProStatus` / `ProgramInfo`。  
 2. P1 用适配器把 PhotonT 切分与 ResultSet 映射成 `RowChange`；不要把 `BatchDataEntity` 做成对外 API。  
-3. 换目标只换 `RowChangeSink` 实现，不改 Source。
+3. 换 Sink 只换 `RowChangeSink` 实现，不改 Source。
 
 ## 9. Offset
 
@@ -243,7 +243,7 @@ IDLE → RUNNING ⇄ CAN_COMMIT → COMMITTING → COMMITTED
 | Oracle / PG | 跟所选 CDC 方案的位点模型走 |
 
 持久化：内存默认；文件/DB 可插拔（对齐 mongo-sync `offsetStoreDir`）。  
-位点推进与目标形态无关：仍按 Source 回调；严格场景后续可改为「Sink 落地后再记」（与 mongo-sync 同一限制）。
+位点推进与 Sink 形态无关：仍按 Source 回调；严格场景后续可改为「Sink 落地后再记」（与 mongo-sync 同一限制）。
 
 ## 10. 落地顺序
 
@@ -255,6 +255,6 @@ IDLE → RUNNING ⇄ CAN_COMMIT → COMMITTING → COMMITTED
 
 ---
 
-**一句话：** PhotonT 的关系型「芯」 + mongo-sync 的编排「壳」；解析借三方；目标 = **MYSQL 或 KAFKA**；Mongo / Hadoop 出局。
+**一句话：** 关系型全量切分与 JDBC「芯」 + mongo-sync 的编排「壳」；解析借三方；Sink = **MYSQL 或 KAFKA**；Mongo / Hadoop 出局。
 
 选型入口：关系库（含投递 Kafka）用本仓；文档库（含 mongo-kafka 格式）用 [mongo-sync](https://github.com/whaleal-dev/mongo-sync)。

@@ -13,13 +13,12 @@
 
     <modules>
         <module>rds-transfer-model</module>
-        <module>common</module>
-        <module>core</module>
-        <module>mysqlSource</module>
-        <module>mysqlTarget</module>
-        <module>oracleSource</module>
-        <module>pgSource</module>
-        <module>realTimeOfMysql</module>
+        <module>rds-common</module>
+        <module>rds-core</module>
+        <module>rds-mysql-source</module>
+        <module>rds-mysql-sink</module>
+        <module>rds-oracle-source</module>
+        <module>rds-pg-source</module>
         <module>rds-kafka-sink</module>
         <module>rds-sync-client</module>
         <!-- Mongo / HDFS / Hadoop removed; relational DB only -->

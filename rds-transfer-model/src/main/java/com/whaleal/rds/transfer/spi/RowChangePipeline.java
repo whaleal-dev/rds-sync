@@ -4,7 +4,7 @@ package com.whaleal.rds.transfer.spi;
  * 有序分桶管道：消费 Source 事件，只向 {@link RowChangeSink} 写出。
  * <p>
  * 禁止依赖 JDBC Driver 或 {@code kafka-clients}。MYSQL / KAFKA 由 Client 按
- * {@code target.type} 注入 Sink。
+ * {@code sink.type} 注入 Sink。
  */
 public interface RowChangePipeline extends RowChangeListener, DdlEventListener, AutoCloseable {
 

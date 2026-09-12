@@ -19,9 +19,9 @@ mvn -DskipTests package
 
 | 诉求 | rds-sync 怎么做 |
 |------|-----------------|
-| 关系库主路径 | MySQL / Oracle / PostgreSQL 全量源 + MySQL JDBC **或 Kafka** 目标 |
+| 关系库主路径 | MySQL / Oracle / PostgreSQL 全量源 + MySQL JDBC **或 Kafka** Sink |
 | 异构搬迁 | PhotonT 列类型与 Range 切分，按主键分桶有序写 |
-| 投递 Kafka | `target.type=kafka`，行级 envelope（`op`/`before`/`after`），与 mongo-kafka Change Stream 格式区分 |
+| 投递 Kafka | `sink.type=kafka`，行级 envelope（`op`/`before`/`after`），与 mongo-kafka Change Stream 格式区分 |
 | 不停服切换 | 规划全量∥增量（`FULL_AND_INCREMENTAL`），`canCommit` / `commit` 最小 cutover |
 | 增量不自研协议 | binlog / redo / WAL 借 Debezium 或 Canal，适配进 `RowChange` |
 | 控制面统一 | `start` / `pauseIncremental` / `progress` / `canCommit`，与 mongo-sync 同构 |
@@ -38,7 +38,7 @@ Sink **不感知** 上游是 JDBC 快照还是 CDC——统一变成 `RowChange`
 | | [rds-sync](https://github.com/whaleal-dev/rds-sync)（本仓） | [mongo-sync](https://github.com/whaleal-dev/mongo-sync) |
 |--|------|-----------|
 | 源 | MySQL / Oracle / PostgreSQL | MongoDB（Oplog / ChangeStream） |
-| 目标 | MySQL JDBC、Kafka（行级 envelope） | MongoDB、DocumentDB / DDS、Kafka（Change Stream） |
+| Sink | MySQL JDBC、Kafka（行级 envelope） | MongoDB、DocumentDB / DDS、Kafka（Change Stream） |
 | 事件契约 | `RowChange` / `DdlEvent` | `TransferEvent` / `DdlEvent` |
 | 增量解析 | 借 Debezium / Canal，适配进本仓契约 | 自研 Oplog + ChangeStream |
 | 形态 | 嵌入式 SDK + 可选 CLI | 已可脚本启动（`mongosync.sh` / `verify.sh`） |
@@ -50,7 +50,7 @@ Sink **不感知** 上游是 JDBC 快照还是 CDC——统一变成 `RowChange`
 ## 核心能力
 
 - **四种同步模式**（契约已定）：仅全量、全量∥持续增量、全量∥追平后停、仅增量  
-- **双目标形态**：MYSQL（JDBC，默认）/ KAFKA（行级 envelope；架构已定，实现见 P1b）  
+- **双 Sink 形态**：MYSQL（JDBC，默认）/ KAFKA（行级 envelope；架构已定，实现见 P1b）  
 - **全量源**：MySQL / Oracle / PostgreSQL（PhotonT JDBC + Range 切分）  
 - **事件契约**：`RowChange` / `DdlEvent`；Pipeline 只依赖 `RowChangeSink`  
 - **控制面骨架**：`RdsSyncClient` 对齐 mongo-sync 状态机  
@@ -78,11 +78,12 @@ Sink **不感知** 上游是 JDBC 快照还是 CDC——统一变成 `RowChange`
 | 模块 | 说明 |
 |------|------|
 | `rds-transfer-model` | `RowChange` / `DdlEvent` / SPI（`SnapshotSource` / `RowChangePipeline` / `RowChangeSink`） |
-| `common` / `core` | PhotonT 列类型、切分、JDBC（对内，未接产品链路） |
-| `mysqlSource` / `mysqlTarget` / `oracleSource` / `pgSource` | PhotonT 全量 JDBC；**尚未**适配 SPI |
+| `rds-common` / `rds-core` | 列类型、切分、JDBC（对内，未接产品链路） |
+| `rds-mysql-source` / `rds-oracle-source` / `rds-pg-source` | 全量 Source；**尚未**适配 SPI |
+| `rds-mysql-sink` | MySQL JDBC Sink；**尚未**适配 SPI |
 | `rds-kafka-sink` | Topic / 行级 envelope 契约；Producer 待 P1b |
 | `realTimeOfMysql` | MySQL 增量适配层（空壳） |
-| `rds-sync-client` | `RdsSyncConfig` + `TargetSinkFactory` + 控制面骨架 |
+| `rds-sync-client` | `RdsSyncConfig` + `SinkFactory` + 控制面骨架 |
 
 ---
 
@@ -101,13 +102,13 @@ mvn -DskipTests package
 
 ### 支持哪些数据库？
 
-源端规划 MySQL / Oracle / PostgreSQL。目标：**MySQL JDBC** 或 **Kafka**。MongoDB / DocumentDB 请用 [mongo-sync](https://github.com/whaleal-dev/mongo-sync)（其 Kafka 消息是 Change Stream，与本仓行级 envelope 不同）。
+源端规划 MySQL / Oracle / PostgreSQL。Sink：**MySQL JDBC** 或 **Kafka**。MongoDB / DocumentDB 请用 [mongo-sync](https://github.com/whaleal-dev/mongo-sync)（其 Kafka 消息是 Change Stream，与本仓行级 envelope 不同）。
 
 ### 和 PhotonT 是什么关系？
 
 本仓继承 PhotonT 的关系型全量切分、列类型与 JDBC 写入，去掉 Mongo / HDFS；编排壳对齐 mongo-sync。
 
-### PhotonT 那几个 Source/Target 模块能直接用吗？
+### PhotonT 那几个 Source/Sink 模块能直接用吗？
 
 不能当产品链路用。它们是旧的全量 JDBC（`BatchDataEntity` + `MemoryCache`），还没适配 `SnapshotSource` / `RowChangeSink`。见 [架构 §8.1](docs/ARCHITECTURE.md)。
 
@@ -117,7 +118,7 @@ mvn -DskipTests package
 
 ### 支持 Kafka 吗？
 
-架构已定：`target.type=kafka`，消息为行级 envelope。Producer 在 P1b；配置示例见 [docs/examples](docs/examples/)。文档库 Change Stream 格式请用 [mongo-sync](https://github.com/whaleal-dev/mongo-sync)。
+架构已定：`sink.type=kafka`，消息为行级 envelope。Producer 在 P1b；配置示例见 [docs/examples](docs/examples/)。文档库 Change Stream 格式请用 [mongo-sync](https://github.com/whaleal-dev/mongo-sync)。
 
 ---
 
@@ -129,7 +130,7 @@ mvn -DskipTests package
 | [docs/QuickStart.md](docs/QuickStart.md) | 构建与范围说明 |
 | [docs/examples](docs/examples/) | MYSQL / KAFKA 配置键示例 |
 | [docs/类型转换.md](docs/类型转换.md) | MySQL / Oracle / PG 列类型转换 |
-| [docs/PhotonT介绍文档.md](docs/PhotonT介绍文档.md) | 历史 PhotonT 背景 |
+| [docs/RDS-Sync介绍文档.md](docs/RDS-Sync介绍文档.md) | 产品背景与历史架构 |
 | [mongo-sync](https://github.com/whaleal-dev/mongo-sync) | 文档库同步（MongoDB / Kafka） |
 
 ---
@@ -139,7 +140,7 @@ mvn -DskipTests package
 - **MySQL → MySQL**：迁库、扩容、逻辑迁移  
 - **MySQL / Oracle / PG → Kafka**：行级变更投递，供下游消费  
 - **Oracle / PG → MySQL**：异构搬迁  
-- **国产化转型**：关系库迁到达梦 / TiDB / 人大金仓等前的结构化同步（按目标 JDBC 能力验证）  
+- **国产化转型**：关系库迁到达梦 / TiDB / 人大金仓等前的结构化同步（按 Sink JDBC 能力验证）  
 - **与 mongo-sync 并列部署**：同一套运维习惯，分别处理关系库与文档库  
 
 > 生产切换前请自行校验数据。更细限制与里程碑见 [架构说明](docs/ARCHITECTURE.md)。

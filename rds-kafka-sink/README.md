@@ -1,6 +1,6 @@
 # rds-kafka-sink
 
-rds-sync 的 **Kafka 目标**：把 `RowChange` / `DdlEvent` 写成 **行级 envelope**。
+rds-sync 的 **Kafka Sink**：把 `RowChange` / `DdlEvent` 写成 **行级 envelope**。
 
 当前模块锁定 topic 与消息契约，**不含** `kafka-clients` Producer（P1b 再接）。Pipeline 只认 `RowChangeSink`，本模块是 KAFKA 侧实现位。
 
@@ -28,6 +28,6 @@ Topic 默认 `{prefix}{sep}{schema}{sep}{table}{sep}{suffix}`；`kafka.topic` �
 | 已定 | 待 P1b |
 |------|--------|
 | `KafkaSinkConfig` / `KafkaTopicMapper` / `RowChangeEnvelope` | `KafkaSinkClient` 实现 `RowChangeSink` |
-| 配置键与 mongo-sync Kafka 目标同构 | `kafka-clients` Producer |
+| 配置键与 mongo-sync Kafka Sink 同构 | `kafka-clients` Producer |
 
-通常不必直接使用本模块，由 `RdsSyncClient` 在 `target.type=kafka` 时装配。
+通常不必直接使用本模块，由 `RdsSyncClient` 在 `sink.type=kafka` 时装配。
