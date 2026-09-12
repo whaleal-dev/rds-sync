@@ -3,7 +3,7 @@ package com.whaleal.rds.sink.kafka.topic;
 import com.whaleal.rds.sink.kafka.config.KafkaSinkConfig;
 
 /**
- * Topic 命名对齐 mongo-sync Kafka 目标，仅把 {@code db.coll} 换成 {@code schema.table}：
+ * Topic 命名对齐 mongo-sync Kafka Sink，仅把 {@code db.coll} 换成 {@code schema.table}：
  * {@code [prefix + sep] + schema + [sep + table] + [sep + suffix]}。
  * 配置了固定 {@code kafka.topic} 时全部事件走该 topic。
  */
@@ -37,7 +37,7 @@ public final class KafkaTopicMapper {
     }
 
     /**
-     * DDL 目标 topic：优先 {@code kafka.ddl.topic}，否则与行事件相同规则。
+     * DDL 所用 topic：优先 {@code kafka.ddl.topic}，否则与行事件相同规则。
      */
     public String ddlTopic(String schema, String table) {
         if (ddlTopic != null) {

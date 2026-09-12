@@ -27,7 +27,7 @@ public final class RdsSyncConfig {
     private String sinkPassword;
     /** 库表过滤，匹配 {@code schema.table}，默认全部。 */
     private String tableWhite = ".*";
-    /** 目标 schema；空则与源 schema 相同。 */
+    /** Sink schema；空则与源 schema 相同。 */
     private String sinkSchema;
     private int bucketNum = 4;
     private int batchSize = 200;

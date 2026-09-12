@@ -5,7 +5,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
- * Kafka 目标配置。{@code sink.uri} 视为 bootstrap servers（可带 {@code kafka://} 前缀）。
+ * Kafka Sink 配置。{@code sink.uri} 视为 bootstrap servers（可带 {@code kafka://} 前缀）。
  * <p>
  * 本类不依赖 {@code kafka-clients}；P1b 的 Producer 再消费这些字段。
  */

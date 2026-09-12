@@ -4,7 +4,7 @@ import com.whaleal.rds.transfer.model.DdlEvent;
 import com.whaleal.rds.transfer.model.RowChange;
 
 /**
- * 目标端写入 SPI：只识别 {@link RowChange} / {@link DdlEvent}，不关心上游是 JDBC 快照还是 CDC。
+ * Sink 端写入 SPI：只识别 {@link RowChange} / {@link DdlEvent}，不关心上游是 JDBC 快照还是 CDC。
  * <p>
  * MYSQL（JDBC）与 KAFKA 各自实现；Pipeline / Client 只依赖本契约。
  * 对齐 mongo-sync {@code TransferSink}。
@@ -19,7 +19,7 @@ public interface RowChangeSink extends AutoCloseable {
     long write(RowChange event);
 
     /**
-     * 已确认落地的最大写入序号：所有 {@code seq <= landedThrough()} 的写入都已在目标端生效
+     * 已确认落地的最大写入序号：所有 {@code seq <= landedThrough()} 的写入都已在 Sink 端生效
      * （JDBC 落库或 Kafka produce ack）。
      */
     long landedThrough();

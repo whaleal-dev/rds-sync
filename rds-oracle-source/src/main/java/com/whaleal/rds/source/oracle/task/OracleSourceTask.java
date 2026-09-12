@@ -17,7 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * oracle目标源任务
+ * Oracle 源任务
  *
  * @author cs
  * @date 2021/08/31
