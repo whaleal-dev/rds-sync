@@ -11,6 +11,9 @@ public class SyncModeTest {
         Assert.assertEquals(SyncMode.FULL_AND_INCREMENTAL, SyncMode.parse("full_and_incremental"));
         Assert.assertTrue(SyncMode.FULL.includesFull());
         Assert.assertFalse(SyncMode.FULL.includesIncremental());
-        Assert.assertTrue(SyncMode.FULL_AND_CATCH_UP.isCatchUpThenStop());
+        Assert.assertTrue(SyncMode.FULL_THEN_CATCH_UP.isCatchUpThenStop());
+        Assert.assertFalse(SyncMode.FULL_THEN_CATCH_UP.parallelFullAndIncremental());
+        Assert.assertTrue(SyncMode.FULL_AND_INCREMENTAL.parallelFullAndIncremental());
+        Assert.assertFalse(SyncMode.FULL_AND_INCREMENTAL.isCatchUpThenStop());
     }
 }

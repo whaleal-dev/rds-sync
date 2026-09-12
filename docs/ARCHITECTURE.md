@@ -10,7 +10,7 @@
 |----|------|
 | 源 | MySQL / Oracle / PostgreSQL（插件式 Source） |
 | Sink | **MYSQL**（JDBC，首发）\| **KAFKA**（行级变更投递）；后续可扩 Oracle/PG JDBC Sink |
-| 模式 | 全量、增量、全量∥增量、追平后可停（命名与 mongo-sync 的 `SyncMode` 对齐） |
+| 模式 | 全量、增量、全量∥增量、全量后追平再停（命名与 mongo-sync 的 `SyncMode` 对齐） |
 | 形态 | 嵌入式 Java SDK + 可选 CLI（对齐 mongo-sync） |
 | 姊妹产品 | [mongo-sync](https://github.com/whaleal-dev/mongo-sync)：MongoDB → MongoDB / Kafka |
 | 非目标 | 做成 Kafka Connect / Flink CDC **产品**；自研 binlog/redo/WAL 协议栈；Mongo / Hadoop 生态；Mongo ↔ 关系库异构直连 |

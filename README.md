@@ -49,7 +49,7 @@ Sink **不感知** 上游是 JDBC 快照还是 CDC——统一变成 `RowChange`
 
 ## 核心能力
 
-- **四种同步模式**（契约已定）：仅全量、全量∥持续增量、全量∥追平后停、仅增量  
+- **四种同步模式**（契约已定）：仅全量、全量∥持续增量、全量后追平再停、仅增量  
 - **双 Sink 形态**：MYSQL（JDBC，默认）/ KAFKA（行级 envelope；架构已定，实现见 P1b）  
 - **全量源**：MySQL / Oracle / PostgreSQL（JDBC + Range 切分）  
 - **事件契约**：`RowChange` / `DdlEvent`；Pipeline 只依赖 `RowChangeSink`  
@@ -66,10 +66,10 @@ Sink **不感知** 上游是 JDBC 快照还是 CDC——统一变成 `RowChange`
 |------|------|
 | `FULL` | 仅全量 |
 | `FULL_AND_INCREMENTAL` | 全量∥增量并行，全量结束后持续增量 |
-| `FULL_AND_CATCH_UP` | 同上；全量结束后设上界，追平后停止 |
+| `FULL_THEN_CATCH_UP` | 先全量，再追增量窗口，追平后停止（串行） |
 | `INCREMENTAL` | 仅增量 |
 
-命名与 [mongo-sync](https://github.com/whaleal-dev/mongo-sync) 一致：`AND` 表示并行，不是串行的 `THEN`。
+命名与 [mongo-sync](https://github.com/whaleal-dev/mongo-sync) 一致：`AND` 表示全量与增量并行并持续；`THEN` 表示先全量、再追平、再停。
 
 ---
 
