@@ -1,3 +1,16 @@
+<p align="center">
+  <img src="docs/assets/banner.svg" alt="rds-sync — 关系型数据库同步 SDK" />
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Java-8-ED8B00" alt="Java 8" />
+  <img src="https://img.shields.io/badge/Source-MySQL%20%7C%20Oracle%20%7C%20PostgreSQL-4479A1" alt="Source: MySQL | Oracle | PostgreSQL" />
+  <img src="https://img.shields.io/badge/Sink-MySQL%20%7C%20Kafka-231F20" alt="Sink: MySQL | Kafka" />
+  <img src="https://img.shields.io/badge/Stage-P0%20Contract-orange" alt="Stage: P0 contract" />
+  <a href="https://github.com/whaleal-dev/rds-sync/stargazers"><img src="https://img.shields.io/github/stars/whaleal-dev/rds-sync?color=yellow" alt="GitHub stars" /></a>
+  <a href="https://github.com/whaleal-dev/rds-sync/commits/main"><img src="https://img.shields.io/github/last-commit/whaleal-dev/rds-sync?label=last%20commit" alt="last commit" /></a>
+</p>
+
 # rds-sync
 
 **关系型数据库同步 SDK**（Java 8+）
@@ -122,6 +135,7 @@ mvn -DskipTests package
 
 | 文档 | 说明 |
 |------|------|
+| **[docs/使用手册](docs/README.md)** | **面向接入方与运维的完整手册**：概念 / 快速开始 / 配置全解 / 同步模式 / SDK 与 SPI / 排障 / 落地路线 |
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | 架构契约、事件模型、控制面、落地顺序 |
 | [docs/QuickStart.md](docs/QuickStart.md) | 构建与范围说明 |
 | [docs/examples](docs/examples/) | MYSQL / KAFKA 配置键示例 |

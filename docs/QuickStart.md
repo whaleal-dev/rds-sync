@@ -1,5 +1,7 @@
 # QuickStart
 
+> 📖 **完整使用手册见 [docs/README.md](README.md)** —— 本文是早期速查，架构与配置细节以手册和 [ARCHITECTURE.md](ARCHITECTURE.md) 为准。
+
 **rds-sync**：关系型数据库同步 SDK（MySQL / Oracle / PostgreSQL）。  
 文档库请用 [mongo-sync](https://github.com/whaleal-dev/mongo-sync)。
 
